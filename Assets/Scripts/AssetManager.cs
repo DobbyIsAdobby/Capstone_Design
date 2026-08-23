@@ -106,6 +106,11 @@ public class AssetManager : MonoBehaviour
         }
 
         Debug.Log($"{type} 자산 {amount}원 매수 주문 체결 완료.");
+
+        if(UIManager.Instance != null)
+        {
+            UIManager.Instance.RefreshUI();
+        }
     }
 
     /// <summary> 
@@ -151,5 +156,10 @@ public class AssetManager : MonoBehaviour
         //현금 증가
         GameManager.Instance.availableCash += amount;
         Debug.Log($"{type} 자산 {amount}원 매도 주문 체결 완료.");
+
+        if(UIManager.Instance != null)
+        {
+            UIManager.Instance.RefreshUI();
+        }
     }
 }
