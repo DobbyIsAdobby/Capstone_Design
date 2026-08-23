@@ -28,6 +28,8 @@ public class GameManager : MonoBehaviour
             return availableCash + investedValue;
         }
     }
+    public int currentMonthOvertimeCount = 0; // 이번 달 야근 횟수
+    public readonly int maxOvertimePerMonth = 30; // 한 달 최대 야근 가능 횟수(불변성 적용)
 
     [Header("Income & Expense")]
     public long monthlySalary = 3000000;
@@ -76,6 +78,9 @@ public class GameManager : MonoBehaviour
 
         // 4. 새로운 이벤트(청구서) 발생 체크 (발생 시 다음 달에 납부하도록 경고)
         EventManager.Instance.CheckMonthlyEvent(currentMonth);
+
+        // 5. 다음 달로 넘어가면 야근 횟수 초기화
+        currentMonthOvertimeCount = 0;
     }
 
     /// <summary>
@@ -101,8 +106,16 @@ public class GameManager : MonoBehaviour
         //게임 오버 상태라면 더 이상 클릭되지 않도록
         if (currentMonth > maxMonth) return;
 
-        availableCash += 50000; //탭 1회당 5만 원 추가
-        stressLevel += 5f;      //탭 1회당 스트레스 5% 증가
+        //야근 횟수 제한
+        if(currentMonthOvertimeCount >= maxOvertimePerMonth)
+        {
+            Debug.Log("이번 달 가능한 야근 횟수를 초과하였습니다.");
+            return;
+        }
+
+        availableCash += 50000;      //탭 1회당 5만 원 추가
+        stressLevel += 5f;           //탭 1회당 스트레스 5% 증가
+        currentMonthOvertimeCount++; //탭 1회당 야근 횟수 1회 추가
 
         CheckStressPenalty(); //스트레스 패널티 적용 여부 판단
         UpdateUI();
@@ -136,7 +149,11 @@ public class GameManager : MonoBehaviour
 
     private void UpdateUI()
     {
-        //UIManager.Instance.RefreshUI(currentMonth, availableCash, stressLevel);
+        //UI Manager를 통해 화면 전체 텍스트를 갱신
+        if(UIManager.Instance != null)
+        {
+            UIManager.Instance.RefreshUI();
+        }
         Debug.Log($"현재 턴 : {currentMonth} / 잔고 : {availableCash} / 스트레스 : {stressLevel}%");
     }
 

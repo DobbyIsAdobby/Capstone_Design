@@ -56,6 +56,11 @@ public class RumorManager : MonoBehaviour
         Debug.Log($"정보 도착. 비용 : -{rumorCost}원 / 진위 : {resultType}");
         Debug.Log($"메시지 내용 : {rumorMessage}");
 
+        if(UIManager.Instance != null)
+        {
+            UIManager.Instance.RefreshUI();
+        }
+
         //추후 UIManager를 통해 인게임 채팅방 UI에 텍스트 띄우기
         //UIManager.Instance.ShowRumorUI(rumorMessage);
     }

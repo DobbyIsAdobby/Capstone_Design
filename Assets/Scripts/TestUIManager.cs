@@ -25,4 +25,14 @@ public class TestUIManager : MonoBehaviour
     {
         AssetManager.Instance.SellAsset(AssetType.Leverage, testAmount);
     }
+
+    //소비 시스템 연결 용
+    public void OnClickBuyDeliveryFood()
+    {
+        ShopManager.Instance.BuyItem(ShopItemType.DeliveryFood);
+    }
+    public void OnClickBuyHocance()
+    {
+        ShopManager.Instance.BuyItem(ShopItemType.Hocance);
+    }
 }
