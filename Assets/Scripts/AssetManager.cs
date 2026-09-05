@@ -60,13 +60,27 @@ public class AssetManager : MonoBehaviour
             bankBalance += (long)(bankBalance * bankMontlyRate);
         }
 
-        //2. 주식 (난수(RNG) 수익률)
-        if(stockBalance > 0)
-        {
-            float currentStockRate = Random.Range(stockMinRate, stockMaxRate);
-            stockBalance += (long)(stockBalance * currentStockRate);
-            Debug.Log($"이번 달 주식 수익률 : {currentStockRate * 100:F1}%");
-        }
+        // 2. 나스닥 실제 수익률 적용
+if(stockBalance > 0)
+{
+    int currentTurn = GameManager.Instance.currentMonth;
+
+    float currentStockRate =
+        MarketDataLoader.GetReturnRate(currentTurn);
+
+    stockBalance +=
+        (long)(stockBalance * currentStockRate);
+
+    string marketDate =
+        MarketDataLoader.GetDate(currentTurn);
+
+    Debug.Log(
+        $"[NASDAQ TEST] Turn {currentTurn} / "
+        + $"{marketDate} / "
+        + $"수익률 : {currentStockRate * 100:F2}% / "
+        + $"주식 평가액 : {stockBalance:N0}원"
+    );
+}
 
         //3. 레버리지 (난수 수익률 - 극단적 변동성)
         if(leverageBalance > 0)

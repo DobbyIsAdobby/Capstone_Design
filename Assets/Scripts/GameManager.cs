@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Game Time")]
     public int currentMonth = 1;
-    public int maxMonth = 120; // 총 10년 (120턴)
+    public int maxMonth = 12; // 총 10년 (120턴)
 
     [Header("Player Status")]
     public long availableCash = 5000000; // 초기 자본금 500만 원
@@ -50,17 +50,24 @@ public class GameManager : MonoBehaviour
     /// UI [턴 종료] 버튼에 연결할 함수
     /// </summary>
     public void OnClickNextMonth()
+{
+    if (currentMonth > maxMonth)
     {
-        if (currentMonth >= maxMonth)
-        {
-            TriggerEnding();
-            return;
-        }
-
-        ProcessMonthlySettlement();
-        currentMonth++;
-        UpdateUI();
+        TriggerEnding();
+        return;
     }
+
+    ProcessMonthlySettlement();
+
+    if (currentMonth >= maxMonth)
+    {
+        TriggerEnding();
+        return;
+    }
+
+    currentMonth++;
+    UpdateUI();
+}
 
     private void ProcessMonthlySettlement()
     {
