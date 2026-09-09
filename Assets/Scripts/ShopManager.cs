@@ -9,23 +9,23 @@ public enum ShopItemType
     LuxuryWatch
 }
 
-public class ShopManager : MonoBehaviour
+public class ShopManager : Singleton<ShopManager>
 {
     /*
     Inspector Zone
     */
-    public static ShopManager Instance;
+    //public static ShopManager Instance;
 
     /*
     function Zone
     */
 
     //싱글톤 패턴
-    private void Awake()
+    /*private void Awake()
     {
         if(Instance == null) Instance = this;
         else Destroy(gameObject);
-    }
+    }*/
 
     /// <summary>
     /// UI [구매하기] 버튼을 통해 아이템을 소비할 때 호출할 함수
