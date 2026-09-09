@@ -1,11 +1,11 @@
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameManager : Singleton<GameManager>
 {
     /*
     Inspector Zone
     */
-    public static GameManager Instance;
+    //public static GameManager Instance;
 
     [Header("Game Time")]
     public int currentMonth = 1;
@@ -40,11 +40,11 @@ public class GameManager : MonoBehaviour
     */
 
     // 싱글톤 패턴
-    private void Awake()
+    /*private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
-    }
+    }*/
 
     /// <summary>
     /// UI [턴 종료] 버튼에 연결할 함수

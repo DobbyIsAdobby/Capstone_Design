@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// 순수 테스트 목적이므로 제너릭 싱글톤 클래스를 상속받지 않도록 진행함.
 public class TestUIManager : MonoBehaviour
 {
     //테스트용 고정 금액(100만원) -> 불변성을 지닌 변수로 선언.
