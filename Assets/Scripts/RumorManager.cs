@@ -7,12 +7,12 @@ public enum RumorType
     Fake  //거짓 정보 (다음 턴 방향과 반대 또는 잘못된 조언)
 }
 
-public class RumorManager : MonoBehaviour
+public class RumorManager : Singleton<RumorManager>
 {
     /*
     Inspector Zone
     */
-    public static RumorManager Instance;
+    //public static RumorManager Instance;
 
     [Header("Rumor Settings")]
     public int rumorCost = 100000; // 정보 1회 열람 비용 (10만 원)
@@ -26,11 +26,11 @@ public class RumorManager : MonoBehaviour
     */
 
     //싱글톤 패턴
-    private void Awake()
+    /*private void Awake()
     {
         if(Instance == null) Instance = this;
         else Destroy(gameObject);
-    }
+    }*/
 
     /// <summary>
     /// UI [정보 대화방] 버튼을 통해 호출되는 함수

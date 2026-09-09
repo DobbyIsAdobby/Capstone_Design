@@ -1,4 +1,3 @@
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 // enum으로 자산 분류
@@ -9,12 +8,12 @@ public enum AssetType
     Leverage //레버리지
 }
 
-public class AssetManager : MonoBehaviour
+public class AssetManager : Singleton<AssetManager>
 {
     /*
     Inspector Zone
     */
-    public static AssetManager Instance;
+    //public static AssetManager Instance;
 
     [Header("Asset Balances")]
     public long bankBalance = 0; //은행 예치금
@@ -35,11 +34,11 @@ public class AssetManager : MonoBehaviour
     */
 
     //싱글톤 패턴
-    private void Awake()
+    /*private void Awake()
     {
         if(Instance == null) Instance = this;
         else Destroy(gameObject);
-    }
+    }*/
     
     /// <summary>
     /// GameManager의 TotalAsset 프로퍼티에서 호출하는 총 투자금액 반환 함수

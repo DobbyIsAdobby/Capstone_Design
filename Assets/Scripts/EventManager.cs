@@ -1,11 +1,11 @@
 using UnityEngine;
 
-public class EventManager : MonoBehaviour
+public class EventManager : Singleton<EventManager>
 {
     /*
     Inspector Zone
     */
-    public static EventManager Instance;
+    //public static EventManager Instance;
 
     [Header("Pending Penalty")]
     public long pendingPenaltyAmount = 0; //유예된 청구서 금액
@@ -16,11 +16,11 @@ public class EventManager : MonoBehaviour
     */
 
     //싱글톤 패턴
-    private void Awake()
+    /*private void Awake()
     {
         if(Instance == null) Instance = this;
         else Destroy(gameObject);
-    }
+    }*/
 
     /// <summary>
     /// GameManager에서 턴이 넘어갈 때마다 호출하는 함수

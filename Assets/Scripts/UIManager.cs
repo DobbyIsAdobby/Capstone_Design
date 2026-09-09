@@ -1,12 +1,12 @@
 using UnityEngine;
 using TMPro;
 
-public class UIManager : MonoBehaviour
+public class UIManager : Singleton<UIManager>
 {
     /*
     Inspector Zone
     */
-    public static UIManager Instance;
+    //public static UIManager Instance;
 
     [Header("Main Player HUD")]
     public TextMeshProUGUI monthText;           // 현재 턴 (n/120)
@@ -28,11 +28,11 @@ public class UIManager : MonoBehaviour
     */
 
     // 싱글톤 패턴
-    private void Awake()
+    /*private void Awake()
     {
         if(Instance == null) Instance = this;
         else Destroy(gameObject);
-    }
+    }*/
 
     private void Start()
     {
