@@ -46,12 +46,27 @@ public class GameManager : Singleton<GameManager>
         else Destroy(gameObject);
     }*/
 
+    // 자동 구현 프로퍼티
+    /// <summary>
+    /// 게임 오버가 됐는지 확인. 기본값 : false
+    /// </summary>
+    public bool IsGameOver{ get; private set; }
+    /// <summary>
+    /// 세팅을 진행해도 되는지 확인. 기본값 : false
+    /// </summary>
+    public bool IsSetting{ get; private set; }
+    /// <summary>
+    /// 게임 오버 여부에 따라 행동 제약을 걸음.
+    /// </summary>
+    public bool CanAct => !IsGameOver && !IsSetting;
+
     /// <summary>
     /// UI [턴 종료] 버튼에 연결할 함수
     /// </summary>
     public void OnClickNextMonth()
     {
-        if (currentMonth >= maxMonth)
+        // 프로토타이핑 용 임시 로직
+        /*if (currentMonth >= maxMonth)
         {
             TriggerEnding();
             return;
@@ -59,28 +74,56 @@ public class GameManager : Singleton<GameManager>
 
         ProcessMonthlySettlement();
         currentMonth++;
-        UpdateUI();
+        UpdateUI();*/
+
+        if(!CanAct) return;
+
+        IsSetting = true;
+
+        try
+        {
+            ProcessMonthlySettlement();
+
+            if(IsGameOver) return;
+
+            // 현재 월 결산 완료 뒤 종료 여부 평가
+            if(currentMonth >= maxMonth)
+            {
+                TriggerEnding();
+                return;
+            }
+
+            // 턴 증가
+            currentMonth++;
+            // 다음 달로 넘어가면 야근 횟수 초기화
+            currentMonthOvertimeCount = 0;
+        }
+        finally
+        {
+            // 결산 중 return해도 결산 상태 해제와 UI갱신은 반드시 진행됨.
+            IsSetting = false;
+            UpdateUI();
+        }
     }
 
     private void ProcessMonthlySettlement()
     {
         // 1. 기본 수입 및 지출 정산
-        availableCash += (monthlySalary - fixedExpense);
+        availableCash += monthlySalary - fixedExpense;
 
-        // 2. 자산 수익률 정산 (추후 AssetManager 연결)
+        // 2. 자산 수익률 정산
         AssetManager.Instance.CalculateMonthlyReturns();
 
-        // 3. 턴 기반 이벤트 및 마진콜(게임오버) 체크 (추후 EventManager 연결)
+        // 3. 턴 기반 이벤트 및 마진콜(게임오버) 체크
         EventManager.Instance.ResolvePendingPenalty();
 
-        // 만약 현금 부족으로 파산했다면, 아래 로직을 더 이상 실행하지 않음.
-        if(currentMonth > maxMonth) return;
+        if(IsGameOver) return;
 
-        // 4. 새로운 이벤트(청구서) 발생 체크 (발생 시 다음 달에 납부하도록 경고)
-        EventManager.Instance.CheckMonthlyEvent(currentMonth);
-
-        // 5. 다음 달로 넘어가면 야근 횟수 초기화
-        currentMonthOvertimeCount = 0;
+        // 마지막 달에는 다음 달에 납부할 청구서를 생성하지 않음
+        if(currentMonth < maxMonth)
+        {
+            EventManager.Instance.CheckMonthlyEvent(currentMonth);
+        }
     }
 
     /// <summary>
@@ -89,13 +132,19 @@ public class GameManager : Singleton<GameManager>
     /// <param name="cause"></param>
     public void TriggerBankruptcy(string cause)
     {
+        if(IsGameOver) return;
+
+        IsGameOver = true;
+
         Debug.LogError("파산하셨습니다.");
         Debug.LogError($"파산 사유 : {cause}");
 
-        //추가 조작을 막기 위해 턴을 강제로 maxMonth이상으로 올리고 추후 UI 팝업을 띄울 예정
-        currentMonth = maxMonth + 1;
+        //추가 조작을 막기 위해 턴을 강제로 maxMonth이상으로 올리고 추후 UI 팝업을 띄울 예정 - 더이상 사용하지 않음.
+        //currentMonth = maxMonth + 1;
 
         //UIManager.Instance.ShowGameOverPanel(cause);
+
+        UpdateUI();
     }
 
     /// <summary>
@@ -104,7 +153,7 @@ public class GameManager : Singleton<GameManager>
     public void OnClickOvertimeWork()
     {
         //게임 오버 상태라면 더 이상 클릭되지 않도록
-        if (currentMonth > maxMonth) return;
+        if (!CanAct) return;
 
         //야근 횟수 제한
         if(currentMonthOvertimeCount >= maxOvertimePerMonth)
@@ -159,6 +208,10 @@ public class GameManager : Singleton<GameManager>
 
     private void TriggerEnding()
     {
+        if(IsGameOver) return;
+
+        IsGameOver = true;
+
         Debug.Log("Game Over. Moving to Ending Window.");
     }
 }
