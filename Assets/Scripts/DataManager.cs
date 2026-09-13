@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel; // 제너릭 읽기 전용 컬렉션(ReadOnlyCollections)을 사용하여 다른 Manager 스크립트에서 읽기만 가능하게끔 딕셔너리를 제공
 using UnityEngine;
 
-// csv 데이터를 담을 구조체 선언 => MarketCSVParser.cs로 구조체 및 parser를 이관함.
+// csv 데이터를 담을 구조체 선언 => MarketCSVParser.cs 및 MarketData.cs로 parser 및 구조체를 이관함.
+// 향후 다른 데이터(상점/정보)의 경우에도 위와 같이 CSVParser와 Data로 각각의 파서와 구조체를 분리, DataManager에서 메인으로 관리만 하도록 설계할 계획.
 /*public struct MarketData
 {
     public string date;      // 일자

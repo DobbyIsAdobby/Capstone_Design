@@ -23,6 +23,9 @@ public class UIManager : Singleton<UIManager>
     [Header("Event Notification HUD")]
     public TextMeshProUGUI warningPanelText;    // 발생 이벤트
 
+    [Header("Trade Panels")]
+    [SerializeField] private AssetTradePanel[] tradePanels;
+
     /*
     function Zone
     */
@@ -46,30 +49,38 @@ public class UIManager : Singleton<UIManager>
     public void RefreshUI()
     {
         // 1. 메인 상태바 갱신
-        monthText.text = $"진행도 : {GameManager.Instance.currentMonth} / {GameManager.Instance.maxMonth} 개월";
+        monthText.text = $"{GameManager.Instance.currentMonth} / {GameManager.Instance.maxMonth} 턴";
         totalAssetText.text = $"총 자산 : {GameManager.Instance.TotalAsset:N0} 원";
         cashText.text = $"보유 현금 : {GameManager.Instance.availableCash:N0} 원";
-        stressText.text = $"피로도 지수 : {GameManager.Instance.stressLevel} %";
-        overtimeCountText.text = $"이번 달 야근 : {GameManager.Instance.currentMonthOvertimeCount} / {GameManager.Instance.maxOvertimePerMonth} 회";
+        stressText.text = $"{GameManager.Instance.stressLevel} %";
+        overtimeCountText.text = $"{GameManager.Instance.currentMonthOvertimeCount} / {GameManager.Instance.maxOvertimePerMonth} 회";
 
         // 2. 투자 자산 갱신
         if(AssetManager.Instance != null)
         {
-            bankBalanceText.text = $"예금 잔고 : {AssetManager.Instance.bankBalance:N0} 원";
-            stockBalanceText.text = $"주식 평가액 : {AssetManager.Instance.stockBalance:N0} 원";
-            leverageBalanceText.text = $"레버리지 평가액 : {AssetManager.Instance.leverageBalance:N0} 원";
+            bankBalanceText.text = $"은행 자산 : {AssetManager.Instance.bankBalance:N0} 원";
+            stockBalanceText.text = $"주식 자산 : {AssetManager.Instance.stockBalance:N0} 원";
+            leverageBalanceText.text = $"레버리지 자산 : {AssetManager.Instance.leverageBalance:N0} 원";
         }
 
         // 3. 생애 주기 이벤트 경고 갱신
         // EventManager가 활성화 되어있고, 유예된 금액이 0원 이상일 경우
         if(EventManager.Instance != null && EventManager.Instance.pendingPenaltyAmount > 0)
         {
-            warningPanelText.text = $"<color=red>[이벤트 발생]</color> {EventManager.Instance.pendingEventName}\n 다음 달 결산까지 <color=yellow>{EventManager.Instance.pendingPenaltyAmount:N0}원</color>을 \n보유하고 있어야합니다.";
+            warningPanelText.text = $"<color=red>[이벤트 발생]</color> {EventManager.Instance.pendingEventName} 다음 달 결산까지 <color=yellow>{EventManager.Instance.pendingPenaltyAmount:N0}원</color>을 보유하고 있어야합니다.";
             warningPanelText.gameObject.SetActive(true); //경고창 활성화
         }
         else
         {
             warningPanelText.gameObject.SetActive(false); //경고창 비활성화
+        }
+
+        foreach(AssetTradePanel panel in tradePanels)
+        {
+            if(panel != null && panel.isActiveAndEnabled)
+            {
+                panel.Refresh();
+            }
         }
     }
 }
