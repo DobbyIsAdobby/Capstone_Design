@@ -53,112 +53,154 @@ public class AssetManager : Singleton<AssetManager>
     /// </summary>
     public void CalculateMonthlyReturns()
     {
+        int currentTurn = GameManager.Instance.currentMonth; // CSV의 turn과 동일한 체계(Start at 1)
+
         //1. 은행 (고정 수익률)
         if(bankBalance > 0)
         {
             bankBalance += (long)(bankBalance * bankMontlyRate);
         }
 
-        //2. 주식 (난수(RNG) 수익률)
+        //2. 주식 (난수(RNG) 수익률) => CSV 데이터 우선 사용
         if(stockBalance > 0)
         {
-            float currentStockRate = Random.Range(stockMinRate, stockMaxRate);
-            stockBalance += (long)(stockBalance * currentStockRate);
-            Debug.Log($"이번 달 주식 수익률 : {currentStockRate * 100:F1}%");
+            if(DataManager.Instance != null && 
+                DataManager.Instance.TryGetMarketData(MarketType.Nasdaq, currentTurn, out MarketData nasdaqData))
+            {
+                stockBalance += (long)(stockBalance * nasdaqData.ReturnRate);
+                Debug.Log($"이번 달 주식 수익률(CSV) : {nasdaqData.ReturnRate * 100:F1}%");
+            }
+            else
+            {
+                // 데이터가 없는 턴이거나, CSV 미연결 시 기존 RNG로 진행.
+                float currentStockRate = Random.Range(stockMinRate, stockMaxRate);
+                stockBalance += (long)(stockBalance * currentStockRate);
+                Debug.Log($"이번 달 주식 수익률(RNG) : {currentStockRate * 100:F1}%");   
+            }
         }
 
-        //3. 레버리지 (난수 수익률 - 극단적 변동성)
+        //3. 레버리지 (난수 수익률 - 극단적 변동성) => CSV 데이터 우선 사용(현재 데이터가 없으나 선택적 연결을 허용했기 때문에 로직 구현 진행함.)
         if(leverageBalance > 0)
         {
-            float currentLeverageRate = Random.Range(leverageMinRate, leverageMaxRate);
-            leverageBalance += (long)(leverageBalance * currentLeverageRate);
-            Debug.Log($"이번 달 레버리지 수익률 : {currentLeverageRate * 100:F1}%");
+            if(DataManager.Instance != null && 
+                DataManager.Instance.TryGetMarketData(MarketType.Leverage, currentTurn, out MarketData leverageData))
+            {
+                leverageBalance += (long)(leverageBalance * leverageData.ReturnRate);
+                Debug.Log($"이번 달 레버리지 수익률(CSV) : {leverageData.ReturnRate * 100:F1}%");
+            }
+            else
+            {
+                // 데이터가 없는 턴이거나, CSV 미연결 시 기존 RNG로 진행.
+                float currentLeverageRate = Random.Range(leverageMinRate, leverageMaxRate);
+                leverageBalance += (long)(leverageBalance * currentLeverageRate);
+                Debug.Log($"이번 달 레버리지 수익률(RNG) : {currentLeverageRate * 100:F1}%");
+            }
         }
     }
 
     /// <summary>
-    /// UI [매수하기] 버튼을 통해 자산을 매수할 때 호출할 함수
+    /// 자산에 따른 금액 반환을 위한 함수
     /// </summary>
-    public void BuyAsset(AssetType type, long amount)
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public long GetBalance(AssetType type)
     {
-        if(GameManager.Instance.availableCash < amount)
-        {
-            Debug.Log("가용 현금이 부족합니다.");
-            return;
-        }
-
-        //현금 차감
-        GameManager.Instance.availableCash -= amount;
-
-        //자산 증가
         switch (type)
         {
             case AssetType.Bank:
-                bankBalance += amount;
-                break;
+                return bankBalance;
             case AssetType.Stock:
-                stockBalance += amount;
-                break;
+                return stockBalance;
             case AssetType.Leverage:
-                leverageBalance += amount;
-                break;
-        }
+                return leverageBalance;
 
-        Debug.Log($"{type} 자산 {amount}원 매수 주문 체결 완료.");
-
-        if(UIManager.Instance != null)
-        {
-            UIManager.Instance.RefreshUI();
+            default:
+                return 0;
         }
     }
 
-    /// <summary> 
-    /// UI [매도하기] 버튼을 통해 자산을 매도할 때 호출할 함수
+    /// <summary>
+    /// 거래를 진행할때 호출할 함수
     /// </summary>
-    public void SellAsset(AssetType type, long amount)
+    /// <param name="type"></param>
+    /// <param name="isBuying"></param>
+    /// <param name="amount"></param>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    public bool TryTrade(AssetType type, bool isBuying, long amount, out string message) //bool 을 반환하는 이유 : 패널에서 거래 성공/실패를 구분하기 위함.
     {
-        long currentBalance = 0;
+        GameManager game = GameManager.Instance;
+
+        if (!game.CanAct)
+        {
+            message = "지금은 거래가 불가능합니다.";
+            return false;
+        }
+
+        if(type != AssetType.Bank && type != AssetType.Stock && type != AssetType.Leverage)
+        {
+            message = "지원하지 않는 자산입니다.";
+            return false;
+        }
+
+        if(amount <= 0)
+        {
+            message = "거래 금액은 1원 이상이어야 합니다.";
+            return false;
+        }
+
+        // 참일 경우 availableCash 변수 반환, 거짓일 경우 GetBalance 내 각 타입에 맞는 변수 반환.
+        long limit = isBuying ? game.availableCash : GetBalance(type);
+
+        if(amount > limit)
+        {
+            message = isBuying ? "가용 현금이 부족합니다." : "보유 자산이 부족합니다.";
+            return false;
+        }
+
+        // 매수(참) / 매도(거짓) 으로 자산 변경
+        long assetChange = isBuying ? amount : -amount;
 
         switch (type)
         {
             case AssetType.Bank:
-                currentBalance = bankBalance;
+                bankBalance += assetChange;
                 break;
             case AssetType.Stock:
-                currentBalance = stockBalance;
+                stockBalance += assetChange;
                 break;
             case AssetType.Leverage:
-                currentBalance = leverageBalance;
+                leverageBalance += assetChange;
                 break;
         }
 
-        if(currentBalance < amount)
-        {
-            Debug.Log($"보유한 {type} 자산이 부족하여 매도 주문을 체결할 수 없습니다.");
-            return;
-        }
+        game.availableCash -= assetChange;
 
-        //자산 차감
-        switch (type)
-        {
-            case AssetType.Bank:
-                bankBalance -= amount;
-                break;
-            case AssetType.Stock:
-                stockBalance -= amount;
-                break;
-            case AssetType.Leverage:
-                leverageBalance -= amount;
-                break;
-        }
-
-        //현금 증가
-        GameManager.Instance.availableCash += amount;
-        Debug.Log($"{type} 자산 {amount}원 매도 주문 체결 완료.");
+        message = $"{amount:N0}원 거래가 완료되었습니다.";
 
         if(UIManager.Instance != null)
         {
             UIManager.Instance.RefreshUI();
         }
+
+        return true;
+    }
+
+    /// <summary>
+    /// UI [매수하기] 버튼을 통해 자산을 매수할 때 호출할 함수 - TryTrade로 핵심 기능 대체 완료
+    /// </summary>
+    public void BuyAsset(AssetType type, long amount)
+    {
+        TryTrade(type, true, amount, out string message);
+        Debug.Log(message);
+    }
+
+    /// <summary> 
+    /// UI [매도하기] 버튼을 통해 자산을 매도할 때 호출할 함수 - TryTrade로 핵심 기능 대체 완료
+    /// </summary>
+    public void SellAsset(AssetType type, long amount)
+    {
+        TryTrade(type, false, amount, out string message);
+        Debug.Log(message);
     }
 }
