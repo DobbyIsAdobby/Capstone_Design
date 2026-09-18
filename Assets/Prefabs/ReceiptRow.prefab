@@ -284,6 +284,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5549031396674553504}
   - component: {fileID: 5057700991972757809}
+  - component: {fileID: 4700532246190444981}
   m_Layer: 5
   m_Name: ReceiptRow
   m_TagString: Untagged
@@ -332,3 +333,20 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &4700532246190444981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8606941726397078778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36f1c825631dc414281bea5c69bf6113, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReceiptRowUI
+  nameText: {fileID: 0}
+  amountText: {fileID: 0}
+  fixedExpenseColor: {r: 0, g: 0, b: 0, a: 1}
+  positiveColor: {r: 0.12, g: 0.55, b: 0.25, a: 1}
+  negativeColor: {r: 0.85, g: 0.15, b: 0.15, a: 1}
