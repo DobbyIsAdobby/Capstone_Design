@@ -21,6 +21,11 @@ public class ReceiptRowUI : MonoBehaviour
     /// </summary>
     public bool IsConfigured => nameText != null && amountText != null;
 
+    /*
+    function Zone
+    */
+
+
     /// <summary>
     /// Unity UI 툴킷 데이터 바인딩 사용 -> 이름으로 UI 오브젝트를 찾아와 자동 할당 가능.
     /// </summary>
