@@ -33,6 +33,8 @@ public class ShopManager : Singleton<ShopManager>
     /// <param name="itemType"></param>
     public void BuyItem(ShopItemType itemType)
     {
+        if(!GameManager.Instance.CanAct) return;
+
         long cost = 0;
         float stressRelief = 0f;
         string itemName = "";
@@ -71,7 +73,7 @@ public class ShopManager : Singleton<ShopManager>
         }
 
         // 2. 결제 진행 (현금 차감)
-        GameManager.Instance.availableCash -= cost;
+        GameManager.Instance.ApplyCashChange(-cost, $"상점");
 
         // 3. 스트레스 감소 적용(0 밑으로 떨어지지 않도록 Mathf.Max 사용)
         GameManager.Instance.stressLevel = Mathf.Max(0, GameManager.Instance.stressLevel - stressRelief);

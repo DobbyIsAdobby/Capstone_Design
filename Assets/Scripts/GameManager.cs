@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
@@ -35,6 +36,12 @@ public class GameManager : Singleton<GameManager>
     public long monthlySalary = 3000000;
     public long fixedExpense = 1500000; // 고정 지출 (월세, 생활비 등) => 추후 인플레이션에 따른 턴마다 증액 함수 필요.
 
+    [Header("Monthly Receipt")]
+    [SerializeField] private MonthlyReceiptPanel receiptPanel;
+    private readonly List<ReceiptLine> monthlyLines = new List<ReceiptLine>();
+    
+    private bool hasMonthBaseLine;
+
     /*
     function Zone
     */
@@ -56,12 +63,71 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public bool IsSetting{ get; private set; }
     /// <summary>
-    /// 게임 오버 여부에 따라 행동 제약을 걸음.
+    /// 초기 자산 설정이 끝난 후를 월 시작 기준으로, 게임 오버 여부에 따라 행동 제약을 걸음.
     /// </summary>
-    public bool CanAct => !IsGameOver && !IsSetting;
+    public bool CanAct => hasMonthBaseLine && !IsGameOver && !IsSetting;
+    /// <summary>
+    /// 총 자산 확인
+    /// </summary>
+    public long MonthStartTotalAsset { get; private set; }
+
+    private void Start()
+    {
+        BeginMonthRecord();
+    }
 
     /// <summary>
-    /// UI [턴 종료] 버튼에 연결할 함수
+    /// 지난 턴 영수증 내역 초기화 및 총 자산 업데이트를 진행하는 함수
+    /// </summary>
+    private void BeginMonthRecord()
+    {
+        monthlyLines.Clear();
+        MonthStartTotalAsset = TotalAsset;
+        hasMonthBaseLine = true;
+    }
+
+    /// <summary>
+    /// 실제 현금 변경과 해당 내역 기록을 함께 처리. 지불 가능 여부는 호출한 행동에서 먼저 검사 진행.
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <param name="label"></param>
+    /// <param name="type"></param>
+    public void ApplyCashChange(long amount, string label, ReceiptLineType type = ReceiptLineType.Change)
+    {
+        availableCash += amount;
+        RecordMonthlyChange(label, amount, type);
+    }
+
+    /// <summary>
+    /// 평가손익처럼 현금 이동 없이 자산이 변할 때도 사용.
+    /// </summary>
+    /// <param name="label"></param>
+    /// <param name="amount"></param>
+    /// <param name="type"></param>
+    public void RecordMonthlyChange(string label, long amount, ReceiptLineType type = ReceiptLineType.Change)
+    {
+        if(amount == 0 && type == ReceiptLineType.Change)
+        {
+            return;
+        }
+
+        // 동일 내역은 월 합계로 묶기
+        for(int i = 0; i < monthlyLines.Count; i++)
+        {
+            ReceiptLine previous = monthlyLines[i];
+
+            if(previous.Name == label && previous.Type == type)
+            {
+                monthlyLines[i] = new ReceiptLine(label, previous.Amount + amount, type);
+                return;
+            }
+        }
+
+        monthlyLines.Add(new ReceiptLine(label, amount, type));
+    }
+
+    /// <summary>
+    /// UI [턴 종료] 버튼에 연결할 함수 - 게임 루프 변경으로 인한(현재 턴 청구서(영수증) 출력 이후 다음달 이동 가능) 로직 전면 개편. - 청구서 영수증 혼용해서 쓸거같음 코드 볼때 헷갈리지 마세요
     /// </summary>
     public void OnClickNextMonth()
     {
@@ -78,36 +144,62 @@ public class GameManager : Singleton<GameManager>
 
         if(!CanAct) return;
 
+        if(receiptPanel == null || !receiptPanel.IsConfigured)
+        {
+            Debug.LogError("청구서 panel의 Inspector가 연결됐는지 확인하세요.");
+            return;
+        }
+
         IsSetting = true;
 
-        try
+        ProcessMonthlySettlement();
+
+        // 고정지출을 먼저 표시하고 나머지는 기록 순서에 따라 출력
+        List<ReceiptLine> orderedLines = new List<ReceiptLine>();
+
+        foreach(ReceiptLine line in monthlyLines)
         {
-            ProcessMonthlySettlement();
-
-            if(IsGameOver) return;
-
-            // 현재 월 결산 완료 뒤 종료 여부 평가
-            if(currentMonth >= maxMonth)
+            if(line.Type == ReceiptLineType.FixedExpense)
             {
-                TriggerEnding();
-                return;
+                orderedLines.Add(line);
             }
+        }
 
-            // 턴 증가
-            currentMonth++;
-            // 다음 달로 넘어가면 야근 횟수 초기화
-            currentMonthOvertimeCount = 0;
-        }
-        finally
+        foreach(ReceiptLine line in monthlyLines)
         {
-            // 결산 중 return해도 결산 상태 해제와 UI갱신은 반드시 진행됨.
-            IsSetting = false;
-            UpdateUI();
+            if(line.Type != ReceiptLineType.FixedExpense)
+            {
+                orderedLines.Add(line);
+            }
         }
+
+        long totalAfterSettlement = TotalAsset;
+        long assetChange = totalAfterSettlement - MonthStartTotalAsset;
+
+        long recordedChange = 0;
+
+        foreach(ReceiptLine line in orderedLines)
+        {
+            recordedChange += line.Amount;
+        }
+
+        if(recordedChange != assetChange)
+        {
+            Debug.LogWarning($"월별 기록 불일치 : 내역 합계 {recordedChange:N0}원 / " + $"실제 자산 증감 {assetChange:N0}원");
+        }
+
+        MonthlyReceiptData result = new MonthlyReceiptData(orderedLines, assetChange, totalAfterSettlement, IsGameOver, currentMonth >= maxMonth);
+
+        receiptPanel.Show(result, CompleteMonthReceipt);
+        UpdateUI();
+
+        // 현재 함수에서는 IsSetting을 헤제하거나 다음 턴으로 더이상 넘어가지 않음.
     }
 
+    // 수익률을 다시 계산하지 않고 기존 계산 전후 잔고 차이를 기록하도록 수정.
     private void ProcessMonthlySettlement()
     {
+        /*
         // 1. 기본 수입 및 지출 정산
         availableCash += monthlySalary - fixedExpense;
 
@@ -123,7 +215,59 @@ public class GameManager : Singleton<GameManager>
         if(currentMonth < maxMonth)
         {
             EventManager.Instance.CheckMonthlyEvent(currentMonth);
+        }*/
+
+        ApplyCashChange(monthlySalary, "급여");
+
+        ApplyCashChange(-fixedExpense, "생활비", ReceiptLineType.FixedExpense);
+
+        AssetManager assets = AssetManager.Instance;
+
+        long bankBefore = assets.bankBalance;
+        long stockBefore = assets.stockBalance;
+        long leverageBefore = assets.leverageBalance;
+
+        assets.CalculateMonthlyReturns();
+
+        // 기존 CSV/RNG 연산은 그대로 실행
+        RecordMonthlyChange("예금 이자", assets.bankBalance - bankBefore);
+
+        RecordMonthlyChange("주식 평가손익", assets.stockBalance - stockBefore);
+
+        RecordMonthlyChange("레버리지 평가손익", assets.leverageBalance - leverageBefore);
+
+        EventManager.Instance.ResolvePendingPenalty();
+    }
+
+    private void CompleteMonthReceipt()
+    {
+        if(!IsSetting) return;
+
+        if (IsGameOver)
+        {
+            IsSetting = false;
+            UpdateUI();
+            return;
         }
+
+        if(currentMonth >= maxMonth)
+        {
+            TriggerEnding();
+            IsSetting = false;
+            UpdateUI();
+            return;
+        }
+
+        // 기존 규칙은 유지 : 마감한 달의 이벤트를 확인하고 다음 달 납부 대상으로 등록함.
+        EventManager.Instance.CheckMonthlyEvent(currentMonth);
+
+        currentMonth++;
+        currentMonthOvertimeCount = 0;
+
+        BeginMonthRecord();
+
+        IsSetting = false;
+        UpdateUI();
     }
 
     /// <summary>
@@ -162,7 +306,7 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
-        availableCash += 50000;      //탭 1회당 5만 원 추가
+        ApplyCashChange(50000, "야근 수입");      //탭 1회당 5만 원 추가 -> 로직 변경으로 수정
         stressLevel += 5f;           //탭 1회당 스트레스 5% 증가
         currentMonthOvertimeCount++; //탭 1회당 야근 횟수 1회 추가
 
@@ -180,7 +324,7 @@ public class GameManager : Singleton<GameManager>
             if (availableCash >= hospitalBill)
             {
                 // 현금이 충분할 경우 병원비 지불 및 스트레스 완화
-                availableCash -= hospitalBill;
+                ApplyCashChange(-hospitalBill, "병원비");
                 stressLevel = 50f; // 치료를 받았으므로 50%로 완화
                 Debug.Log($"응급실 비용 {hospitalBill:N0}원 지불 완료. 남은 현금: {availableCash:N0}원");
             }

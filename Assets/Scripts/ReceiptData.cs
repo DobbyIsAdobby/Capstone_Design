@@ -26,17 +26,24 @@ public sealed class MonthlyReceiptData
 {
     // 자동 구현 프로퍼티 - { get; } 형태
     public IReadOnlyList<ReceiptLine> Lines { get; }    //각 영수증 줄 마다 리스트로 분리하기 위함.(하나씩 띄우는 연출 목적)
-    public long AssetCange { get; }     // 이번달 수익률(자산변동)
+    public long AssetChange { get; }     // 이번달 수익률(자산변동)
     public long TotalAsset { get; }     // 총 자산
     public bool IsBankrupt { get; }     // 파산 여부 확인
     public bool IsFinalMonth { get; }   // 종료 턴(달) 도달 여부 확인
 
-    // 생성자
+    /// <summary>
+    /// 생성자
+    /// </summary>
+    /// <param name="lines"></param>
+    /// <param name="assetChange"></param>
+    /// <param name="totalAsset"></param>
+    /// <param name="isBankrupt"></param>
+    /// <param name="isFinalMonth"></param>
     public MonthlyReceiptData(List<ReceiptLine> lines, long assetChange, long totalAsset, bool isBankrupt, bool isFinalMonth)
     {
         Lines = new List<ReceiptLine>(lines).AsReadOnly();  // ReadOnly로 리스트 선언
         
-        AssetCange = assetChange;
+        AssetChange = assetChange;
         TotalAsset = totalAsset;
         IsBankrupt = isBankrupt;
         IsFinalMonth = isFinalMonth;
