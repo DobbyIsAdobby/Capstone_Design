@@ -32,6 +32,11 @@ public class GameManager : Singleton<GameManager>
     public int currentMonthOvertimeCount = 0; // 이번 달 야근 횟수
     public readonly int maxOvertimePerMonth = 30; // 한 달 최대 야근 가능 횟수(불변성 적용)
 
+    [Header("Stress")]
+    [SerializeField, Min(1)]
+    private float baseMaxStress = 100f;
+    public float MaxStress => baseMaxStress + (ShopManager.Instance != null ? ShopManager.Instance.MaxStressBonus : 0f);
+
     [Header("Income & Expense")]
     public long monthlySalary = 3000000;
     public long fixedExpense = 1500000; // 고정 지출 (월세, 생활비 등) => 추후 인플레이션에 따른 턴마다 증액 함수 필요.
@@ -229,12 +234,23 @@ public class GameManager : Singleton<GameManager>
 
         assets.CalculateMonthlyReturns();
 
-        // 기존 CSV/RNG 연산은 그대로 실행
-        RecordMonthlyChange("예금 이자", assets.bankBalance - bankBefore);
+        long bankProfit = assets.bankBalance - bankBefore;
+        long stockProfit = assets.stockBalance - stockBefore;
+        long leverageProfit = assets.leverageBalance - leverageBefore;
 
-        RecordMonthlyChange("주식 평가손익", assets.stockBalance - stockBefore);
+        RecordMonthlyChange("예금 이자", bankProfit);
+        RecordMonthlyChange("주식 평가손익", stockProfit);
+        RecordMonthlyChange("레버리지 평가손익", leverageProfit);
 
-        RecordMonthlyChange("레버리지 평가손익", assets.leverageBalance - leverageBefore);
+        if (ShopManager.Instance != null)
+        {
+            ShopManager.Instance.ProcessMonthlySettlement(
+                currentMonth,
+                stockProfit + leverageProfit);
+        }
+
+        if (IsGameOver)
+            return;
 
         EventManager.Instance.ResolvePendingPenalty();
     }
@@ -316,7 +332,7 @@ public class GameManager : Singleton<GameManager>
 
     private void CheckStressPenalty()
     {
-        if (stressLevel >= 100f)
+        if (stressLevel >= MaxStress)
         {
             long hospitalBill = 3000000; // 병원비 300만 원
             Debug.LogWarning("Stress Gauge is 100%. Penalty Active.");
