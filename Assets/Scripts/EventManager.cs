@@ -61,31 +61,35 @@ public class EventManager : Singleton<EventManager>
     }
 
     /// <summary>
-    /// 다음 턴 결산 시 호출되어, 실제로 돈을 차감하고 파산 여부를 묻는 함수
+    /// 다음 턴 결산 시 호출되어, 실제로 돈을 차감하고 파산 여부를 묻는 함수 - 해당 파트도 청구서 추가로 인한 수정
     /// </summary>
     public void ResolvePendingPenalty()
     {
-        if(pendingPenaltyAmount > 0)
+        if(pendingPenaltyAmount <= 0) return;
+
+        GameManager game = GameManager.Instance;
+
+        // 처리 후 원본 값이 초기화되니 먼저 보관.
+        string eventName = pendingEventName;
+        long amount = pendingPenaltyAmount;
+
+        if(game.availableCash >= amount)
         {
-            Debug.LogWarning($"[납부 기한 도달] '{pendingEventName}' 청구액 {pendingPenaltyAmount:N0}원이 차감됩니다.");
+            game.ApplyCashChange(-amount, $"이벤트");
 
-            if(GameManager.Instance.availableCash >= pendingPenaltyAmount)
-            {
-                //현금이 납부 금액보다 많아 이벤트 방어 성공
-                GameManager.Instance.availableCash -= pendingPenaltyAmount;
-                Debug.Log($"납부 성공. 남은 현금 {GameManager.Instance.availableCash:N0}원.");
-            }
-            else
-            {
-                //납부 금액이 현금보다 많아 이벤트 방어 실패
-                long shortage = pendingPenaltyAmount - GameManager.Instance.availableCash;
-                Debug.LogError($"보유 현금이 {shortage:N0}원 부족하여 이벤트 납부를 하지 못했습니다.");
-                GameManager.Instance.TriggerBankruptcy(pendingEventName);
-            }
-
-            // 납부가 끝났으므로 청구서 초기화
-            pendingPenaltyAmount = 0;
-            pendingEventName = "";
+            Debug.Log($"납부 완료 : {amount:N0}원");
         }
+        else
+        {
+            // 현금 차감과 청구서 기록 없이 파산 처리
+            long cash = game.availableCash;
+            long shortage = amount - cash;
+
+            game.TriggerBankruptcy($"{eventName}\n" + $"필요 금액 : {amount:N0}원\n" + $"보유 현금 : {cash:N0}원\n" + $"부족 금액 : {shortage:N0}원");
+        }
+
+        // 납부가 끝났으므로 청구서 초기화
+        pendingPenaltyAmount = 0;
+        pendingEventName = "";
     }
 }

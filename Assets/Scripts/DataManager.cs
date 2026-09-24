@@ -20,6 +20,13 @@ public class DataManager : Singleton<DataManager>
     Inspector Zone
     */
     //public static DataManager Instance;
+
+    [Header("Shop Data")]
+    [SerializeField] private TextAsset shopItemsJson;
+
+    private readonly Dictionary<string, ShopItemData> shopTable = new Dictionary<string, ShopItemData>(StringComparer.Ordinal);
+    public IReadOnlyList<ShopItemData> ShopItems { get; private set; } = Array.Empty<ShopItemData>();
+
     [Header("Market Data")]
     [SerializeField] private TextAsset nasdaqCSV;
     [Tooltip("현재는 미연결 허용. 연결 시 주식과 동일한 턴/월 구간(횟수)여야만 함.")]
@@ -45,11 +52,13 @@ public class DataManager : Singleton<DataManager>
     // 연결한 선택 파일의 load 성공 여부
     // 모든 테이블의 존재를 의미하진 않음.
     public bool IsLoaded { get; private set; }
+    public bool IsShopLoaded { get; private set; }
     public string LoadError { get; private set; } = "아직 초기화하지 않음.";
 
     protected override void OnSingletonAwake()
     {
         LoadAllData();
+        LoadShopData();
     }
 
     // 시작 시 한번 호출. 런타임 리로드는 현재 지원 X
@@ -96,6 +105,36 @@ public class DataManager : Singleton<DataManager>
         }
     }
 
+    private void LoadShopData()
+    {
+        IsShopLoaded = false;
+        shopTable.Clear();
+        ShopItems = Array.Empty<ShopItemData>();
+
+        try
+        {
+            if(shopItemsJson == null)
+            {
+                throw new FormatException("DataManager의 Shop Items Json을 연결하세요.");
+            }
+            
+            List<ShopItemData> loaded = ShopJsonParser.Parse(shopItemsJson.text);
+
+            foreach(ShopItemData item in loaded)
+                shopTable.Add(item.Id, item);
+            
+            ShopItems = loaded.AsReadOnly();
+            IsShopLoaded = true;
+
+            Debug.Log($"상점 JSON : {loaded.Count}개 load Completed.", this);
+        }
+        catch(FormatException exception)
+        {
+            shopTable.Clear();
+            Debug.LogError(exception.Message, this);
+        }
+    }
+
     private static IReadOnlyDictionary<int, MarketData> LoadMarketTable(TextAsset csv, MarketType type)
     {
         Dictionary<int, MarketData> parsed = MarketCSVParser.Parse(csv.text, $"{type} ({csv.name})");
@@ -128,5 +167,13 @@ public class DataManager : Singleton<DataManager>
     {
         data = default;
         return TryGetMarketTable(type, out var table) && table.TryGetValue(turn, out data);
+    }
+
+    // 상점 아이템을 조회하는 함수
+    public bool TryGetShopItem(string id, out ShopItemData item)
+    {
+        item = null;
+
+        return IsShopLoaded && !string.IsNullOrEmpty(id) && shopTable.TryGetValue(id, out item);
     }
 }

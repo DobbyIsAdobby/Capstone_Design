@@ -52,7 +52,7 @@ public class UIManager : Singleton<UIManager>
         monthText.text = $"{GameManager.Instance.currentMonth} / {GameManager.Instance.maxMonth} 턴";
         totalAssetText.text = $"총 자산 : {GameManager.Instance.TotalAsset:N0} 원";
         cashText.text = $"보유 현금 : {GameManager.Instance.availableCash:N0} 원";
-        stressText.text = $"{GameManager.Instance.stressLevel} %";
+        stressText.text = $"{GameManager.Instance.stressLevel / GameManager.Instance.MaxStress * 100f:0.#}%";
         overtimeCountText.text = $"{GameManager.Instance.currentMonthOvertimeCount} / {GameManager.Instance.maxOvertimePerMonth} 회";
 
         // 2. 투자 자산 갱신
