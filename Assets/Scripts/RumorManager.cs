@@ -45,7 +45,7 @@ public class RumorManager : Singleton<RumorManager>
         }
 
         //2. 비용 지불
-        GameManager.Instance.availableCash -= rumorCost;
+        GameManager.Instance.ApplyCashChange(-rumorCost, "정보 구매");
 
         //3. 확률에 따른 진위 여부 판별
         RumorType resultType = (Random.value <= trueRumorProbability) ? RumorType.True : RumorType.Fake;
