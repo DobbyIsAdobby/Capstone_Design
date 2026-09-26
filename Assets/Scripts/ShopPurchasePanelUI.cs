@@ -151,7 +151,7 @@ public class ShopPurchasePanelUI : MonoBehaviour
         long monthly = shop.GetMonthlyPayment(item, selectedMonths);
         long last = shop.GetLastPayment(item, selectedMonths);
 
-        paymentScheduleText.text = $"다음 달 마감부터 {selectedMonths}회 납부\n" + $"회당 {monthly:N0}원";
+        paymentScheduleText.text = $"이번 달 마감부터 {selectedMonths}회 납부\n" + $"회당 {monthly:N0}원";
 
         if (last != monthly)
             paymentScheduleText.text += $"\n마지막 회차 {last:N0}원";

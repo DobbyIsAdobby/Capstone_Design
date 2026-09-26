@@ -20,6 +20,7 @@ public class MonthlyReceiptPanel : MonoBehaviour
     [SerializeField] private GameObject summaryRoot;
     [SerializeField] private TMP_Text assetChangeText;
     [SerializeField] private TMP_Text totalAssetText;
+    [SerializeField] private TMP_Text totalAssetLabelText;  // 총자산 또는 미납금액 문구를 표시할 텍스트
 
     [Header("Continue")]
     [SerializeField] private Button continueButton;
@@ -46,6 +47,7 @@ public class MonthlyReceiptPanel : MonoBehaviour
         summaryRoot != null &&
         assetChangeText != null &&
         totalAssetText != null &&
+        totalAssetLabelText != null &&
         continueButton != null &&
         continueButtonText != null;
 
@@ -115,7 +117,19 @@ public class MonthlyReceiptPanel : MonoBehaviour
 
         assetChangeText.color = data.AssetChange > 0 ? positiveColor : data.AssetChange < 0 ? negativeColor : Color.black;
 
-        totalAssetText.text = $"{data.TotalAsset:N0}원";
+        //totalAssetText.text = $"{data.TotalAsset:N0}원";
+        if (data.IsBankrupt)
+        {
+            totalAssetLabelText.text = "미납금액";
+            totalAssetText.text = $"{data.UnpaidAmount:N0}원";
+            totalAssetText.color = negativeColor;
+        }
+        else
+        {
+            totalAssetLabelText.text = "총자산";
+            totalAssetText.text = $"{data.TotalAsset:N0}원";
+            totalAssetText.color = Color.black;
+        }
 
         summaryRoot.SetActive(true);
 

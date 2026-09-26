@@ -64,6 +64,22 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public bool IsGameOver{ get; private set; }
     /// <summary>
+    /// 파산 여부. 일반적 게임 종료와 구분
+    /// </summary>
+    public bool IsBankrupt { get; private set;}
+    /// <summary>
+    /// 결과창에서 사용할 파산 사유
+    /// </summary>
+    public string BankruptcyCause { get; private set; } = "";
+    /// <summary>
+    /// 미납금액은 마이너스된 현금을 양수로 표시한 값
+    /// </summary>
+    public long UnpaidAmount => availableCash < 0 ? -availableCash : 0;
+    /// <summary>
+    /// 정산 중 처음으로 현금 부족을 발생시킨 지출.
+    /// </summary>
+    private string pendingBankruptcyCause = "";
+    /// <summary>
     /// 세팅을 진행해도 되는지 확인. 기본값 : false
     /// </summary>
     public bool IsSetting{ get; private set; }
@@ -101,6 +117,42 @@ public class GameManager : Singleton<GameManager>
     {
         availableCash += amount;
         RecordMonthlyChange(label, amount, type);
+    }
+
+    /// <summary>
+    /// 생활비, 할부금, 유지비, 이벤트, 병원비용 잔액 검증 함수
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <param name="label"></param>
+    /// <param name="type"></param>
+    public void ApplyMandatoryExpense(long amount, string label, ReceiptLineType type = ReceiptLineType.Change)
+    {
+        if (amount <= 0)
+            return;
+
+        // 잔액이 부족해도 비용 전액 차감 및 청구서 기록.
+        ApplyCashChange(-amount, label, type);
+
+        // 여기서는 파산을 확정하지 않고 원인만 보관.
+        if (availableCash < 0 &&
+            string.IsNullOrEmpty(pendingBankruptcyCause))
+        {
+            pendingBankruptcyCause = label;
+        }
+    }
+
+    // 정산이 끝난 뒤 파산 확인용 함수
+    private void ResolveBankruptcyAfterSettlement()
+    {
+        if (availableCash >= 0)
+        {
+            pendingBankruptcyCause = "";
+            return;
+        }
+
+        string cause = string.IsNullOrEmpty(pendingBankruptcyCause) ? "필수 지출 정산" : pendingBankruptcyCause;
+
+        TriggerBankruptcy(cause);
     }
 
     /// <summary>
@@ -193,7 +245,7 @@ public class GameManager : Singleton<GameManager>
             Debug.LogWarning($"월별 기록 불일치 : 내역 합계 {recordedChange:N0}원 / " + $"실제 자산 증감 {assetChange:N0}원");
         }
 
-        MonthlyReceiptData result = new MonthlyReceiptData(orderedLines, assetChange, totalAfterSettlement, IsGameOver, currentMonth >= maxMonth);
+        MonthlyReceiptData result = new MonthlyReceiptData(orderedLines, assetChange, totalAfterSettlement, UnpaidAmount, IsBankrupt, currentMonth >= maxMonth);
 
         receiptPanel.Show(result, CompleteMonthReceipt);
         UpdateUI();
@@ -222,10 +274,12 @@ public class GameManager : Singleton<GameManager>
             EventManager.Instance.CheckMonthlyEvent(currentMonth);
         }*/
 
+        pendingBankruptcyCause = "";
+
+        // 급여 지급
         ApplyCashChange(monthlySalary, "급여");
 
-        ApplyCashChange(-fixedExpense, "생활비", ReceiptLineType.FixedExpense);
-
+        // 자산 수익률 계산
         AssetManager assets = AssetManager.Instance;
 
         long bankBefore = assets.bankBalance;
@@ -242,17 +296,20 @@ public class GameManager : Singleton<GameManager>
         RecordMonthlyChange("주식 평가손익", stockProfit);
         RecordMonthlyChange("레버리지 평가손익", leverageProfit);
 
+        // 생활비
+        ApplyMandatoryExpense(fixedExpense, "생활비", ReceiptLineType.FixedExpense);
+
+        // 상점 보유 효과, 할부금, 유지비
         if (ShopManager.Instance != null)
         {
-            ShopManager.Instance.ProcessMonthlySettlement(
-                currentMonth,
-                stockProfit + leverageProfit);
+            ShopManager.Instance.ProcessMonthlySettlement(currentMonth, stockProfit + leverageProfit);
         }
 
-        if (IsGameOver)
-            return;
-
+        // 이번 달 납부 대상 이벤트
         EventManager.Instance.ResolvePendingPenalty();
+
+        // 모든 정산을 반영한 뒤 파산 판정
+        ResolveBankruptcyAfterSettlement();
     }
 
     private void CompleteMonthReceipt()
@@ -292,17 +349,14 @@ public class GameManager : Singleton<GameManager>
     /// <param name="cause"></param>
     public void TriggerBankruptcy(string cause)
     {
-        if(IsGameOver) return;
+        if (IsGameOver)
+            return;
 
+        IsBankrupt = true;
         IsGameOver = true;
+        BankruptcyCause = cause;
 
-        Debug.LogError("파산하셨습니다.");
-        Debug.LogError($"파산 사유 : {cause}");
-
-        //추가 조작을 막기 위해 턴을 강제로 maxMonth이상으로 올리고 추후 UI 팝업을 띄울 예정 - 더이상 사용하지 않음.
-        //currentMonth = maxMonth + 1;
-
-        //UIManager.Instance.ShowGameOverPanel(cause);
+        Debug.Log($"파산 사유: {BankruptcyCause}\n" + $"정산 후 현금: {availableCash:N0}원\n" + $"미납금액: {UnpaidAmount:N0}원\n" + $"총자산: {TotalAsset:N0}원");
 
         UpdateUI();
     }
@@ -332,27 +386,20 @@ public class GameManager : Singleton<GameManager>
 
     private void CheckStressPenalty()
     {
-        if (stressLevel >= MaxStress)
-        {
-            long hospitalBill = 3000000; // 병원비 300만 원
-            Debug.LogWarning("Stress Gauge is 100%. Penalty Active.");
+        if (stressLevel < MaxStress)
+            return;
 
-            if (availableCash >= hospitalBill)
-            {
-                // 현금이 충분할 경우 병원비 지불 및 스트레스 완화
-                ApplyCashChange(-hospitalBill, "병원비");
-                stressLevel = 50f; // 치료를 받았으므로 50%로 완화
-                Debug.Log($"응급실 비용 {hospitalBill:N0}원 지불 완료. 남은 현금: {availableCash:N0}원");
-            }
-            else
-            {
-                // 현금이 부족한 경우 파산(게임 오버) 처리
-                long shortage = hospitalBill - availableCash;
-                Debug.LogError($"병원비가 {shortage:N0}원 부족하여 파산했습니다.");
-                
-                // TriggerBankruptcy를 호출하여 파산 사유 전달
-                TriggerBankruptcy("응급실 병원비 미납");
-            }
+        pendingBankruptcyCause = "";
+
+        ApplyMandatoryExpense(3000000, "병원비", ReceiptLineType.Change);
+
+        ResolveBankruptcyAfterSettlement();
+
+        if (!IsGameOver)
+        {
+            stressLevel = 50f;
+
+            Debug.Log($"병원비 납부 완료. 남은 현금: {availableCash:N0}원");
         }
     }
 

@@ -65,31 +65,19 @@ public class EventManager : Singleton<EventManager>
     /// </summary>
     public void ResolvePendingPenalty()
     {
-        if(pendingPenaltyAmount <= 0) return;
+        // 처리할 이벤트 비용이 없으면 종료.
+        if (pendingPenaltyAmount <= 0)
+            return;
 
-        GameManager game = GameManager.Instance;
-
-        // 처리 후 원본 값이 초기화되니 먼저 보관.
+        // 초기화하기 전에 이번에 처리할 내용을 복사.
         string eventName = pendingEventName;
         long amount = pendingPenaltyAmount;
 
-        if(game.availableCash >= amount)
-        {
-            game.ApplyCashChange(-amount, $"이벤트");
-
-            Debug.Log($"납부 완료 : {amount:N0}원");
-        }
-        else
-        {
-            // 현금 차감과 청구서 기록 없이 파산 처리
-            long cash = game.availableCash;
-            long shortage = amount - cash;
-
-            game.TriggerBankruptcy($"{eventName}\n" + $"필요 금액 : {amount:N0}원\n" + $"보유 현금 : {cash:N0}원\n" + $"부족 금액 : {shortage:N0}원");
-        }
-
-        // 납부가 끝났으므로 청구서 초기화
+        // 대기 중인 이벤트 청구를 초기화.
         pendingPenaltyAmount = 0;
         pendingEventName = "";
+
+        // 복사한 값으로 실제 차감 및 청구서 기록.
+        GameManager.Instance.ApplyMandatoryExpense(amount, $"이벤트: {eventName}", ReceiptLineType.Change);
     }
 }

@@ -59,11 +59,6 @@ public class ShopManager : Singleton<ShopManager>
     [SerializeField, Range(1,12)]
     private int maxInstallmentMonths = 12;
 
-    [Header("유지비")]
-    [Tooltip("1 : 구매 다음 달 부터 / 0 : 구매한 달부터")]
-    [SerializeField, Min(0)]
-    private int maintenanceStartDelay = 1;
-
     [Header("paymentRules")]
     [SerializeField]
     private List<PaymentRule> paymentRules = new List<PaymentRule>
@@ -222,13 +217,16 @@ public class ShopManager : Singleton<ShopManager>
                 PurchaseTurn = game.currentMonth,
 
                 MonthlyMaintenance = monthlyMaintenance,
-                MaintenanceStartTurn =
-                    game.currentMonth + Mathf.Max(0, maintenanceStartDelay),
+
+                // 유지비는 다음 달부터.
+                MaintenanceStartTurn = game.currentMonth + 1,
 
                 RemainingDebt = months > 0 ? item.Price : 0,
                 MonthlyPayment = months > 0 ? item.Price / months : 0,
                 RemainingPayments = months,
-                NextPaymentTurn = game.currentMonth + 1
+
+                // 첫 할부금은 구매한 달 마감에 납부
+                NextPaymentTurn = game.currentMonth
             });
         }
 
@@ -239,7 +237,7 @@ public class ShopManager : Singleton<ShopManager>
         // AP는 추후 AP 시스템에서 적용 계획 - 현재 미구현 상태
         message = months == 0
             ? $"{item.DisplayName} 구매 완료."
-            : $"{item.DisplayName} 구매 완료.\n다음 달부터 {months}회 납부합니다.";
+            : $"{item.DisplayName} 구매 완료.\n이번 달부터 {months}회 납부합니다.";
 
         if (UIManager.Instance != null)
             UIManager.Instance.RefreshUI();
@@ -263,11 +261,17 @@ public class ShopManager : Singleton<ShopManager>
 
         foreach (OwnedItem owned in ownedItems)
         {
-            if (turn <= owned.PurchaseTurn)
-                continue;
+            // 투자 보너스: 구매한 턴부터 적용
+            if (turn >= owned.PurchaseTurn)
+            {
+                bonusRate += owned.Data.InvestmentBonusRate;
+            }
 
-            bonusRate += owned.Data.InvestmentBonusRate;
-            fatigueChange += owned.Data.MonthlyFatigueChange;
+            // 매월 피로도 회복: 기존 규칙인 구매 다음 턴부터 유지
+            if (turn > owned.PurchaseTurn)
+            {
+                fatigueChange += owned.Data.MonthlyFatigueChange;
+            }
         }
 
         // 기존 규칙: 주식+레버리지 합산 평가이익이 양수일 때 현금 보너스. - 이를 자산 각각으로 나눌지, 통합으로 할지는 아직 결정안됨.
@@ -290,9 +294,10 @@ public class ShopManager : Singleton<ShopManager>
                     ? owned.RemainingDebt
                     : owned.MonthlyPayment;
 
-                if (!TryPay(
-                    game, payment, $"{owned.Data.DisplayName} 할부금"))
-                    return;
+                game.ApplyMandatoryExpense(
+                    payment,
+                    $"{owned.Data.DisplayName} 할부금",
+                    ReceiptLineType.FixedExpense);
 
                 owned.RemainingDebt -= payment;
                 owned.RemainingPayments--;
@@ -302,15 +307,15 @@ public class ShopManager : Singleton<ShopManager>
             if (turn >= owned.MaintenanceStartTurn &&
                 owned.MonthlyMaintenance > 0)
             {
-                if (!TryPay(
-                    game,
+                game.ApplyMandatoryExpense(
                     owned.MonthlyMaintenance,
-                    $"{owned.Data.DisplayName} 유지비"))
-                    return;
+                    $"{owned.Data.DisplayName} 유지비",
+                    ReceiptLineType.FixedExpense);
             }
         }
     }
 
+    /* - 더 이상 사용하지 않음.
     private bool TryPay(GameManager game, long amount, string label)
     {
         if (game.availableCash < amount)
@@ -326,6 +331,7 @@ public class ShopManager : Singleton<ShopManager>
 
         return true;
     }
+    */
 
     // 구매할 때 수치를 누적해서 변경하지 않고 보유 상품에서 계산.
     // 패널을 다시 열어도 최대치가 중복 증가하지 않음.
