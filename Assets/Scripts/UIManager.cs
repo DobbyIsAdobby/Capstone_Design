@@ -26,6 +26,9 @@ public class UIManager : Singleton<UIManager>
     [Header("Trade Panels")]
     [SerializeField] private AssetTradePanel[] tradePanels;
 
+    [Header("Asset_Navigation Panel")]
+    [SerializeField] private AssetNavigationPanel assetNavigationPanel;
+
     /*
     function Zone
     */
@@ -48,20 +51,40 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void RefreshUI()
     {
+        float stressGauge = GameManager.Instance.stressLevel / GameManager.Instance.MaxStress * 100f;
         // 1. 메인 상태바 갱신
-        monthText.text = $"{GameManager.Instance.currentMonth} / {GameManager.Instance.maxMonth} 턴";
+        monthText.text = $"{GameManager.Instance.currentMonth}/{GameManager.Instance.maxMonth}턴";
         totalAssetText.text = $"총 자산 : {GameManager.Instance.TotalAsset:N0} 원";
         cashText.text = $"보유 현금 : {GameManager.Instance.availableCash:N0} 원";
-        stressText.text = $"{GameManager.Instance.stressLevel / GameManager.Instance.MaxStress * 100f:0.#}%";
+        stressText.text = $"{stressGauge:0.#}%";
+        stressText.color = stressGauge < 50f ? Color.black : (stressGauge < 75) ? Color.orange : Color.red;
+        
         overtimeCountText.text = $"{GameManager.Instance.currentMonthOvertimeCount} / {GameManager.Instance.maxOvertimePerMonth} 회";
 
-        // 2. 투자 자산 갱신
-        if(AssetManager.Instance != null)
+        // 2. 투자 자산 갱신 -- 투자 자산군 추가로 인한 로직 수정
+        AssetManager assets = AssetManager.Instance;
+
+        if (assets != null)
+        {
+            // 주식과 주식 인버스 자산 합산
+            long stockGroupBalance = assets.stockBalance + assets.stockInverseBalance;
+
+            // 레버리지와 레버리지 인버스 자산 합산
+            long leverageGroupBalance = assets.leverageBalance + assets.leverageInverseBalance;
+
+            bankBalanceText.text = $"예금 : {assets.bankBalance:N0}원";
+
+            stockBalanceText.text = $"주식 합계 : {stockGroupBalance:N0}원";
+
+            leverageBalanceText.text = $"레버리지 합계 : {leverageGroupBalance:N0}원";
+        }
+        /*if(AssetManager.Instance != null)
         {
             bankBalanceText.text = $"은행 자산 : {AssetManager.Instance.bankBalance:N0} 원";
             stockBalanceText.text = $"주식 자산 : {AssetManager.Instance.stockBalance:N0} 원";
             leverageBalanceText.text = $"레버리지 자산 : {AssetManager.Instance.leverageBalance:N0} 원";
-        }
+        }*/
+
 
         // 3. 생애 주기 이벤트 경고 갱신
         // EventManager가 활성화 되어있고, 유예된 금액이 0원 이상일 경우
@@ -81,6 +104,12 @@ public class UIManager : Singleton<UIManager>
             {
                 panel.Refresh();
             }
+        }
+
+        // 자산 관리소 패널 내 자산 내역 갱신
+        if(assetNavigationPanel != null && assetNavigationPanel.isActiveAndEnabled)
+        {
+            assetNavigationPanel.Refresh();
         }
     }
 }

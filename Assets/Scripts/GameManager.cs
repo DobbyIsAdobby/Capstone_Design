@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,7 +11,8 @@ public class GameManager : Singleton<GameManager>
 
     [Header("Game Time")]
     public int currentMonth = 1;
-    public int maxMonth = 120; // 총 10년 (120턴)
+    // Inspector에 기존 값이 남을 수 있으므로 Start에서도 60으로 맞춰줘야함.
+    public int maxMonth = MarketModelConfig.TurnCount;
 
     [Header("Player Status")]
     public long availableCash = 5000000; // 초기 자본금 500만 원
@@ -46,6 +48,10 @@ public class GameManager : Singleton<GameManager>
     private readonly List<ReceiptLine> monthlyLines = new List<ReceiptLine>();
     
     private bool hasMonthBaseLine;
+
+    [Header("Market Generation")]
+    [SerializeField] private MarketGenerator marketGenerator;
+
 
     /*
     function Zone
@@ -84,17 +90,58 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public bool IsSetting{ get; private set; }
     /// <summary>
-    /// 초기 자산 설정이 끝난 후를 월 시작 기준으로, 게임 오버 여부에 따라 행동 제약을 걸음.
+    /// 시장과 월 기록이 준비됐고, 정산,게임 종료 상태가 아닐 때만 행동
     /// </summary>
-    public bool CanAct => hasMonthBaseLine && !IsGameOver && !IsSetting;
+    public bool CanAct => hasMonthBaseLine && !IsGameOver && !IsSetting && DataManager.Instance != null && DataManager.Instance.IsMarketReady;
     /// <summary>
     /// 총 자산 확인
     /// </summary>
     public long MonthStartTotalAsset { get; private set; }
 
+    /*
     private void Start()
     {
         BeginMonthRecord();
+    }
+    */
+
+    /// <summary>
+    /// 시장 생성이 완료될 때까지 기다린 뒤 플레이를 시작함. 
+    /// IEnumerator Start는 유니티가 코루틴으로 실행함.
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator Start()
+    {
+        // 아직 플레이를 시작하지 않았으므로 행동할 수 없음
+        hasMonthBaseLine = false;
+
+        // Inspector에 60으로 재조정할 것.
+        maxMonth = MarketModelConfig.TurnCount;
+
+        if (marketGenerator == null || !marketGenerator.isActiveAndEnabled)
+        {
+            Debug.LogError("활성화된 MarketGenerator를 GameManager에 연결하세요.");
+
+            yield break;
+        }
+
+        marketGenerator.Begin();
+
+        // 다음 프레임으로 제어를 넘기면서 생성 완료 여부 대기
+        // 이 동안 MarketGenerator.Update가 생성 작업을 진행함
+        while (!marketGenerator.IsFinished)
+            yield return null;
+
+        if (!marketGenerator.Succeeded)
+        {
+            Debug.LogError($"시장 생성 실패로 게임을 시작할 수 없습니다: " + marketGenerator.Error);
+
+            yield break;
+        }
+
+        // 시작 자산 기준을 기록하고 이제부터 행동할 수 있음.
+        BeginMonthRecord();
+        UpdateUI();
     }
 
     /// <summary>
@@ -207,6 +254,14 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
+        // 현금이나 자산을 변경하기 전에 이번 턴 데이터 존재 여부를 확인함
+        // 급여부터 반영한 뒤 데이터 누락을 발견하는 상황을 방지하고자 함. 
+        // out _ => out 파라미터 값을 무시하고 결과 여부만 확인하고자 함
+        if(!DataManager.Instance.TryGetGeneratedMarketRates(currentMonth, out _))
+        {
+            Debug.LogError($"{currentMonth}턴 시장 데이터가 없어 정산을 중단합니다.");
+        }
+
         IsSetting = true;
 
         ProcessMonthlySettlement();
@@ -285,19 +340,29 @@ public class GameManager : Singleton<GameManager>
         long bankBefore = assets.bankBalance;
         long stockBefore = assets.stockBalance;
         long leverageBefore = assets.leverageBalance;
+        long stockInverseBefore = assets.stockInverseBalance;
+        long leverageInverseBefore = assets.leverageInverseBalance;
 
         assets.CalculateMonthlyReturns();
 
         long bankProfit = assets.bankBalance - bankBefore;
         long stockProfit = assets.stockBalance - stockBefore;
         long leverageProfit = assets.leverageBalance - leverageBefore;
+        long stockInverseProfit = assets.stockInverseBalance - stockInverseBefore;
+        long leverageInverseProfit = assets.leverageInverseBalance - leverageInverseBefore;
 
         RecordMonthlyChange("예금 이자", bankProfit);
-        RecordMonthlyChange("주식 평가손익", stockProfit);
-        RecordMonthlyChange("레버리지 평가손익", leverageProfit);
+        RecordMonthlyChange("주식 손익", stockProfit);
+        RecordMonthlyChange("레버리지 손익", leverageProfit);
+        // 청구서의 긴 라벨 문제를 피하도록 짧게 표기합니다.
+        RecordMonthlyChange("주식 인버스", stockInverseProfit);
+        RecordMonthlyChange("레버리지 인버스", leverageInverseProfit);
 
         // 생활비
         ApplyMandatoryExpense(fixedExpense, "생활비", ReceiptLineType.FixedExpense);
+
+        //전체 자산 상품 이익(노트북 보너스 계산용)
+        long marketProfit = stockProfit + leverageProfit + stockInverseProfit + leverageInverseProfit;
 
         // 상점 보유 효과, 할부금, 유지비
         if (ShopManager.Instance != null)
