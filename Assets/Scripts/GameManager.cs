@@ -152,6 +152,12 @@ public class GameManager : Singleton<GameManager>
         monthlyLines.Clear();
         MonthStartTotalAsset = TotalAsset;
         hasMonthBaseLine = true;
+
+        // 새로운 턴마다 이전 정보를 초기화하고, 휴대폰을 갖고있으면 하급 정보를 미리 공개.
+        if(RumorManager.Instance != null)
+        {
+            RumorManager.Instance.BeginTurn();
+        }
     }
 
     /// <summary>

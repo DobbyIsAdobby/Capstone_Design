@@ -54,35 +54,35 @@ public sealed class InformationItemData
         LookaheadTurns = lookaheadTurns;
         FreeWithItem = freeWithItem;
     }
+}
+
+/// <summary>
+/// 이번 턴에 공개된 정보. 
+/// 패널을 다시 열 때 이 결과를 그대로 표시함.
+/// </summary>
+public sealed class InformationReveal
+{
+    // 자동 생성 프로퍼티 - { get; } 사용
+    public int TargetTurn { get; }
+    public AssetType Asset { get; }
+    public InformationDirection Direction { get; }
+    public string Body { get; }     // 각 정보에 들어갈 대화 스크립트
+    public bool IsFree { get; }     // 휴대폰 보유 여부 - 보유 시 무료
 
     /// <summary>
-    /// 이번 턴에 공개된 정보. 
-    /// 패널을 다시 열 때 이 결과를 그대로 표시함.
+    /// 생성자
     /// </summary>
-    public sealed class InformationReveal
+    /// <param name="targetTurn"></param>
+    /// <param name="asset"></param>
+    /// <param name="direction"></param>
+    /// <param name="body"></param>
+    /// <param name="isFree"></param>
+    public InformationReveal(int targetTurn, AssetType asset, InformationDirection direction, string body, bool isFree)
     {
-        // 자동 생성 프로퍼티 - { get; } 사용
-        public int TargetTurn { get; }
-        public AssetType Asset { get; }
-        public InformationDirection Direction { get; }
-        public string Body { get; }     // 각 정보에 들어갈 대화 스크립트
-        public bool IsFree { get; }     // 휴대폰 보유 여부 - 보유 시 무료
-
-        /// <summary>
-        /// 생성자
-        /// </summary>
-        /// <param name="targetTurn"></param>
-        /// <param name="asset"></param>
-        /// <param name="direction"></param>
-        /// <param name="body"></param>
-        /// <param name="isFree"></param>
-        public InformationReveal(int targetTurn, AssetType asset, InformationDirection direction, string body, bool isFree)
-        {
-            TargetTurn = targetTurn;
-            Asset = asset;
-            Direction = direction;
-            Body = body;
-            IsFree = isFree;
-        }
+        TargetTurn = targetTurn;
+        Asset = asset;
+        Direction = direction;
+        Body = body;
+        IsFree = isFree;
     }
 }

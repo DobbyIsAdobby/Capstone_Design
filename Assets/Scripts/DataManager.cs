@@ -32,6 +32,12 @@ public class DataManager : Singleton<DataManager>
 
     private Dictionary<InformationGrade, InformationItemData> informationTable = new Dictionary<InformationGrade, InformationItemData>();
 
+    [Header("Information Dialogue")]
+    [SerializeField] private TextAsset marketDialogueCsv;
+
+    // 상승/하락별 읽기 전용 스크립트 목록
+    private Dictionary<InformationDirection, IReadOnlyList<string>> marketDialogues = new Dictionary<InformationDirection, IReadOnlyList<string>>();
+
     // 수익률 자동 생성 ONNX 모델 적용으로 인해 더 이상 Market Data 인스펙터는 사용하지 않음
     /*
     [Header("Market Data")]
@@ -208,23 +214,28 @@ public class DataManager : Singleton<DataManager>
     }
 
     /// <summary>
-    /// 정보 상품의 가격/정확도 설정을 읽어옴
+    /// 정보 상품의 가격/정확도 설정과 대사 CSV가 모두 준비되어야 정보 구매가 가능함.
     /// </summary>
     private void LoadInformationData()
     {
         IsInformationLoaded = false;
         informationTable.Clear();
+        marketDialogues.Clear();
 
         try
         {
             if (informationItemsJson == null)
                 throw new FormatException("Information Items Json을 연결하세요.");
+            if (marketDialogueCsv == null)
+                throw new FormatException("Market Dialogue Csv를 연결하세요.");
 
             // 검증이 끝난 테이블만 등록함
             informationTable = InformationJsonParser.Parse(informationItemsJson.text);
+            marketDialogues = MarketDialogueCsvParser.Parse(marketDialogueCsv.text);
 
             IsInformationLoaded = true;
-            Debug.Log("정보 JSON: 상/중/하급 로드 완료.", this);
+            Debug.Log($"정보 데이터 준비 완료: " + $"POS {marketDialogues[InformationDirection.Up].Count}개 / " + $"NEG {marketDialogues[InformationDirection.Down].Count}개",
+            this);
         }
         catch (FormatException exception)
         {
@@ -243,6 +254,19 @@ public class DataManager : Singleton<DataManager>
         item = null;
 
         return IsInformationLoaded && informationTable.TryGetValue(grade, out item);
+    }
+
+    /// <summary>
+    /// 기초 주식시장의 상승/하락에 맞는 대사 후보 return
+    /// </summary>
+    /// <param name="marketDirection"></param>
+    /// <param name="dialogues"></param>
+    /// <returns></returns>
+    public bool TryGetMarketDialogues(InformationDirection marketDirection, out IReadOnlyList<string> dialogues)
+    {
+        dialogues = null;
+
+        return IsInformationLoaded && marketDialogues.TryGetValue(marketDirection, out dialogues);
     }
 
     // 더 이상 사용하지 않음

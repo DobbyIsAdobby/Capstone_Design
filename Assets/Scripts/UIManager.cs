@@ -29,6 +29,9 @@ public class UIManager : Singleton<UIManager>
     [Header("Asset_Navigation Panel")]
     [SerializeField] private AssetNavigationPanel assetNavigationPanel;
 
+    [Header("Information Panel")]
+    [SerializeField] private InformationPanel informationPanel;
+
     /*
     function Zone
     */
@@ -110,6 +113,12 @@ public class UIManager : Singleton<UIManager>
         if(assetNavigationPanel != null && assetNavigationPanel.isActiveAndEnabled)
         {
             assetNavigationPanel.Refresh();
+        }
+
+        // 정보 커뮤니티 패널 내 정보 패널 갱신
+        if (informationPanel != null && informationPanel.isActiveAndEnabled)
+        {
+            informationPanel.Refresh();
         }
     }
 }
