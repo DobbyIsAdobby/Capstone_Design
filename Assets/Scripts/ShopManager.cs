@@ -70,15 +70,13 @@ public class ShopManager : Singleton<ShopManager>
         new PaymentRule("SHOP_010", false, 2000000)
     };
 
-    private readonly List<OwnedItem> ownedItems =
-        new List<OwnedItem>();
+    private readonly List<OwnedItem> ownedItems = new List<OwnedItem>();
 
-    private readonly Dictionary<string, int> purchaseCounts =
-        new Dictionary<string, int>(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> purchaseCounts = new Dictionary<string, int>(StringComparer.Ordinal);
 
     private int lastSettlementTurn = -1;
-    private int rumorUsageTurn = -1;
-    private int usedFreeRumors;
+    //private int rumorUsageTurn = -1;
+    //private int usedFreeRumors;
 
     public int GetPurchaseCount(string itemId)
     {
@@ -92,15 +90,11 @@ public class ShopManager : Singleton<ShopManager>
 
     public bool HasReachedPurchaseLimit(ShopItemData item)
     {
-        return item.PurchaseLimit > 0 &&
-               GetPurchaseCount(item.Id) >= item.PurchaseLimit;
+        return item.PurchaseLimit > 0 && GetPurchaseCount(item.Id) >= item.PurchaseLimit;
     }
 
     // 일회성 소비는 별도 결제 규칙 없이 일시불 / 유지비 0.
-    public bool TryGetPaymentSettings(
-        ShopItemData item,
-        out bool allowInstallment,
-        out long monthlyMaintenance)
+    public bool TryGetPaymentSettings(ShopItemData item, out bool allowInstallment, out long monthlyMaintenance)
     {
         allowInstallment = false;
         monthlyMaintenance = 0;
@@ -126,8 +120,7 @@ public class ShopManager : Singleton<ShopManager>
             return false;
 
         // 집은 일시불로만 구매가능.
-        allowInstallment =
-            found.AllowInstallment && !item.RequiredForHappyEnding;
+        allowInstallment = found.AllowInstallment && !item.RequiredForHappyEnding;
 
         monthlyMaintenance = found.MonthlyMaintenance;
         return true;
@@ -138,8 +131,7 @@ public class ShopManager : Singleton<ShopManager>
         if (!TryGetPaymentSettings(item, out bool allow, out _) || !allow)
             return 0;
 
-        return (int)Math.Min(
-            Mathf.Clamp(maxInstallmentMonths, 1, 12), item.Price);
+        return (int)Math.Min(Mathf.Clamp(maxInstallmentMonths, 1, 12), item.Price);
     }
 
     public long GetMonthlyPayment(ShopItemData item, int months)
@@ -149,9 +141,7 @@ public class ShopManager : Singleton<ShopManager>
 
     public long GetLastPayment(ShopItemData item, int months)
     {
-        return months > 0
-            ? item.Price / months + item.Price % months
-            : item.Price;
+        return months > 0 ? item.Price / months + item.Price % months : item.Price;
     }
 
     public bool TryBuy(string itemId, int months, out string message)
@@ -165,8 +155,7 @@ public class ShopManager : Singleton<ShopManager>
             return false;
         }
 
-        if (data == null ||
-            !data.TryGetShopItem(itemId, out ShopItemData item))
+        if (data == null || !data.TryGetShopItem(itemId, out ShopItemData item))
         {
             message = "상품 데이터를 찾을 수 없습니다.";
             return false;
@@ -178,8 +167,7 @@ public class ShopManager : Singleton<ShopManager>
             return false;
         }
 
-        if (!TryGetPaymentSettings(
-            item, out _, out long monthlyMaintenance))
+        if (!TryGetPaymentSettings(item, out _, out long monthlyMaintenance))
         {
             message = "상품의 할부·유지비 설정을 확인하세요.";
             return false;
@@ -195,16 +183,14 @@ public class ShopManager : Singleton<ShopManager>
 
         if (game.availableCash < immediateCost)
         {
-            message =
-                $"현금이 {immediateCost - game.availableCash:N0}원 부족합니다.";
+            message = $"현금이 {immediateCost - game.availableCash:N0}원 부족합니다.";
             return false;
         }
 
         // 모든 구매 조건을 확인한 다음 실제 상태 변경.
         if (immediateCost > 0)
         {
-            game.ApplyCashChange(
-                -immediateCost, $"상점: {item.DisplayName}");
+            game.ApplyCashChange(-immediateCost, $"상점: {item.DisplayName}");
         }
 
         purchaseCounts[item.Id] = GetPurchaseCount(item.Id) + 1;
@@ -231,13 +217,10 @@ public class ShopManager : Singleton<ShopManager>
         }
 
         // JSON의 FATIGUE는 음수이므로 그대로 더함.
-        game.stressLevel =
-            Mathf.Max(0, game.stressLevel + item.ImmediateFatigueChange);
+        game.stressLevel = Mathf.Max(0, game.stressLevel + item.ImmediateFatigueChange);
 
         // AP는 추후 AP 시스템에서 적용 계획 - 현재 미구현 상태
-        message = months == 0
-            ? $"{item.DisplayName} 구매 완료."
-            : $"{item.DisplayName} 구매 완료.\n이번 달부터 {months}회 납부합니다.";
+        message = months == 0 ? $"{item.DisplayName} 구매 완료." : $"{item.DisplayName} 구매 완료.\n이번 달부터 {months}회 납부합니다.";
 
         if (UIManager.Instance != null)
             UIManager.Instance.RefreshUI();
@@ -249,9 +232,7 @@ public class ShopManager : Singleton<ShopManager>
     {
         GameManager game = GameManager.Instance;
 
-        if (game == null || game.IsGameOver ||
-            !game.IsSetting || game.currentMonth != turn ||
-            turn <= lastSettlementTurn)
+        if (game == null || game.IsGameOver || !game.IsSetting || game.currentMonth != turn || turn <= lastSettlementTurn)
             return;
 
         lastSettlementTurn = turn;
@@ -287,30 +268,20 @@ public class ShopManager : Singleton<ShopManager>
 
         foreach (OwnedItem owned in ownedItems)
         {
-            if (owned.RemainingPayments > 0 &&
-                turn >= owned.NextPaymentTurn)
+            if (owned.RemainingPayments > 0 && turn >= owned.NextPaymentTurn)
             {
-                long payment = owned.RemainingPayments == 1
-                    ? owned.RemainingDebt
-                    : owned.MonthlyPayment;
+                long payment = owned.RemainingPayments == 1 ? owned.RemainingDebt : owned.MonthlyPayment;
 
-                game.ApplyMandatoryExpense(
-                    payment,
-                    $"{owned.Data.DisplayName} 할부금",
-                    ReceiptLineType.FixedExpense);
+                game.ApplyMandatoryExpense(payment, $"{owned.Data.DisplayName} 할부금", ReceiptLineType.FixedExpense);
 
                 owned.RemainingDebt -= payment;
                 owned.RemainingPayments--;
                 owned.NextPaymentTurn++;
             }
 
-            if (turn >= owned.MaintenanceStartTurn &&
-                owned.MonthlyMaintenance > 0)
+            if (turn >= owned.MaintenanceStartTurn && owned.MonthlyMaintenance > 0)
             {
-                game.ApplyMandatoryExpense(
-                    owned.MonthlyMaintenance,
-                    $"{owned.Data.DisplayName} 유지비",
-                    ReceiptLineType.FixedExpense);
+                game.ApplyMandatoryExpense(owned.MonthlyMaintenance, $"{owned.Data.DisplayName} 유지비", ReceiptLineType.FixedExpense);
             }
         }
     }
@@ -372,7 +343,9 @@ public class ShopManager : Singleton<ShopManager>
     }
 
     // 휴대폰 보유 시 매월 하급 정보 이용권.
-    // 정보 시스템 구현 시 실제 무료 정보 제공 흐름에서 호출.
+    // 정보 시스템 구현 시 실제 무료 정보 제공 흐름에서 호출. -- 더 이상 사용하지 않음
+    // HasFreeLowInformation(string itemId, int turn) 메서드로 대체됨.
+    /*
     public bool TryUseFreeLowRumor()
     {
         GameManager game = GameManager.Instance;
@@ -399,6 +372,31 @@ public class ShopManager : Singleton<ShopManager>
 
         usedFreeRumors++;
         return true;
+    }
+    */
+
+    /// <summary>
+    /// 이번 턴에 해당 아이템의 하급 정보 무료 효과가 유효한지 조회. 
+    /// 이전 메서드처럼 더 이상 횟수를 차감하거나 정보를 생성하지 않음.
+    /// </summary>
+    /// <param name="itemId"></param>
+    /// <param name="turn"></param>
+    /// <returns></returns>
+    public bool HasFreeLowInformation(string itemId, int turn)
+    {
+        if (string.IsNullOrEmpty(itemId))
+            return false;
+
+        foreach (OwnedItem owned in ownedItems)
+        {
+            if(owned.Data.Id == itemId && turn > owned.PurchaseTurn && owned.Data.MonthlyFreeLowRumors > 0)
+            {
+                // 구매한 다음 턴부터 적용함
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public bool HasHappyEndingItem

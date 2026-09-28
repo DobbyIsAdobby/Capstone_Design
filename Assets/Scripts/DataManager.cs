@@ -27,6 +27,11 @@ public class DataManager : Singleton<DataManager>
     private readonly Dictionary<string, ShopItemData> shopTable = new Dictionary<string, ShopItemData>(StringComparer.Ordinal);
     public IReadOnlyList<ShopItemData> ShopItems { get; private set; } = Array.Empty<ShopItemData>();
 
+    [Header("Information Data")]
+    [SerializeField] private TextAsset informationItemsJson;
+
+    private Dictionary<InformationGrade, InformationItemData> informationTable = new Dictionary<InformationGrade, InformationItemData>();
+
     // 수익률 자동 생성 ONNX 모델 적용으로 인해 더 이상 Market Data 인스펙터는 사용하지 않음
     /*
     [Header("Market Data")]
@@ -72,12 +77,15 @@ public class DataManager : Singleton<DataManager>
 
     public int MarketTurnCount => generatedMarket?.Count ?? 0;
 
+    public bool IsInformationLoaded { get; private set; }
+
     protected override void OnSingletonAwake()
     {
         //LoadAllData();
         // 시장(수익률) 생성은 시간이 걸리므로 Awake에서 실행하면 안됨.
         // 상점 데이터만 읽기.
         LoadShopData();
+        LoadInformationData();
     }
 
     /// <summary>
@@ -197,6 +205,44 @@ public class DataManager : Singleton<DataManager>
         item = null;
 
         return IsShopLoaded && !string.IsNullOrEmpty(id) && shopTable.TryGetValue(id, out item);
+    }
+
+    /// <summary>
+    /// 정보 상품의 가격/정확도 설정을 읽어옴
+    /// </summary>
+    private void LoadInformationData()
+    {
+        IsInformationLoaded = false;
+        informationTable.Clear();
+
+        try
+        {
+            if (informationItemsJson == null)
+                throw new FormatException("Information Items Json을 연결하세요.");
+
+            // 검증이 끝난 테이블만 등록함
+            informationTable = InformationJsonParser.Parse(informationItemsJson.text);
+
+            IsInformationLoaded = true;
+            Debug.Log("정보 JSON: 상/중/하급 로드 완료.", this);
+        }
+        catch (FormatException exception)
+        {
+            Debug.LogError(exception.Message, this);
+        }
+    }
+
+    /// <summary>
+    /// 정보를 조회하는 함수
+    /// </summary>
+    /// <param name="grade"></param>
+    /// <param name="item"></param>
+    /// <returns></returns>
+    public bool TryGetInformation(InformationGrade grade, out InformationItemData item)
+    {
+        item = null;
+
+        return IsInformationLoaded && informationTable.TryGetValue(grade, out item);
     }
 
     // 더 이상 사용하지 않음
