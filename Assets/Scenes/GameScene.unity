@@ -13860,6 +13860,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DataManager
   shopItemsJson: {fileID: 4900000, guid: 71a89983ed1c2f24684140760fe53d30, type: 3}
+  informationItemsJson: {fileID: 4900000, guid: c8cc4cbc4e80fed4184d7206f54c4b3d, type: 3}
 --- !u!4 &1330168423
 Transform:
   m_ObjectHideFlags: 0
