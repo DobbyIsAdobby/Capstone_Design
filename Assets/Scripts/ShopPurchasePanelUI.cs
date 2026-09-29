@@ -159,17 +159,17 @@ public class ShopPurchasePanelUI : MonoBehaviour
 
     private static string GetPendingEffectNote(ShopItemData data)
     {
-        bool ap = false;
-        bool information = false;
+        //bool ap = false;
+        //bool information = false;
         bool career = false;
 
         foreach (ShopEffectData effect in data.Effects)
         {
-            if (effect.Type == ShopEffectType.AP || effect.Type == ShopEffectType.MAX_AP)
-                ap = true;
+            //if (effect.Type == ShopEffectType.AP || effect.Type == ShopEffectType.MAX_AP)
+            //    ap = true;
 
-            if (effect.Type == ShopEffectType.FREE_LOW_GRADE_INFO)
-                information = true;
+            //if (effect.Type == ShopEffectType.FREE_LOW_GRADE_INFO)
+            //    information = true;
 
             if (effect.Type == ShopEffectType.CAREER_EXP)
                 career = true;
@@ -177,8 +177,8 @@ public class ShopPurchasePanelUI : MonoBehaviour
 
         string note = "";
 
-        if (ap) note += "\n AP 효과 연결 예정";
-        if (information) note += "\n 정보 시스템 연결 예정";
+        //if (ap) note += "\n AP 효과 연결 예정";
+        //if (information) note += "\n 정보 시스템 연결 예정";
         if (career) note += "\n 직급 경험치 연결 예정";
 
         return note;

@@ -41,6 +41,11 @@ public class MarketGenerator : MonoBehaviour
     private MarketModelConfig config;
     private MarketModelRunner runner;
     private System.Random random;
+    // 상품 배율 전용 난수 생성기(RNG)
+    // 모델의 일별 수익률 생성에 사용하는 난수와 분리하여 적용함. 
+    // 배율 추출 때문에 모델이 사용하는 난수 순서가 바뀌지 않도록 하기 위해서임.
+    // (기존 random을 같이 사용하면 같은 시드라도 다음 달 부터 주식 수익률 자체가 달라질 수 있음.)
+    private System.Random multiplierRandom;
     private DataManager dataManager;
 
     // history에는 정규화 전의 실제 일별 수익률을 보관함
@@ -102,6 +107,12 @@ public class MarketGenerator : MonoBehaviour
             // 시장 생성 전용 난수 생성기(RNG).
             // UnityEngine.Random을 사용하는 다른 시스템과 분리됨.
             random = new System.Random(Seed);
+
+            // 같은 시장 시드에서 배율도 재현할 수 있도록 파생 시드를 사용함.
+            // 기존 모델용 random과는 별개임.
+            // 0x51A7B39D는 해시 알고리즘에서 주로 사용하는 고정 상수.
+            int multiplierSeed = unchecked(Seed ^ 0x51A7B39D);
+            multiplierRandom = new System.Random(multiplierSeed);
 
             int window = config.generation.window_size;
 
@@ -236,9 +247,16 @@ public class MarketGenerator : MonoBehaviour
 
         int turn = results.Count + 1;
 
-        // 9. 하나의 월 수익률에서 네 상품의 수익률로 변경.
+        // 9. 하나의 월 수익률에서 네 상품의 수익률로 변경. - 너무 단순하여 상품별 랜덤 배율을 적용하도록 재구성함.
         // 주식 r / 레버리지 2r / 주식 인버스 -r / 레버리지 인버스 -2r
-        results.Add(turn, new MonthlyMarketRates(r, 2m * r, -r, -2m * r));
+        //results.Add(turn, new MonthlyMarketRates(r, 2m * r, -r, -2m * r));
+
+        // 월 주식 수익률 r에 이번 턴에 사용할 상품별 랜덤 배율을 적용
+        MonthlyMarketRates rates = MarketReturnRules.Create(r, multiplierRandom);
+
+        // 확정한 수익률 보관
+        // 정보 열람이나 결산 시점에는 배율을 다시 추출하지 않음.
+        results.Add(turn, rates);
 
         // 다음 달 복리 계산을 위해 월 단위 누적값만 초기화
         // 최근 60일 history는 그대로 이어서 사용

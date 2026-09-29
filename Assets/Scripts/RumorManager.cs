@@ -18,6 +18,19 @@ public enum RumorType
 /// </summary>
 public class RumorManager : Singleton<RumorManager>
 {
+    /*
+    Inspector Zone
+    */
+
+    [Header("Information AP Cost")]
+    [SerializeField, Min(0)] private int highAPCost = 20;
+    [SerializeField, Min(0)] private int midAPCost = 10;
+    [SerializeField, Min(0)] private int lowAPCost = 5;
+
+    /*
+    function Zone
+    */
+
     private static readonly AssetType[] TargetAssets =
     {
         AssetType.Stock,
@@ -138,6 +151,12 @@ public class RumorManager : Singleton<RumorManager>
             return false;
         }
 
+        if (!game.CanSpendAP(GetAPCost(grade), out reason))
+        {
+            reason = "보유 AP가 부족합니다.";
+            return false;
+        }
+
         return true;
     }
 
@@ -176,6 +195,9 @@ public class RumorManager : Singleton<RumorManager>
             message = "정보 생성에 실패했습니다. 현금은 차감되지 않았습니다.";
             return false;
         }
+
+        if (!game.TrySpendAP(GetAPCost(grade), out message))
+            return false;
 
         // 먼저 공개 상태를 기록하여 중복 호출 시 재구매를 차단
         StoreReveal(grade, reveal);
@@ -243,6 +265,31 @@ public class RumorManager : Singleton<RumorManager>
         // 이제 이곳에는 이번 턴에 공개한 결과만 보관함.
         reveals.Add(grade, reveal);
         //usedTexts.Add(reveal.Body);
+    }
+
+    /// <summary>
+    /// 유료 정보 구매 시 필요한 AP
+    /// 휴대폰 구매 시, 하급 정보는 현재 구매 경로를 거치지 않고 다이렉트로 해금됨.
+    /// </summary>
+    /// <param name="grade"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public int GetAPCost(InformationGrade grade)
+    {
+        switch (grade)
+        {
+            case InformationGrade.High:
+                return highAPCost;
+
+            case InformationGrade.Mid:
+                return midAPCost;
+
+            case InformationGrade.Low:
+                return lowAPCost;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(grade));
+        }
     }
 }
 

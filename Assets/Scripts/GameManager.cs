@@ -39,6 +39,13 @@ public class GameManager : Singleton<GameManager>
     private float baseMaxStress = 100f;
     public float MaxStress => baseMaxStress + (ShopManager.Instance != null ? ShopManager.Instance.MaxStressBonus : 0f);
 
+    [Header("AP")]
+    [SerializeField, Min(1)]
+    private int baseMaxAP = 100;
+
+    [SerializeField, Min(0)]
+    private int overtimeAPCost = 1;
+
     [Header("Income & Expense")]
     public long monthlySalary = 3000000;
     public long fixedExpense = 1500000; // 고정 지출 (월세, 생활비 등) => 추후 인플레이션에 따른 턴마다 증액 함수 필요.
@@ -97,6 +104,15 @@ public class GameManager : Singleton<GameManager>
     /// 총 자산 확인
     /// </summary>
     public long MonthStartTotalAsset { get; private set; }
+    /// <summary>
+    /// 현재 AP 조회
+    /// </summary>
+    public int CurrentAP { get; private set; }
+    // JSON 내에서 자동차를 구매시 최대 AP를 20 증가하는 로직이 존재함.
+    // 소유 목록으로 계산하므로 화면을 열 때마다 중복 증가하지 않도록 함.
+    public int MaxAP => baseMaxAP + (ShopManager.Instance != null ? ShopManager.Instance.MaxAPBonus : 0);
+    // 같은 턴에 초기화 함수가 중복 호출되어도 AP를 다시 채우지 않음.
+    private int lastAPResetTurn = -1;
 
     /*
     private void Start()
@@ -145,6 +161,82 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
+    /// 새로운 턴에 진입하면 최대 AP로 초기화.
+    /// 지난 턴에 남은 AP에 추가하면 안됨 - 이월 금지
+    /// </summary>
+    private void BeginAPTurn()
+    {
+        if (lastAPResetTurn == currentMonth)
+            return;
+
+        lastAPResetTurn = currentMonth;
+        CurrentAP = MaxAP;
+    }
+
+    /// <summary>
+    /// AP 보유량에 따라 현재 사용 가능한지만 검사
+    /// 버튼 표시와 행동 실행 여부 양쪽에서 사용함.
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <param name="reason"></param>
+    /// <returns></returns>
+    public bool CanSpendAP(int amount, out string reason)
+    {
+        reason = "";
+
+        if (!CanAct)
+        {
+            reason = "지금은 행동할 수 없습니다.";
+            return false;
+        }
+
+        if (amount < 0)
+        {
+            reason = "AP 소모량 설정이 올바르지 않습니다.";
+            return false;
+        }
+
+        if (CurrentAP < amount)
+        {
+            reason = $"AP가 부족합니다. 필요 {amount}, 보유 {CurrentAP}";
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// AP가 충분할 때만 차감함.
+    /// 부족하면 현재 AP를 유지하고 실패를 반환
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <param name="reason"></param>
+    /// <returns></returns>
+    public bool TrySpendAP(int amount, out string reason)
+    {
+        if (!CanSpendAP(amount, out reason))
+            return false;
+
+        CurrentAP -= amount;
+        return true;
+    }
+
+    /// <summary>
+    /// AP 회복 효과를 적용할 경우 최대치를 넘지 않도록 함.
+    /// 화면 갱신은 구매 전체 처리가 끝난 뒤 호출
+    /// </summary>
+    /// <param name="amount"></param>
+    public void RecoverAP(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        int recoverable = Mathf.Max(0, MaxAP - CurrentAP);
+        CurrentAP += Mathf.Min(amount, recoverable);
+    }
+
+
+    /// <summary>
     /// 지난 턴 영수증 내역 초기화 및 총 자산 업데이트를 진행하는 함수
     /// </summary>
     private void BeginMonthRecord()
@@ -152,6 +244,10 @@ public class GameManager : Singleton<GameManager>
         monthlyLines.Clear();
         MonthStartTotalAsset = TotalAsset;
         hasMonthBaseLine = true;
+
+        // 첫 턴 및 다음 턴 진입 시 최대치로 초기화.
+        // 같은 턴에 중복 호출되어도 다시 회복하지 않음.
+        BeginAPTurn();
 
         // 새로운 턴마다 이전 정보를 초기화하고, 휴대폰을 갖고있으면 하급 정보를 미리 공개.
         if(RumorManager.Instance != null)
@@ -444,6 +540,14 @@ public class GameManager : Singleton<GameManager>
         if(currentMonthOvertimeCount >= maxOvertimePerMonth)
         {
             Debug.Log("이번 달 가능한 야근 횟수를 초과하였습니다.");
+            return;
+        }
+
+        // 야근 가능 횟수를 먼저 검사한 후 AP를 차감함.
+        // 횟수 초과로 인해 실행하지 못한 야근은 현금/피로도/야근 횟수가 변경되지 않음.
+        if (!TrySpendAP(overtimeAPCost, out string reason))
+        {
+            Debug.Log(reason);
             return;
         }
 

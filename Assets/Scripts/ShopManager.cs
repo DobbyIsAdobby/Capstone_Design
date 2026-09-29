@@ -78,6 +78,20 @@ public class ShopManager : Singleton<ShopManager>
     //private int rumorUsageTurn = -1;
     //private int usedFreeRumors;
 
+    [Header("Turn Purchase Limit")]
+    [SerializeField] private string overseasTravelItemId = "SHOP_005";
+
+    // 해외여행을 마지막으로 구매한 턴
+    // 다음 턴에는 다시 구매할 수 있음.
+    private int lastOverseasTravelTurn = -1;
+
+    public bool HasReachedTurnPurchaseLimit(ShopItemData item)
+    {
+        GameManager game = GameManager.Instance;
+
+        return game != null && item.Id == overseasTravelItemId && lastOverseasTravelTurn == game.currentMonth;
+    }
+
     public int GetPurchaseCount(string itemId)
     {
         return purchaseCounts.TryGetValue(itemId, out int count) ? count : 0;
@@ -90,7 +104,11 @@ public class ShopManager : Singleton<ShopManager>
 
     public bool HasReachedPurchaseLimit(ShopItemData item)
     {
-        return item.PurchaseLimit > 0 && GetPurchaseCount(item.Id) >= item.PurchaseLimit;
+        // 전체 구매 제한
+        bool lifetimeLimitReached = item.PurchaseLimit > 0 && GetPurchaseCount(item.Id) >= item.PurchaseLimit;
+
+        // 해외여행은 별도로 턴당 구매 제한을 적용
+        return lifetimeLimitReached || HasReachedTurnPurchaseLimit(item);
     }
 
     // 일회성 소비는 별도 결제 규칙 없이 일시불 / 유지비 0.
@@ -163,7 +181,7 @@ public class ShopManager : Singleton<ShopManager>
 
         if (HasReachedPurchaseLimit(item))
         {
-            message = "구매 가능한 횟수를 모두 사용했습니다.";
+            message = HasReachedTurnPurchaseLimit(item) ? "해외여행은 이번 턴에 이미 이용했습니다." : "구매 가능한 횟수를 모두 사용했습니다.";
             return false;
         }
 
@@ -187,6 +205,18 @@ public class ShopManager : Singleton<ShopManager>
             return false;
         }
 
+        int apChange = item.ImmediateAPChange;
+
+        // 회복 상품은 구매에 AP를 요구하지 않음
+        int apCost = apChange < 0 ? -apChange : 0;
+
+        // AP 차감시 실패하면 현금과 구매 횟수는 그대로 유지함.
+        if (!game.TrySpendAP(apCost, out message))
+        {
+            message = "AP가 부족합니다";
+            return false;   
+        }
+
         // 모든 구매 조건을 확인한 다음 실제 상태 변경.
         if (immediateCost > 0)
         {
@@ -194,6 +224,13 @@ public class ShopManager : Singleton<ShopManager>
         }
 
         purchaseCounts[item.Id] = GetPurchaseCount(item.Id) + 1;
+
+        // 구매가 성공한 경우에만 이용 턴을 기록함
+        // 현금 부족 등으로 실패한 구매는 이용 횟수에 포함하지 않음
+        if (item.Id == overseasTravelItemId)
+        {
+            lastOverseasTravelTurn = game.currentMonth;
+        }
 
         if (item.Category == ShopCategory.Prestige)
         {
@@ -219,7 +256,13 @@ public class ShopManager : Singleton<ShopManager>
         // JSON의 FATIGUE는 음수이므로 그대로 더함.
         game.stressLevel = Mathf.Max(0, game.stressLevel + item.ImmediateFatigueChange);
 
-        // AP는 추후 AP 시스템에서 적용 계획 - 현재 미구현 상태
+        // 해외여행처럼 AP 효과가 양수인 상품은 구매 성공 후 회복
+        // 최대치를 초과한 경우 최대치에 고정
+        if(apChange > 0)
+        {
+            game.RecoverAP(apChange);
+        }
+        
         message = months == 0 ? $"{item.DisplayName} 구매 완료." : $"{item.DisplayName} 구매 완료.\n이번 달부터 {months}회 납부합니다.";
 
         if (UIManager.Instance != null)

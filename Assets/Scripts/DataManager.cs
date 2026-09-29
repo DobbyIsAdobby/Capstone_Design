@@ -120,11 +120,17 @@ public class DataManager : Singleton<DataManager>
                 throw new InvalidOperationException($"{turn}턴 데이터가 없습니다.");
             }
 
-            // 현재 게임에서 사용하는 상품 간 수익률 관계를 검사.
+            // 현재 게임에서 사용하는 각 상품의 수익률이 허용된 배율 범위 안에 존재하는지 검사.
+            if (!MarketReturnRules.IsValid(rates))
+            {
+                throw new InvalidOperationException($"{turn}턴 수익률이 상품별 배율 범위를 벗어났습니다.");
+            }
+            /*
             if (rates.Stock <= -1m || rates.Leverage != rates.Stock * 2m || rates.StockInverse != -rates.Stock || rates.LeverageInverse != -rates.Stock * 2m)
             {
                 throw new InvalidOperationException($"{turn}턴 수익률 규칙이 올바르지 않습니다.");
             }
+            */
         }
 
         // 원본 Dictionary가 나중에 수정되어도 영향을 받지 않도록 복사

@@ -13,6 +13,7 @@ public class UIManager : Singleton<UIManager>
     public TextMeshProUGUI totalAssetText;      // 총 자산
     public TextMeshProUGUI cashText;            // 보유 현금
     public TextMeshProUGUI stressText;          // 현재 피로도
+    public TextMeshProUGUI apText;              // 현재 AP
     public TextMeshProUGUI overtimeCountText;   // 현재 야근 횟수
 
     [Header("Asset Balances HUD")]
@@ -54,13 +55,16 @@ public class UIManager : Singleton<UIManager>
     /// </summary>
     public void RefreshUI()
     {
-        float stressGauge = GameManager.Instance.stressLevel / GameManager.Instance.MaxStress * 100f;
+        float stressGauge = GameManager.Instance.stressLevel;
+        float apGauge = GameManager.Instance.CurrentAP;
         // 1. 메인 상태바 갱신
         monthText.text = $"{GameManager.Instance.currentMonth}/{GameManager.Instance.maxMonth}턴";
         totalAssetText.text = $"총 자산 : {GameManager.Instance.TotalAsset:N0} 원";
         cashText.text = $"보유 현금 : {GameManager.Instance.availableCash:N0} 원";
         stressText.text = $"{stressGauge:0.#}%";
-        stressText.color = stressGauge < 50f ? Color.black : (stressGauge < 75) ? Color.orange : Color.red;
+        stressText.color = stressGauge < 50f ? Color.black : (stressGauge < 75f) ? Color.orange : Color.red;
+        apText.text = $"{apGauge:0.#}%";
+        apText.color = apGauge < 50f ? Color.red : (apGauge < 75f) ? Color.orange : Color.black; 
         
         overtimeCountText.text = $"{GameManager.Instance.currentMonthOvertimeCount} / {GameManager.Instance.maxOvertimePerMonth} 회";
 

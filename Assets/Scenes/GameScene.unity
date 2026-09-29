@@ -2452,6 +2452,7 @@ MonoBehaviour:
   totalAssetText: {fileID: 484844864}
   cashText: {fileID: 1337905611}
   stressText: {fileID: 2081083734}
+  apText: {fileID: 1759606240}
   overtimeCountText: {fileID: 471499475}
   bankBalanceText: {fileID: 1767380395}
   stockBalanceText: {fileID: 942449996}
@@ -4959,6 +4960,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84191e9f55c79e64bafd70d9d430de38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RumorManager
+  highAPCost: 20
+  midAPCost: 10
+  lowAPCost: 5
 --- !u!4 &441221969
 Transform:
   m_ObjectHideFlags: 0
@@ -11288,6 +11292,7 @@ MonoBehaviour:
   - itemId: SHOP_010
     allowInstallment: 0
     monthlyMaintenance: 2000000
+  overseasTravelItemId: SHOP_005
 --- !u!1 &1074030419
 GameObject:
   m_ObjectHideFlags: 0
@@ -15404,6 +15409,8 @@ MonoBehaviour:
   stressLevel: 0
   currentMonthOvertimeCount: 0
   baseMaxStress: 100
+  baseMaxAP: 100
+  overtimeAPCost: 1
   monthlySalary: 3000000
   fixedExpense: 1500000
   receiptPanel: {fileID: 1739898978}
