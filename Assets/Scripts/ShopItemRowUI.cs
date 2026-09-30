@@ -46,7 +46,7 @@ public class ShopItemRowUI : MonoBehaviour
 
         purchaseButton.interactable = !limited;
 
-        purchaseButtonText.text = limited ? (item.Category == ShopCategory.Prestige ? "보유 중" : "구매 완료") : "구매\n하기";
+        purchaseButtonText.text = limited ? (item.Category == ShopCategory.Prestige ? "보유 중" : "구매 완료") : "구매\n";
     }
 
     private void OnClickPurchase()

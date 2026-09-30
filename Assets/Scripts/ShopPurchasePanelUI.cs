@@ -151,7 +151,7 @@ public class ShopPurchasePanelUI : MonoBehaviour
         long monthly = shop.GetMonthlyPayment(item, selectedMonths);
         long last = shop.GetLastPayment(item, selectedMonths);
 
-        paymentScheduleText.text = $"다음 달 마감부터 {selectedMonths}회 납부\n" + $"회당 {monthly:N0}원";
+        paymentScheduleText.text = $"이번 달 마감부터 {selectedMonths}회 납부\n" + $"회당 {monthly:N0}원";
 
         if (last != monthly)
             paymentScheduleText.text += $"\n마지막 회차 {last:N0}원";
@@ -159,17 +159,17 @@ public class ShopPurchasePanelUI : MonoBehaviour
 
     private static string GetPendingEffectNote(ShopItemData data)
     {
-        bool ap = false;
-        bool information = false;
+        //bool ap = false;
+        //bool information = false;
         bool career = false;
 
         foreach (ShopEffectData effect in data.Effects)
         {
-            if (effect.Type == ShopEffectType.AP || effect.Type == ShopEffectType.MAX_AP)
-                ap = true;
+            //if (effect.Type == ShopEffectType.AP || effect.Type == ShopEffectType.MAX_AP)
+            //    ap = true;
 
-            if (effect.Type == ShopEffectType.FREE_LOW_GRADE_INFO)
-                information = true;
+            //if (effect.Type == ShopEffectType.FREE_LOW_GRADE_INFO)
+            //    information = true;
 
             if (effect.Type == ShopEffectType.CAREER_EXP)
                 career = true;
@@ -177,8 +177,8 @@ public class ShopPurchasePanelUI : MonoBehaviour
 
         string note = "";
 
-        if (ap) note += "\n AP 효과 연결 예정";
-        if (information) note += "\n 정보 시스템 연결 예정";
+        //if (ap) note += "\n AP 효과 연결 예정";
+        //if (information) note += "\n 정보 시스템 연결 예정";
         if (career) note += "\n 직급 경험치 연결 예정";
 
         return note;

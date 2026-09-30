@@ -3,9 +3,11 @@ using UnityEngine;
 // enum으로 자산 분류
 public enum AssetType
 {
-    Bank,    //은행(예적금)
-    Stock,   //주식
-    Leverage //레버리지
+    Bank = 0,    //은행(예적금)
+    Stock = 1,   //주식
+    Leverage = 2, //레버리지
+    StockInverse = 3, //주식 인버스
+    LeverageInverse = 4, //레버리지 인버스
 }
 
 public class AssetManager : Singleton<AssetManager>
@@ -19,15 +21,19 @@ public class AssetManager : Singleton<AssetManager>
     public long bankBalance = 0; //은행 예치금
     public long stockBalance = 0; //주식 평가 금액
     public long leverageBalance = 0; //레버리지 평가 금액
+    public long stockInverseBalance = 0; //주식 인버스 평가 금액
+    public long leverageInverseBalance = 0; //레버리지 인버스 평가 금액
 
+    /* -- ONNX 모델 추가로 인해 더이상 사용하지 않는 인스펙터 값
     [Header("Temporary Return Rates (RNG)")]
     //추후 DB 데이터로 대체될 임시 수익률 범위(프로토타이핑 전용)
     //readonly로 불변성을 가진 변수로 선언
-    private readonly float bankMontlyRate = 0.003f; //은행 : 월 0.3% (연 약 3.6% 고정)
+    //private readonly float bankMonthlyRate = 0.003f; //은행 : 월 0.3% (연 약 3.6% 고정)
     private readonly float stockMinRate = -0.05f; //주식 : 월 -5% ~
     private readonly float stockMaxRate = 0.07f; //주식 : 월 +7% (장기 우상향)
     private readonly float leverageMinRate = -0.37f; //레버리지 : 월 -37% ~
     private readonly float leverageMaxRate = 0.40f; //레버리지 : 월 +40%
+    */
 
     /*
     function Zone
@@ -45,7 +51,7 @@ public class AssetManager : Singleton<AssetManager>
     /// </summary>
     public long GetTotalInvestedValue()
     {
-        return bankBalance + stockBalance + leverageBalance;
+        return bankBalance + stockBalance + leverageBalance + stockInverseBalance + leverageInverseBalance;
     }
 
     /// <summary>
@@ -53,49 +59,48 @@ public class AssetManager : Singleton<AssetManager>
     /// </summary>
     public void CalculateMonthlyReturns()
     {
-        int currentTurn = GameManager.Instance.currentMonth; // CSV의 turn과 동일한 체계(Start at 1)
+        int turn = GameManager.Instance.currentMonth;
 
-        //1. 은행 (고정 수익률)
-        if(bankBalance > 0)
+        // 보유 여부와 관계없이 해당 턴의 확정된 시장 수익률을 DataManager에서 가져와 조회
+        MonthlyMarketRates rates = GetMonthlyMarketRates(turn);
+
+        // 은행은 모델과 관계없이 기존 월 이율 유지함. - 추후 밸런싱 작업 이후 변경할 수 있음.
+        bankBalance = ApplyReturn(bankBalance, 0.003m);
+
+        // 각 상품의 보유 평가액에 해당 턴 수익률을 적용함
+        stockBalance = ApplyReturn(stockBalance, rates.Stock);
+        leverageBalance = ApplyReturn(leverageBalance, rates.Leverage);
+
+        stockInverseBalance = ApplyReturn(stockInverseBalance, rates.StockInverse);
+
+        leverageInverseBalance = ApplyReturn(leverageInverseBalance, rates.LeverageInverse);
+    }
+
+    /// <summary>
+    /// 수익률 계산 함수
+    /// </summary>
+    /// <param name="balance"></param>
+    /// <param name="rate"></param>
+    /// <returns></returns>
+    private long ApplyReturn(long balance, decimal rate)
+    {
+        if (balance <= 0)
+            return balance;
+
+        // 차입 없는 투자상품으로 취급하여 평가액의 최솟값은 0원
+        if (rate < -1m)
         {
-            bankBalance += (long)(bankBalance * bankMontlyRate);
+            Debug.LogWarning(
+                $"수익률 {rate * 100m:F4}%가 -100% 미만이므로 " +
+                "해당 투자 평가액을 0원으로 처리합니다.");
+
+            return 0;
         }
 
-        //2. 주식 (난수(RNG) 수익률) => CSV 데이터 우선 사용
-        if(stockBalance > 0)
-        {
-            if(DataManager.Instance != null && 
-                DataManager.Instance.TryGetMarketData(MarketType.Nasdaq, currentTurn, out MarketData nasdaqData))
-            {
-                stockBalance += (long)(stockBalance * nasdaqData.ReturnRate);
-                Debug.Log($"이번 달 주식 수익률(CSV) : {nasdaqData.ReturnRate * 100:F1}%");
-            }
-            else
-            {
-                // 데이터가 없는 턴이거나, CSV 미연결 시 기존 RNG로 진행.
-                float currentStockRate = Random.Range(stockMinRate, stockMaxRate);
-                stockBalance += (long)(stockBalance * currentStockRate);
-                Debug.Log($"이번 달 주식 수익률(RNG) : {currentStockRate * 100:F1}%");   
-            }
-        }
+        // 원 미만 손익은 0 방향으로 버림
+        long profit = (long)(balance * rate);
 
-        //3. 레버리지 (난수 수익률 - 극단적 변동성) => CSV 데이터 우선 사용(현재 데이터가 없으나 선택적 연결을 허용했기 때문에 로직 구현 진행함.)
-        if(leverageBalance > 0)
-        {
-            if(DataManager.Instance != null && 
-                DataManager.Instance.TryGetMarketData(MarketType.Leverage, currentTurn, out MarketData leverageData))
-            {
-                leverageBalance += (long)(leverageBalance * leverageData.ReturnRate);
-                Debug.Log($"이번 달 레버리지 수익률(CSV) : {leverageData.ReturnRate * 100:F1}%");
-            }
-            else
-            {
-                // 데이터가 없는 턴이거나, CSV 미연결 시 기존 RNG로 진행.
-                float currentLeverageRate = Random.Range(leverageMinRate, leverageMaxRate);
-                leverageBalance += (long)(leverageBalance * currentLeverageRate);
-                Debug.Log($"이번 달 레버리지 수익률(RNG) : {currentLeverageRate * 100:F1}%");
-            }
-        }
+        return balance + profit;
     }
 
     /// <summary>
@@ -113,6 +118,10 @@ public class AssetManager : Singleton<AssetManager>
                 return stockBalance;
             case AssetType.Leverage:
                 return leverageBalance;
+            case AssetType.StockInverse:
+                return stockInverseBalance;
+            case AssetType.LeverageInverse:
+                return leverageInverseBalance;
 
             default:
                 return 0;
@@ -137,7 +146,7 @@ public class AssetManager : Singleton<AssetManager>
             return false;
         }
 
-        if(type != AssetType.Bank && type != AssetType.Stock && type != AssetType.Leverage)
+        if(type != AssetType.Bank && type != AssetType.Stock && type != AssetType.Leverage && type != AssetType.StockInverse && type != AssetType.LeverageInverse)
         {
             message = "지원하지 않는 자산입니다.";
             return false;
@@ -172,6 +181,12 @@ public class AssetManager : Singleton<AssetManager>
             case AssetType.Leverage:
                 leverageBalance += assetChange;
                 break;
+            case AssetType.StockInverse:
+                stockInverseBalance += assetChange;
+                break;
+            case AssetType.LeverageInverse:
+                leverageInverseBalance += assetChange;
+                break;
         }
 
         game.availableCash -= assetChange;
@@ -203,4 +218,68 @@ public class AssetManager : Singleton<AssetManager>
         TryTrade(type, false, amount, out string message);
         Debug.Log(message);
     }
+
+    /// <summary>
+    /// 새로 수익률을 생성하지 않고, 게임 시작 시 확정된 이번 턴의 수익률을 읽어옴
+    /// </summary>
+    /// <param name="turn"></param>
+    /// <returns></returns>
+    /// <exception cref="System.InvalidOperationException"></exception>
+    private MonthlyMarketRates GetMonthlyMarketRates(int turn)
+    {
+        DataManager data = DataManager.Instance;
+
+        if (data == null || !data.TryGetGeneratedMarketRates(turn, out MonthlyMarketRates rates))
+        {
+            // 데이터 누락을 다른 난수로 대체하면 이번 플레이에서 확정된 시장과 달라지므로 오류로 처리함
+            throw new System.InvalidOperationException($"{turn}턴의 생성된 시장 데이터가 없습니다.");
+        }
+
+        Debug.Log($"[{turn}턴][ONNX 모델] " + $"주식 {rates.Stock * 100m:F4}% / " + $"레버리지 {rates.Leverage * 100m:F4}% / " + $"주식 인버스 {rates.StockInverse * 100m:F4}% / " + $"레버리지 인버스 {rates.LeverageInverse * 100m:F4}%");
+
+        return rates;
+    }
+
+    /// <summary>
+    /// CSV 우선, 없을 시 RNG 진행 -- ONNX 모델 적용으로 인해 더 이상 사용하지 않음.
+    /// </summary>
+    /// <param name="marketType"></param>
+    /// <param name="turn"></param>
+    /// <param name="minRate"></param>
+    /// <param name="maxRate"></param>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    /*private decimal GetBaseReturnRate(MarketType marketType, int turn, float minRate, float maxRate, out string source)
+    {
+        DataManager data = DataManager.Instance;
+
+        if (data != null && data.TryGetMarketData(marketType, turn, out MarketData marketData))
+        {
+            source = "CSV";
+            return marketData.ReturnRate;
+        }
+
+        source = "RNG";
+        return (decimal)Random.Range(minRate, maxRate);
+    }*/
+
+    /// <summary>
+    /// 주식과 레버리지의 인버스 표기 (부호 변경) -- ONNX 모델 적용으로 인해 동일한 이름의 새로운 메서드로 위에 새로 제작함.
+    /// </summary>
+    /// <param name="turn"></param>
+    /// <returns></returns>
+    /*private MonthlyMarketRates GetMonthlyMarketRates(int turn)
+    {
+        decimal stockRate = GetBaseReturnRate(MarketType.Nasdaq, turn, stockMinRate, stockMaxRate, out string stockSource);
+
+        decimal leverageRate = GetBaseReturnRate(MarketType.Leverage, turn, leverageMinRate, leverageMaxRate, out string leverageSource);
+
+        MonthlyMarketRates rates = new MonthlyMarketRates(stockRate, leverageRate, -stockRate, -leverageRate);
+
+        Debug.Log($"[{turn}턴][{stockSource}] " + $"주식: {rates.Stock * 100m:F4}% / " + $"주식 인버스: {rates.StockInverse * 100m:F4}%");
+
+        Debug.Log($"[{turn}턴][{leverageSource}] " + $"레버리지: {rates.Leverage * 100m:F4}% / " + $"레버리지 인버스: {rates.LeverageInverse * 100m:F4}%");
+
+        return rates;
+    }*/
 }
