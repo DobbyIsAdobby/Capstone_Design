@@ -59,6 +59,8 @@ public sealed class ShopItemData
     public string Description { get; }  // 상품 설명
     public IReadOnlyList<ShopEffectData> Effects { get; }   // 효과 - 외부에서 값을 변경할 수 없게 IReadOnlyList 인터페이스 사용
 
+    public int ImmediateAPChange => (int)GetEffectValue(ShopEffectType.AP, ShopEffectTrigger.IMMEDIATE);    //AP 변화 - 음수는 소모, 양수는 회복
+
     /// <summary>
     /// 생성자
     /// </summary>

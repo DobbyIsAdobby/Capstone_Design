@@ -35,6 +35,30 @@ public class AssetTradePanel : MonoBehaviour
     /*
     function Zone
     */
+    /// <summary>
+    /// 기존 자산군에 따른 자산 타입 분류를 간편화하기 위한 메서드
+    /// </summary>
+    /// <returns></returns>
+    private string GetAssetName()
+    {
+        switch (assetType)
+        {
+            case AssetType.Bank:
+                return "은행";
+            case AssetType.Stock:
+                return "주식";
+            case AssetType.Leverage:
+                return "레버리지";
+            case AssetType.StockInverse:
+                return "주식 인버스";
+            case AssetType.LeverageInverse:
+                return "레버리지 인버스";
+
+            default:
+                return "알 수 없는 자산";
+        }
+    }
+
     private long TradeLimit
     {
         get
@@ -89,7 +113,8 @@ public class AssetTradePanel : MonoBehaviour
     public void Refresh()
     {
         // 자산군에 따른 자산 타입 분류
-        string assetName = assetType == AssetType.Bank ? "은행" : assetType == AssetType.Stock ? "주식" : "레버리지";
+        //string assetName = assetType == AssetType.Bank ? "은행" : assetType == AssetType.Stock ? "주식" : "레버리지";
+        string assetName = GetAssetName();
         // 자산군에 따른 액션 단어 분류
         string action = assetType == AssetType.Bank ? (isBuying ? "예금" : "출금") : (isBuying ? "매수" : "매도");
 

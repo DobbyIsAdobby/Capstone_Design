@@ -32,7 +32,11 @@ public class ReceiptRowUI : MonoBehaviour
     /// <param name="line"></param>
     public void Bind(ReceiptLine line)
     {
-        nameText.text = line.Name;
+        //nameText.text = line.Name;
+        // 이벤트는 이벤트로만 청구서에 표기하기.
+        bool isEvent = line.Name != null && line.Name.StartsWith("이벤트:", System.StringComparison.Ordinal);
+
+        nameText.text = isEvent ? "이벤트" : line.Name;
 
         // C# 커스텀 숫자 서식 사용. 양수/음수/0
         // #,0 : 숫자 자리 표시자 + 1,000단위 구분 기호(,)
@@ -40,8 +44,8 @@ public class ReceiptRowUI : MonoBehaviour
 
         Color color;
 
-        // 고정 지출일 경우
-        if (line.Type == ReceiptLineType.FixedExpense)
+        // 고정 지출일 경우 + Financing일 경우도 추가
+        if (line.Type == ReceiptLineType.FixedExpense || line.Type == ReceiptLineType.Financing)
         {
             color = fixedExpenseColor;
         }

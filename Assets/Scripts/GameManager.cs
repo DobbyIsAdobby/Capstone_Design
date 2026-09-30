@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,25 +11,23 @@ public class GameManager : Singleton<GameManager>
 
     [Header("Game Time")]
     public int currentMonth = 1;
-    public int maxMonth = 120; // 총 10년 (120턴)
+    // Inspector에 기존 값이 남을 수 있으므로 Start에서도 60으로 맞춰줘야함.
+    public int maxMonth = MarketModelConfig.TurnCount;
 
     [Header("Player Status")]
     public long availableCash = 5000000; // 초기 자본금 500만 원
     public float stressLevel = 0f; // 스트레스 지수
-    public long TotalAsset //총 자산은 투자 자산과 현재 현금에 따라 변동되므로 프로퍼티로 지정.
-    {
-        get
-        {
-            // 가용 현금 + (AssetManager에서 가져온 투자 자산 평가액 총합) => 총 보유 자산
-            long investedValue = 0;
-            if(AssetManager.Instance != null)
-            {
-                investedValue = AssetManager.Instance.GetTotalInvestedValue();
-            }
+    
+    /// <summary>
+    /// 대출을 차감하기 전의 자산 합계
+    /// </summary>
+    public long GrossAsset => availableCash + (AssetManager.Instance != null ? AssetManager.Instance.GetTotalInvestedValue() : 0L);
 
-            return availableCash + investedValue;
-        }
-    }
+    /// <summary>
+    /// TotalAsset을 참조하는 HUD/청구서는 순자산을 사용함.
+    /// </summary>
+    public long TotalAsset => GrossAsset - (LoanManager.Instance != null ? LoanManager.Instance.OutstandingPrincipal : 0L);
+
     public int currentMonthOvertimeCount = 0; // 이번 달 야근 횟수
     public readonly int maxOvertimePerMonth = 30; // 한 달 최대 야근 가능 횟수(불변성 적용)
 
@@ -36,6 +35,13 @@ public class GameManager : Singleton<GameManager>
     [SerializeField, Min(1)]
     private float baseMaxStress = 100f;
     public float MaxStress => baseMaxStress + (ShopManager.Instance != null ? ShopManager.Instance.MaxStressBonus : 0f);
+
+    [Header("AP")]
+    [SerializeField, Min(1)]
+    private int baseMaxAP = 100;
+
+    [SerializeField, Min(0)]
+    private int overtimeAPCost = 1;
 
     [Header("Income & Expense")]
     public long monthlySalary = 3000000;
@@ -46,6 +52,10 @@ public class GameManager : Singleton<GameManager>
     private readonly List<ReceiptLine> monthlyLines = new List<ReceiptLine>();
     
     private bool hasMonthBaseLine;
+
+    [Header("Market Generation")]
+    [SerializeField] private MarketGenerator marketGenerator;
+
 
     /*
     function Zone
@@ -64,22 +74,172 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public bool IsGameOver{ get; private set; }
     /// <summary>
+    /// 파산 여부. 일반적 게임 종료와 구분
+    /// </summary>
+    public bool IsBankrupt { get; private set;}
+    /// <summary>
+    /// 결과창에서 사용할 파산 사유
+    /// </summary>
+    public string BankruptcyCause { get; private set; } = "";
+    /// <summary>
+    /// 미납금액은 마이너스된 현금을 양수로 표시한 값
+    /// </summary>
+    public long UnpaidAmount => availableCash < 0 ? -availableCash : 0;
+    /// <summary>
+    /// 정산 중 처음으로 현금 부족을 발생시킨 지출.
+    /// </summary>
+    private string pendingBankruptcyCause = "";
+    /// <summary>
     /// 세팅을 진행해도 되는지 확인. 기본값 : false
     /// </summary>
     public bool IsSetting{ get; private set; }
     /// <summary>
-    /// 초기 자산 설정이 끝난 후를 월 시작 기준으로, 게임 오버 여부에 따라 행동 제약을 걸음.
+    /// 시장과 월 기록이 준비됐고, 정산,게임 종료 상태가 아닐 때만 행동
     /// </summary>
-    public bool CanAct => hasMonthBaseLine && !IsGameOver && !IsSetting;
+    public bool CanAct => hasMonthBaseLine && !IsGameOver && !IsSetting && DataManager.Instance != null && DataManager.Instance.IsMarketReady;
     /// <summary>
     /// 총 자산 확인
     /// </summary>
     public long MonthStartTotalAsset { get; private set; }
+    /// <summary>
+    /// 현재 AP 조회
+    /// </summary>
+    public int CurrentAP { get; private set; }
+    // JSON 내에서 자동차를 구매시 최대 AP를 20 증가하는 로직이 존재함.
+    // 소유 목록으로 계산하므로 화면을 열 때마다 중복 증가하지 않도록 함.
+    public int MaxAP => baseMaxAP + (ShopManager.Instance != null ? ShopManager.Instance.MaxAPBonus : 0);
+    // 같은 턴에 초기화 함수가 중복 호출되어도 AP를 다시 채우지 않음.
+    private int lastAPResetTurn = -1;
 
+    /*
     private void Start()
     {
         BeginMonthRecord();
     }
+    */
+
+    /// <summary>
+    /// 시장 생성이 완료될 때까지 기다린 뒤 플레이를 시작함. 
+    /// IEnumerator Start는 유니티가 코루틴으로 실행함.
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator Start()
+    {
+        // 아직 플레이를 시작하지 않았으므로 행동할 수 없음
+        hasMonthBaseLine = false;
+
+        // Inspector에 60으로 재조정할 것.
+        maxMonth = MarketModelConfig.TurnCount;
+
+        // LoanManager 누락으로 채무 계산이나 청구가 생략되지 않도록
+        if (LoanManager.Instance == null || !LoanManager.Instance.IsConfigured)
+        {
+            Debug.LogError("LoanManager와 LoanRules 설정을 확인하세요.");
+            yield break;
+        }
+
+        // 수익률 자동 생성 모델 적용이 생략되지 않도록
+        if (marketGenerator == null || !marketGenerator.isActiveAndEnabled)
+        {
+            Debug.LogError("활성화된 MarketGenerator를 GameManager에 연결하세요.");
+
+            yield break;
+        }
+
+        marketGenerator.Begin();
+
+        // 다음 프레임으로 제어를 넘기면서 생성 완료 여부 대기
+        // 이 동안 MarketGenerator.Update가 생성 작업을 진행함
+        while (!marketGenerator.IsFinished)
+            yield return null;
+
+        if (!marketGenerator.Succeeded)
+        {
+            Debug.LogError($"시장 생성 실패로 게임을 시작할 수 없습니다: " + marketGenerator.Error);
+
+            yield break;
+        }
+
+        // 시작 자산 기준을 기록하고 이제부터 행동할 수 있음.
+        BeginMonthRecord();
+        UpdateUI();
+    }
+
+    /// <summary>
+    /// 새로운 턴에 진입하면 최대 AP로 초기화.
+    /// 지난 턴에 남은 AP에 추가하면 안됨 - 이월 금지
+    /// </summary>
+    private void BeginAPTurn()
+    {
+        if (lastAPResetTurn == currentMonth)
+            return;
+
+        lastAPResetTurn = currentMonth;
+        CurrentAP = MaxAP;
+    }
+
+    /// <summary>
+    /// AP 보유량에 따라 현재 사용 가능한지만 검사
+    /// 버튼 표시와 행동 실행 여부 양쪽에서 사용함.
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <param name="reason"></param>
+    /// <returns></returns>
+    public bool CanSpendAP(int amount, out string reason)
+    {
+        reason = "";
+
+        if (!CanAct)
+        {
+            reason = "지금은 행동할 수 없습니다.";
+            return false;
+        }
+
+        if (amount < 0)
+        {
+            reason = "AP 소모량 설정이 올바르지 않습니다.";
+            return false;
+        }
+
+        if (CurrentAP < amount)
+        {
+            reason = $"AP가 부족합니다. 필요 {amount}, 보유 {CurrentAP}";
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// AP가 충분할 때만 차감함.
+    /// 부족하면 현재 AP를 유지하고 실패를 반환
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <param name="reason"></param>
+    /// <returns></returns>
+    public bool TrySpendAP(int amount, out string reason)
+    {
+        if (!CanSpendAP(amount, out reason))
+            return false;
+
+        CurrentAP -= amount;
+        return true;
+    }
+
+    /// <summary>
+    /// AP 회복 효과를 적용할 경우 최대치를 넘지 않도록 함.
+    /// 화면 갱신은 구매 전체 처리가 끝난 뒤 호출
+    /// </summary>
+    /// <param name="amount"></param>
+    public void RecoverAP(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        int recoverable = Mathf.Max(0, MaxAP - CurrentAP);
+        CurrentAP += Mathf.Min(amount, recoverable);
+    }
+
 
     /// <summary>
     /// 지난 턴 영수증 내역 초기화 및 총 자산 업데이트를 진행하는 함수
@@ -89,6 +249,16 @@ public class GameManager : Singleton<GameManager>
         monthlyLines.Clear();
         MonthStartTotalAsset = TotalAsset;
         hasMonthBaseLine = true;
+
+        // 첫 턴 및 다음 턴 진입 시 최대치로 초기화.
+        // 같은 턴에 중복 호출되어도 다시 회복하지 않음.
+        BeginAPTurn();
+
+        // 새로운 턴마다 이전 정보를 초기화하고, 휴대폰을 갖고있으면 하급 정보를 미리 공개.
+        if(RumorManager.Instance != null)
+        {
+            RumorManager.Instance.BeginTurn();
+        }
     }
 
     /// <summary>
@@ -101,6 +271,42 @@ public class GameManager : Singleton<GameManager>
     {
         availableCash += amount;
         RecordMonthlyChange(label, amount, type);
+    }
+
+    /// <summary>
+    /// 생활비, 할부금, 유지비, 이벤트, 병원비용 잔액 검증 함수
+    /// </summary>
+    /// <param name="amount"></param>
+    /// <param name="label"></param>
+    /// <param name="type"></param>
+    public void ApplyMandatoryExpense(long amount, string label, ReceiptLineType type = ReceiptLineType.Change)
+    {
+        if (amount <= 0)
+            return;
+
+        // 잔액이 부족해도 비용 전액 차감 및 청구서 기록.
+        ApplyCashChange(-amount, label, type);
+
+        // 여기서는 파산을 확정하지 않고 원인만 보관.
+        if (availableCash < 0 &&
+            string.IsNullOrEmpty(pendingBankruptcyCause))
+        {
+            pendingBankruptcyCause = label;
+        }
+    }
+
+    // 정산이 끝난 뒤 파산 확인용 함수
+    private void ResolveBankruptcyAfterSettlement()
+    {
+        if (availableCash >= 0)
+        {
+            pendingBankruptcyCause = "";
+            return;
+        }
+
+        string cause = string.IsNullOrEmpty(pendingBankruptcyCause) ? "필수 지출 정산" : pendingBankruptcyCause;
+
+        TriggerBankruptcy(cause);
     }
 
     /// <summary>
@@ -155,6 +361,21 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
+        // 현금이나 자산을 변경하기 전에 이번 턴 데이터 존재 여부를 확인함
+        // 급여부터 반영한 뒤 데이터 누락을 발견하는 상황을 방지하고자 함. 
+        // out _ => out 파라미터 값을 무시하고 결과 여부만 확인하고자 함
+        if(!DataManager.Instance.TryGetGeneratedMarketRates(currentMonth, out _))
+        {
+            Debug.LogError($"{currentMonth}턴 시장 데이터가 없어 정산을 중단합니다.");
+            return; // - 얘 왜 빠져있었음?
+        }
+
+        if (LoanManager.Instance == null || !LoanManager.Instance.IsConfigured)
+        {
+            Debug.LogError("대출 시스템 설정 오류로 정산을 중단합니다.");
+            return;
+        }
+
         IsSetting = true;
 
         ProcessMonthlySettlement();
@@ -185,6 +406,10 @@ public class GameManager : Singleton<GameManager>
 
         foreach(ReceiptLine line in orderedLines)
         {
+            // 원금 거래는 청구서에 표시하지만 수익 합계에서는 제외함
+            if (line.Type == ReceiptLineType.Financing)
+                continue;
+                
             recordedChange += line.Amount;
         }
 
@@ -193,7 +418,7 @@ public class GameManager : Singleton<GameManager>
             Debug.LogWarning($"월별 기록 불일치 : 내역 합계 {recordedChange:N0}원 / " + $"실제 자산 증감 {assetChange:N0}원");
         }
 
-        MonthlyReceiptData result = new MonthlyReceiptData(orderedLines, assetChange, totalAfterSettlement, IsGameOver, currentMonth >= maxMonth);
+        MonthlyReceiptData result = new MonthlyReceiptData(orderedLines, assetChange, totalAfterSettlement, UnpaidAmount, IsBankrupt, currentMonth >= maxMonth);
 
         receiptPanel.Show(result, CompleteMonthReceipt);
         UpdateUI();
@@ -222,37 +447,55 @@ public class GameManager : Singleton<GameManager>
             EventManager.Instance.CheckMonthlyEvent(currentMonth);
         }*/
 
+        pendingBankruptcyCause = "";
+
+        // 급여 지급
         ApplyCashChange(monthlySalary, "급여");
 
-        ApplyCashChange(-fixedExpense, "생활비", ReceiptLineType.FixedExpense);
-
+        // 자산 수익률 계산
         AssetManager assets = AssetManager.Instance;
 
         long bankBefore = assets.bankBalance;
         long stockBefore = assets.stockBalance;
         long leverageBefore = assets.leverageBalance;
+        long stockInverseBefore = assets.stockInverseBalance;
+        long leverageInverseBefore = assets.leverageInverseBalance;
 
         assets.CalculateMonthlyReturns();
 
         long bankProfit = assets.bankBalance - bankBefore;
         long stockProfit = assets.stockBalance - stockBefore;
         long leverageProfit = assets.leverageBalance - leverageBefore;
+        long stockInverseProfit = assets.stockInverseBalance - stockInverseBefore;
+        long leverageInverseProfit = assets.leverageInverseBalance - leverageInverseBefore;
 
         RecordMonthlyChange("예금 이자", bankProfit);
-        RecordMonthlyChange("주식 평가손익", stockProfit);
-        RecordMonthlyChange("레버리지 평가손익", leverageProfit);
+        RecordMonthlyChange("주식 손익", stockProfit);
+        RecordMonthlyChange("레버리지 손익", leverageProfit);
+        // 청구서의 긴 라벨 문제를 피하도록 짧게 표기합니다.
+        RecordMonthlyChange("주식 인버스", stockInverseProfit);
+        RecordMonthlyChange("레버리지 인버스", leverageInverseProfit);
 
+        // 생활비
+        ApplyMandatoryExpense(fixedExpense, "생활비", ReceiptLineType.FixedExpense);
+
+        //전체 자산 상품 이익(노트북 보너스 계산용)
+        long marketProfit = stockProfit + leverageProfit + stockInverseProfit + leverageInverseProfit;
+
+        // 상점 보유 효과, 할부금, 유지비
         if (ShopManager.Instance != null)
         {
-            ShopManager.Instance.ProcessMonthlySettlement(
-                currentMonth,
-                stockProfit + leverageProfit);
+            ShopManager.Instance.ProcessMonthlySettlement(currentMonth, stockProfit + leverageProfit);
         }
 
-        if (IsGameOver)
-            return;
-
+        // 이번 달 납부 대상 이벤트
         EventManager.Instance.ResolvePendingPenalty();
+
+        // 대출 이자 및 만기 원금 청구
+        LoanManager.Instance.ProcessMonthlySettlement(currentMonth);
+
+        // 모든 정산을 반영한 뒤 파산 판정
+        ResolveBankruptcyAfterSettlement();
     }
 
     private void CompleteMonthReceipt()
@@ -292,17 +535,14 @@ public class GameManager : Singleton<GameManager>
     /// <param name="cause"></param>
     public void TriggerBankruptcy(string cause)
     {
-        if(IsGameOver) return;
+        if (IsGameOver)
+            return;
 
+        IsBankrupt = true;
         IsGameOver = true;
+        BankruptcyCause = cause;
 
-        Debug.LogError("파산하셨습니다.");
-        Debug.LogError($"파산 사유 : {cause}");
-
-        //추가 조작을 막기 위해 턴을 강제로 maxMonth이상으로 올리고 추후 UI 팝업을 띄울 예정 - 더이상 사용하지 않음.
-        //currentMonth = maxMonth + 1;
-
-        //UIManager.Instance.ShowGameOverPanel(cause);
+        Debug.Log($"파산 사유: {BankruptcyCause}\n" + $"정산 후 현금: {availableCash:N0}원\n" + $"미납금액: {UnpaidAmount:N0}원\n" + $"총자산: {TotalAsset:N0}원");
 
         UpdateUI();
     }
@@ -322,6 +562,14 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
+        // 야근 가능 횟수를 먼저 검사한 후 AP를 차감함.
+        // 횟수 초과로 인해 실행하지 못한 야근은 현금/피로도/야근 횟수가 변경되지 않음.
+        if (!TrySpendAP(overtimeAPCost, out string reason))
+        {
+            Debug.Log(reason);
+            return;
+        }
+
         ApplyCashChange(50000, "야근 수입");      //탭 1회당 5만 원 추가 -> 로직 변경으로 수정
         stressLevel += 5f;           //탭 1회당 스트레스 5% 증가
         currentMonthOvertimeCount++; //탭 1회당 야근 횟수 1회 추가
@@ -332,27 +580,20 @@ public class GameManager : Singleton<GameManager>
 
     private void CheckStressPenalty()
     {
-        if (stressLevel >= MaxStress)
-        {
-            long hospitalBill = 3000000; // 병원비 300만 원
-            Debug.LogWarning("Stress Gauge is 100%. Penalty Active.");
+        if (stressLevel < MaxStress)
+            return;
 
-            if (availableCash >= hospitalBill)
-            {
-                // 현금이 충분할 경우 병원비 지불 및 스트레스 완화
-                ApplyCashChange(-hospitalBill, "병원비");
-                stressLevel = 50f; // 치료를 받았으므로 50%로 완화
-                Debug.Log($"응급실 비용 {hospitalBill:N0}원 지불 완료. 남은 현금: {availableCash:N0}원");
-            }
-            else
-            {
-                // 현금이 부족한 경우 파산(게임 오버) 처리
-                long shortage = hospitalBill - availableCash;
-                Debug.LogError($"병원비가 {shortage:N0}원 부족하여 파산했습니다.");
-                
-                // TriggerBankruptcy를 호출하여 파산 사유 전달
-                TriggerBankruptcy("응급실 병원비 미납");
-            }
+        pendingBankruptcyCause = "";
+
+        ApplyMandatoryExpense(3000000, "병원비", ReceiptLineType.Change);
+
+        ResolveBankruptcyAfterSettlement();
+
+        if (!IsGameOver)
+        {
+            stressLevel = 50f;
+
+            Debug.Log($"병원비 납부 완료. 남은 현금: {availableCash:N0}원");
         }
     }
 
