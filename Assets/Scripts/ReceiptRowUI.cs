@@ -44,8 +44,8 @@ public class ReceiptRowUI : MonoBehaviour
 
         Color color;
 
-        // 고정 지출일 경우
-        if (line.Type == ReceiptLineType.FixedExpense)
+        // 고정 지출일 경우 + Financing일 경우도 추가
+        if (line.Type == ReceiptLineType.FixedExpense || line.Type == ReceiptLineType.Financing)
         {
             color = fixedExpenseColor;
         }

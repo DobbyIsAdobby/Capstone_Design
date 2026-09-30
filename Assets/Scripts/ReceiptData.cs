@@ -4,6 +4,7 @@ public enum ReceiptLineType
 {
     FixedExpense,   // 고정지출 : 검정
     Change,         // 수익|지출 : 부호에 따라 색상 변경 -빨|+초
+    Financing,      // 현금과 채무가 함께 변하는 대출 원금 거래 - 청구서에는 표시하지만 수익 계산에서는 제외함.
 }
 
 public readonly struct ReceiptLine

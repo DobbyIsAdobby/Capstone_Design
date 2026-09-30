@@ -17,20 +17,17 @@ public class GameManager : Singleton<GameManager>
     [Header("Player Status")]
     public long availableCash = 5000000; // 초기 자본금 500만 원
     public float stressLevel = 0f; // 스트레스 지수
-    public long TotalAsset //총 자산은 투자 자산과 현재 현금에 따라 변동되므로 프로퍼티로 지정.
-    {
-        get
-        {
-            // 가용 현금 + (AssetManager에서 가져온 투자 자산 평가액 총합) => 총 보유 자산
-            long investedValue = 0;
-            if(AssetManager.Instance != null)
-            {
-                investedValue = AssetManager.Instance.GetTotalInvestedValue();
-            }
+    
+    /// <summary>
+    /// 대출을 차감하기 전의 자산 합계
+    /// </summary>
+    public long GrossAsset => availableCash + (AssetManager.Instance != null ? AssetManager.Instance.GetTotalInvestedValue() : 0L);
 
-            return availableCash + investedValue;
-        }
-    }
+    /// <summary>
+    /// TotalAsset을 참조하는 HUD/청구서는 순자산을 사용함.
+    /// </summary>
+    public long TotalAsset => GrossAsset - (LoanManager.Instance != null ? LoanManager.Instance.OutstandingPrincipal : 0L);
+
     public int currentMonthOvertimeCount = 0; // 이번 달 야근 횟수
     public readonly int maxOvertimePerMonth = 30; // 한 달 최대 야근 가능 횟수(불변성 적용)
 
@@ -134,6 +131,14 @@ public class GameManager : Singleton<GameManager>
         // Inspector에 60으로 재조정할 것.
         maxMonth = MarketModelConfig.TurnCount;
 
+        // LoanManager 누락으로 채무 계산이나 청구가 생략되지 않도록
+        if (LoanManager.Instance == null || !LoanManager.Instance.IsConfigured)
+        {
+            Debug.LogError("LoanManager와 LoanRules 설정을 확인하세요.");
+            yield break;
+        }
+
+        // 수익률 자동 생성 모델 적용이 생략되지 않도록
         if (marketGenerator == null || !marketGenerator.isActiveAndEnabled)
         {
             Debug.LogError("활성화된 MarketGenerator를 GameManager에 연결하세요.");
@@ -362,6 +367,13 @@ public class GameManager : Singleton<GameManager>
         if(!DataManager.Instance.TryGetGeneratedMarketRates(currentMonth, out _))
         {
             Debug.LogError($"{currentMonth}턴 시장 데이터가 없어 정산을 중단합니다.");
+            return; // - 얘 왜 빠져있었음?
+        }
+
+        if (LoanManager.Instance == null || !LoanManager.Instance.IsConfigured)
+        {
+            Debug.LogError("대출 시스템 설정 오류로 정산을 중단합니다.");
+            return;
         }
 
         IsSetting = true;
@@ -394,6 +406,10 @@ public class GameManager : Singleton<GameManager>
 
         foreach(ReceiptLine line in orderedLines)
         {
+            // 원금 거래는 청구서에 표시하지만 수익 합계에서는 제외함
+            if (line.Type == ReceiptLineType.Financing)
+                continue;
+                
             recordedChange += line.Amount;
         }
 
@@ -474,6 +490,9 @@ public class GameManager : Singleton<GameManager>
 
         // 이번 달 납부 대상 이벤트
         EventManager.Instance.ResolvePendingPenalty();
+
+        // 대출 이자 및 만기 원금 청구
+        LoanManager.Instance.ProcessMonthlySettlement(currentMonth);
 
         // 모든 정산을 반영한 뒤 파산 판정
         ResolveBankruptcyAfterSettlement();
