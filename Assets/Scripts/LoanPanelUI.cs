@@ -213,7 +213,7 @@ public class LoanPanelUI : MonoBehaviour
         long interest = rules.CalculateInterest(selectedAmount);
 
         previewText.text = maximumDuration > 0
-            ? $"월 금리 {rules.MonthlyRate * 100m:0.##}%\n" +
+            ? $"월 금리 {rules.AnnualRate * 100m:0.##}%\n" +
               $"매월 이자 {interest:N0}원\n" +
               $"만기 {game.currentMonth + selectedDuration}턴 마감\n" +
               $"이자 총 {selectedDuration + 1}회\n" +

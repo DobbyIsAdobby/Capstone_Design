@@ -39,12 +39,12 @@ public class GameManager : Singleton<GameManager>
     [Header("AP")]
     [SerializeField, Min(1)]
     private int baseMaxAP = 100;
-
     [SerializeField, Min(0)]
     private int overtimeAPCost = 1;
 
+
     [Header("Income & Expense")]
-    public long monthlySalary = 3000000;
+    public long monthlySalary  => JobManager.Instance != null ? JobManager.Instance.MonthlySalary : 0L; // 고정된 값이 아닌 현재 직급의 급여를 사용함 - 직급 시스템 연결 완료
     public long fixedExpense = 1500000; // 고정 지출 (월세, 생활비 등) => 추후 인플레이션에 따른 턴마다 증액 함수 필요.
 
     [Header("Monthly Receipt")]
@@ -94,9 +94,17 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public bool IsSetting{ get; private set; }
     /// <summary>
-    /// 시장과 월 기록이 준비됐고, 정산,게임 종료 상태가 아닐 때만 행동
+    /// 시장과 월 기록, 직급 게임이 준비됐고, 정산,게임 종료 상태가 아닐 때만 행동
     /// </summary>
-    public bool CanAct => hasMonthBaseLine && !IsGameOver && !IsSetting && DataManager.Instance != null && DataManager.Instance.IsMarketReady;
+    public bool CanAct =>
+        hasMonthBaseLine &&
+        !IsGameOver &&
+        !IsSetting &&
+        DataManager.Instance != null &&
+        DataManager.Instance.IsMarketReady &&
+        JobManager.Instance != null &&
+        JobManager.Instance.IsConfigured &&
+        !JobManager.Instance.IsPlaying;
     /// <summary>
     /// 총 자산 확인
     /// </summary>
@@ -138,11 +146,25 @@ public class GameManager : Singleton<GameManager>
             yield break;
         }
 
+        // JobManager 연결이 생략되지 않도록
+        if (JobManager.Instance == null ||
+            !JobManager.Instance.IsConfigured)
+        {
+            Debug.LogError("JobManager와 JobRules 설정을 확인하세요.");
+            yield break;
+        }
+
         // 수익률 자동 생성 모델 적용이 생략되지 않도록
         if (marketGenerator == null || !marketGenerator.isActiveAndEnabled)
         {
             Debug.LogError("활성화된 MarketGenerator를 GameManager에 연결하세요.");
 
+            yield break;
+        }
+
+        if (WealthTierManager.Instance == null || !WealthTierManager.Instance.IsConfigured)
+        {
+            Debug.LogError("WealthTierManager의 씬 참조와 5개 티어 에셋을 확인하세요.");
             yield break;
         }
 
@@ -259,6 +281,9 @@ public class GameManager : Singleton<GameManager>
         {
             RumorManager.Instance.BeginTurn();
         }
+
+        // 새 턴의 순자산으로 외형과 등급을 확정.
+        WealthTierManager.Instance.ApplyAtTurnStart(currentMonth, TotalAsset);
     }
 
     /// <summary>
@@ -496,6 +521,13 @@ public class GameManager : Singleton<GameManager>
 
         // 모든 정산을 반영한 뒤 파산 판정
         ResolveBankruptcyAfterSettlement();
+
+        // 정상 진행 중인 경우에만 월 고정 경험치를 지급
+        // 이번 턴 급여는 이미 지급됐으므로, 승급 급여는 다음 턴부터 적용
+        if (!IsGameOver)
+        {
+            JobManager.Instance.ProcessMonthlyExperience(currentMonth);
+        }
     }
 
     private void CompleteMonthReceipt()

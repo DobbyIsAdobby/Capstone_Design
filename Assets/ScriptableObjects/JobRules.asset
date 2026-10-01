@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd67d5d080bff7f41acb9d5d2db12f67, type: 3}
+  m_Name: JobRules
+  m_EditorClassIdentifier: Assembly-CSharp::JobRules
+  grades:
+  - gradeName: "\uBC31\uC218"
+    salary: 0
+    requiredExperience: 50
+  - gradeName: "\uC54C\uBC14"
+    salary: 500000
+    requiredExperience: 80
+  - gradeName: "\uC778\uD134"
+    salary: 1000000
+    requiredExperience: 120
+  - gradeName: "\uC0AC\uC6D0"
+    salary: 1800000
+    requiredExperience: 170
+  - gradeName: "\uC8FC\uC784"
+    salary: 2600000
+    requiredExperience: 230
+  - gradeName: "\uB300\uB9AC"
+    salary: 3600000
+    requiredExperience: 300
+  - gradeName: "\uACFC\uC7A5"
+    salary: 4900000
+    requiredExperience: 390
+  - gradeName: "\uCC28\uC7A5"
+    salary: 6400000
+    requiredExperience: 500
+  - gradeName: "\uBD80\uC7A5"
+    salary: 8100000
+    requiredExperience: 650
+  - gradeName: "\uC784\uC6D0"
+    salary: 10000000
+    requiredExperience: 0
+  apCost: 30
+  successExperience: 20
+  failureExperience: 10
+  travelSpeed: 0.8
+  successWidth: 0.22

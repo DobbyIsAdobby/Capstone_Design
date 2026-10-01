@@ -175,7 +175,7 @@ public class LoanManager : Singleton<LoanManager>
 
         GameManager game = GameManager.Instance;
 
-        var contract = new LoanContract(nextContractId++, amount, game.currentMonth, duration, rules.MonthlyRate);
+        var contract = new LoanContract(nextContractId++, amount, game.currentMonth, duration, rules.AnnualRate);
 
         // 계약과 현금을 모두 변경한 뒤 호출 측에서 화면 갱신
         contracts.Add(contract);
