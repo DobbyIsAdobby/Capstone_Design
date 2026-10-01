@@ -47,7 +47,7 @@ public class ShopPurchasePanelUI : MonoBehaviour
         productIcon.enabled = icon != null;
 
         productNameText.text = item.DisplayName;
-        effectText.text = item.Description + GetPendingEffectNote(item);
+        effectText.text = item.Description;
         priceText.text = $"{item.Price:N0}원";
 
         bool prestige = item.Category == ShopCategory.Prestige;
@@ -157,6 +157,7 @@ public class ShopPurchasePanelUI : MonoBehaviour
             paymentScheduleText.text += $"\n마지막 회차 {last:N0}원";
     }
 
+    /* -- 구현이 전부 완료되었기에, 더 이상 사용하지 않음 -- 추후 미구현 파트가 생기면, 이 함수를 풀어서 재사용할 것.
     private static string GetPendingEffectNote(ShopItemData data)
     {
         //bool ap = false;
@@ -183,4 +184,5 @@ public class ShopPurchasePanelUI : MonoBehaviour
 
         return note;
     }
+    */
 }

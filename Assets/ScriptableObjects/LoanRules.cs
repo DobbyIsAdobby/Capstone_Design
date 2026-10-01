@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 // 대출 규칙이므로 MonoBehaviour로 Scene이 로드될때 마다 새롭게 생성될 필요가 없음.
 // 따라서 ScriptableObject로 생성. - 데이터만 저장하는 객체이기 때문
@@ -38,9 +39,10 @@ public class LoanRules : ScriptableObject
     };
 
     [Header("Interest Rate")]
-    [Tooltip("100 = 1%, 700 = 월 7%")]
+    [Tooltip("연이율 설정: 100 = 연 1%, 700 = 연 7%")]
+    [FormerlySerializedAs("monthlyRateBasisPoints")]
     [SerializeField, Range(0, 10000)]
-    private int monthlyRateBasisPoints = 700;
+    private int annualRateBasisPoints = 700;
 
     [Header("Prerequisites")]
     [SerializeField, Range(1, 12)]
@@ -53,7 +55,11 @@ public class LoanRules : ScriptableObject
     private long amountStep = 10_000;
 
     // float 오차를 피하기 위해 decimal type 사용.
-    public decimal MonthlyRate => monthlyRateBasisPoints / 10000m;
+    // 연 7%는 0.07
+    public decimal AnnualRate => annualRateBasisPoints / 10000m;
+
+    // 월 환산 금리
+    public decimal MonthlyRate => AnnualRate / 12m;
     public int MaxDuration => maxDuration;
     public long MinimumLoanAmount => minimumLoanAmount;
     public long AmountStep => amountStep;
@@ -94,7 +100,7 @@ public class LoanRules : ScriptableObject
             return false;
         }
 
-        if (maxDuration < 1 || maxDuration > 12 || monthlyRateBasisPoints < 0 || monthlyRateBasisPoints > 10000)
+        if (maxDuration < 1 || maxDuration > 12 || annualRateBasisPoints < 0 || annualRateBasisPoints > 10000)
         {
             error = "대출 기간 또는 금리가 올바르지 않습니다.";
             return false;
@@ -125,8 +131,9 @@ public class LoanRules : ScriptableObject
 
     public long CalculateInterest(long principal)
     {
-        // 원 미만은 버림
-        return (long)decimal.Floor(principal * MonthlyRate);
+        // 연 이자를 계산한 뒤 12개월로 나누고, 마지막에 원 미만을 버림
+        // 월 환산 금리를 먼저 반올림하지 않음
+        return (long)decimal.Floor(principal * AnnualRate / 12m);
     }
 
     public string GetHelpText()
