@@ -12,8 +12,12 @@ public sealed class LoanContract
     public int Duration { get; }
     public int MaturityTurn { get; }
 
-    // 계약 당시 금리와 월 이자를 고정
-    public decimal MonthlyRate { get; }
+    // 계약 당시 연이율을 고정
+    public decimal AnnualRate { get; }
+
+    // 필요 시 월 환산 금리를 조회
+    public decimal MonthlyRate => AnnualRate / 12m;
+
     public long MonthlyInterest { get; }
 
     public int LastInterestPaidTurn { get; private set; }
@@ -27,17 +31,18 @@ public sealed class LoanContract
     /// <param name="principal"></param>
     /// <param name="startTurn"></param>
     /// <param name="duration"></param>
-    /// <param name="monthlyRate"></param>
-    public LoanContract(int id, long principal, int startTurn, int duration, decimal monthlyRate)
+    /// <param name="annualRate"></param>
+    public LoanContract(int id, long principal, int startTurn, int duration, decimal annualRate)
     {
         Id = id;
         Principal = principal;
         StartTurn = startTurn;
         Duration = duration;
         MaturityTurn = startTurn + duration;    // 만기일
-        MonthlyRate = monthlyRate;
+        
+        AnnualRate = annualRate;
 
-        MonthlyInterest = (long)decimal.Floor(principal * monthlyRate);
+        MonthlyInterest = (long)decimal.Floor(principal * annualRate / 12m);
 
         // 실행한 턴에도 첫 이자를 내야함
         LastInterestPaidTurn = startTurn - 1;

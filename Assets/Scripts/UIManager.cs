@@ -33,6 +33,9 @@ public class UIManager : Singleton<UIManager>
     [Header("Information Panel")]
     [SerializeField] private InformationPanel informationPanel;
 
+    [Header("Job HUD")]
+    [SerializeField] private TMP_Text jobGradeText;
+
     /*
     function Zone
     */
@@ -123,6 +126,14 @@ public class UIManager : Singleton<UIManager>
         if (informationPanel != null && informationPanel.isActiveAndEnabled)
         {
             informationPanel.Refresh();
+        }
+
+        // 직급 갱신
+        JobManager job = JobManager.Instance;
+
+        if (jobGradeText != null && job != null && job.IsConfigured)
+        {
+            jobGradeText.text = job.IsMaxGrade ? $"{job.GradeName}\nMAX" : $"{job.GradeName}\n";
         }
     }
 }
