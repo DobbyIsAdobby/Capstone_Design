@@ -13,6 +13,8 @@ public class GameManager : Singleton<GameManager>
     public int currentMonth = 1;
     // Inspector에 기존 값이 남을 수 있으므로 Start에서도 60으로 맞춰줘야함.
     public int maxMonth = MarketModelConfig.TurnCount;
+    //1턴 = 2030/1 -> 경과 개월은 현재 턴의 -1
+    public System.DateTime CurrentGameDate => new System.DateTime(2030,1,1).AddMonths(currentMonth - 1);
 
     [Header("Player Status")]
     public long availableCash = 5000000; // 초기 자본금 500만 원

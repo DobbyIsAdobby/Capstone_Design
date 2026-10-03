@@ -4325,6 +4325,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIManager
   monthText: {fileID: 760513765}
+  dateText: {fileID: 1039860459}
   totalAssetText: {fileID: 484844864}
   cashText: {fileID: 1337905611}
   stressText: {fileID: 2081083734}
@@ -4333,7 +4334,7 @@ MonoBehaviour:
   bankBalanceText: {fileID: 1767380395}
   stockBalanceText: {fileID: 942449996}
   leverageBalanceText: {fileID: 364430968}
-  warningPanelText: {fileID: 571843135}
+  lifeEventTicker: {fileID: 1912133111}
   tradePanels:
   - {fileID: 1617896854}
   assetNavigationPanel: {fileID: 216377582}
@@ -9693,12 +9694,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1912133108}
+  m_Father: {fileID: 672194708}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 50}
+  m_SizeDelta: {x: 800, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &571843135
 MonoBehaviour:
@@ -9754,7 +9755,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -11319,6 +11320,57 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &672194707
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 672194708}
+  - component: {fileID: 672194709}
+  m_Layer: 5
+  m_Name: TextViewport
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &672194708
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 672194707}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 571843134}
+  m_Father: {fileID: 1912133108}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 22, y: 0}
+  m_SizeDelta: {x: -76, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &672194709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 672194707}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
+  m_Padding: {x: 0, y: 0, z: 0, w: 0}
+  m_Softness: {x: 0, y: 0}
 --- !u!1 &681112984
 GameObject:
   m_ObjectHideFlags: 0
@@ -18115,7 +18167,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "20xx\uB144 x\uC6D4"
+  m_text: "2030\uB144 1\uC6D4"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 0e16e1429777d1543afff715e2a6ee85, type: 2}
   m_sharedMaterial: {fileID: 3255723613584503589, guid: 0e16e1429777d1543afff715e2a6ee85, type: 2}
@@ -33878,13 +33930,14 @@ GameObject:
   - component: {fileID: 1912133108}
   - component: {fileID: 1912133110}
   - component: {fileID: 1912133109}
+  - component: {fileID: 1912133111}
   m_Layer: 5
   m_Name: LifeEvent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1912133108
 RectTransform:
   m_ObjectHideFlags: 0
@@ -33897,7 +33950,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 571843134}
+  - {fileID: 672194708}
   - {fileID: 1526249578}
   m_Father: {fileID: 65135061}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -33944,6 +33997,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1912133107}
   m_CullTransparentMesh: 1
+--- !u!114 &1912133111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1912133107}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a4766c2c507cf349941362879098708, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LifeEventTickerUI
+  viewport: {fileID: 672194708}
+  eventText: {fileID: 571843135}
+  scrollSpeed: 60
+  startPause: 1.5
+  endPause: 1.5
 --- !u!1 &1915941086
 GameObject:
   m_ObjectHideFlags: 0
