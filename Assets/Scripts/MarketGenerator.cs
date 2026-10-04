@@ -282,7 +282,8 @@ public class MarketGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// 완성된 시장 등록과 자원 정리를 진행
+    /// 완성된 시장 등록과 모델에 관한 자원 정리만 진행
+    /// 로딩 패널은 유저가 시작 버튼을 누른 뒤에 닫힘.
     /// </summary>
     private void CompleteGeneration()
     {
@@ -297,8 +298,11 @@ public class MarketGenerator : MonoBehaviour
 
         SetProgress("시장 생성 완료");
 
+        // 스토리가 끝나기 전에 패널이 닫히면 안됨.
+        /*
         if (loadingRoot != null)
             loadingRoot.SetActive(false);
+        */
     }
 
     /// <summary>

@@ -11,6 +11,9 @@ public class EventManager : Singleton<EventManager>
     public long pendingPenaltyAmount = 0; //유예된 청구서 금액
     public string pendingEventName = "";  //유예된 청구서 사유
 
+    private SaveRandom eventRandom; // 이벤트도 별도의 난수(seed)를 갖도록 함.
+    private const int EventSeedSalt = 0x27439A51; // 같은 시장 시드에서도 이벤트용 난수를 별도로 만들기 위한 값
+
     /*
     function Zone
     */
@@ -27,6 +30,9 @@ public class EventManager : Singleton<EventManager>
     /// </summary>
     public void CheckMonthlyEvent(int currentMonth)
     {
+        // 새 게임에서 저장을 한 번도 하지 않았더라도 이벤트 추첨 전에 난수가 반드시 준비되도록 함. - 안할 시 nullReferenceException 발생함..
+        EnsureRandom();
+
         // 1. 확정적 생애 주기 이벤트 (프로토타입용 => 추후 밸런싱 필요)
         if (currentMonth == 24) // 2년 차
         {
@@ -41,7 +47,7 @@ public class EventManager : Singleton<EventManager>
             SetPendingEvent("자녀 양육비 및 교육비 목돈 지출", 20000000); // 2,000만 원
         }
         // 2. 무작위 돌발 지출 (예: 5% 확률로 150만 원 지출)
-        else if (Random.value <= 0.05f) 
+        else if (eventRandom.NextDouble() <= 0.05) 
         {
             SetPendingEvent("경조사 및 갑작스러운 질병 발생", 1500000); // 150만 원
         }
@@ -79,5 +85,50 @@ public class EventManager : Singleton<EventManager>
 
         // 복사한 값으로 실제 차감 및 청구서 기록.
         GameManager.Instance.ApplyMandatoryExpense(amount, $"이벤트: {eventName}", ReceiptLineType.Change);
+    }
+
+    /// <summary>
+    /// 이벤트 난수가 없을 때만 생성.
+    /// 이미 생성했거나 저장 상태를 복원했다면 그대로 유지함
+    /// </summary>
+    /// <exception cref="System.InvalidOperationException"></exception>
+    private void EnsureRandom()
+    {
+        // 매 턴 다시 생성하면 난수 진행 상태가 초기화되므로, 이미 존재할 때는 아무것도 하지 않음.
+        if (eventRandom != null)
+            return;
+
+        DataManager data = DataManager.Instance;
+
+        // 시장 시드가 확정되기 전에 잘못된 시드로 생성하지 않음.
+        if (data == null || !data.IsMarketReady)
+        {
+            throw new System.InvalidOperationException("시장 데이터가 준비되기 전에 이벤트 난수 초기화가 요청되었습니다.");
+        }
+
+        int seed = unchecked(data.MarketSeed ^ EventSeedSalt);
+
+        eventRandom = new SaveRandom(seed);
+    }
+
+    public EventSaveData CaptureSave()
+    {
+        EnsureRandom();
+
+        return new EventSaveData
+        {
+            pendingPenaltyAmount = pendingPenaltyAmount,
+            pendingEventName = pendingEventName,
+            randomState = eventRandom.State
+        };
+    }
+
+    public void RestoreSave(EventSaveData data)
+    {
+        pendingPenaltyAmount = data.pendingPenaltyAmount;
+        pendingEventName = data.pendingEventName;
+
+        eventRandom = new SaveRandom(1);
+        eventRandom.Restore(data.randomState);
     }
 }

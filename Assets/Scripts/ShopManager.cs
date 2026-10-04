@@ -455,6 +455,127 @@ public class ShopManager : Singleton<ShopManager>
             return false;
         }
     }
+
+    /// <summary>
+    /// 현재 턴 마감에 청구할 할부금과 유지비 조회.
+    /// 조회만 하고 현금, 남은 할부금, 납부 횟수는 변경하지 않음.
+    /// </summary>
+    /// <param name="installmentTotal"></param>
+    /// <param name="maintenanceTotal"></param>
+    public void GetCurrentMonthExpenses(out long installmentTotal, out long maintenanceTotal)
+    {
+        installmentTotal = 0;
+        maintenanceTotal = 0;
+
+        GameManager game = GameManager.Instance;
+
+        if(game == null)
+            return;
+
+        int turn = game.currentMonth;
+
+        // 이미 정산한 턴의 금액을 다시 표시하지 않음
+        if(turn <= lastSettlementTurn)
+            return;
+
+        foreach (OwnedItem owned in ownedItems)
+        {
+            // 청구 조건과 동일하게 계산
+            if (owned.RemainingPayments > 0 && turn >= owned.NextPaymentTurn)
+            {
+                // 마지막 회차에는 남은 잔액까지 전부 납부
+                long payment = owned.RemainingPayments == 1 ? owned.RemainingDebt : owned.MonthlyPayment;
+
+                installmentTotal += payment;
+            }
+
+            // 구매한 턴에는 유지비가 없고, 설정된 시작 턴부터 청구
+            if (turn >= owned.MaintenanceStartTurn && owned.MonthlyMaintenance > 0)
+            {
+                maintenanceTotal += owned.MonthlyMaintenance;
+            }
+        }
+    }
+
+    public ShopSaveData CaptureSave()
+    {
+        var data = new ShopSaveData
+        {
+            lastSettlementTurn = lastSettlementTurn,
+            lastOverseasTravelTurn = lastOverseasTravelTurn
+        };
+
+        foreach (var pair in purchaseCounts)
+        {
+            data.purchaseCounts.Add(new PurchaseCountSaveData
+            {
+                itemId = pair.Key,
+                count = pair.Value
+            });
+        }
+
+        foreach (OwnedItem owned in ownedItems)
+        {
+            data.ownedItems.Add(new OwnedItemSaveData
+            {
+                itemId = owned.Data.Id,
+                purchaseTurn = owned.PurchaseTurn,
+                monthlyMaintenance = owned.MonthlyMaintenance,
+                maintenanceStartTurn = owned.MaintenanceStartTurn,
+                remainingDebt = owned.RemainingDebt,
+                monthlyPayment = owned.MonthlyPayment,
+                remainingPayments = owned.RemainingPayments,
+                nextPaymentTurn = owned.NextPaymentTurn
+            });
+        }
+
+        return data;
+    }
+
+    public void RestoreSave(ShopSaveData data)
+    {
+        // 먼저 새 목록을 구성
+        // 상품 조회 중 실패했는데 기존 목록만 비워지는 것을 방지.
+        var restoredOwned = new List<OwnedItem>();
+        var restoredCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        foreach (PurchaseCountSaveData count in data.purchaseCounts)
+        {
+            if (!DataManager.Instance.TryGetShopItem(count.itemId, out _))
+                throw new InvalidOperationException("저장된 상품 ID를 찾을 수 없습니다.");
+
+            restoredCounts.Add(count.itemId, count.count);
+        }
+
+        foreach (OwnedItemSaveData saved in data.ownedItems)
+        {
+            if (!DataManager.Instance.TryGetShopItem(saved.itemId, out ShopItemData item))
+                throw new InvalidOperationException("보유 상품 데이터를 찾을 수 없습니다.");
+
+            restoredOwned.Add(new OwnedItem
+            {
+                Data = item,
+                PurchaseTurn = saved.purchaseTurn,
+                MonthlyMaintenance = saved.monthlyMaintenance,
+                MaintenanceStartTurn = saved.maintenanceStartTurn,
+                RemainingDebt = saved.remainingDebt,
+                MonthlyPayment = saved.monthlyPayment,
+                RemainingPayments = saved.remainingPayments,
+                NextPaymentTurn = saved.nextPaymentTurn
+            });
+        }
+
+        ownedItems.Clear();
+        ownedItems.AddRange(restoredOwned);
+
+        purchaseCounts.Clear();
+
+        foreach (var pair in restoredCounts)
+            purchaseCounts.Add(pair.Key, pair.Value);
+
+        lastSettlementTurn = data.lastSettlementTurn;
+        lastOverseasTravelTurn = data.lastOverseasTravelTurn;
+    }
     // 더이상 사용하지 않음.
     /*
     Inspector Zone

@@ -192,4 +192,57 @@ public class WealthTierManager : Singleton<WealthTierManager>
         Debug.Log(
             $"[{turn}턴] 재산 등급: {current.Name} / " + $"판정 순자산: {netWorth:N0}원");
     }
+
+    /// <summary>
+    /// 전달한 순자산이 다이아수저 조건을 충족하는지 확인.
+    /// 화면에 표시 중인 등급이나 배경은 변경하지 않음.
+    /// </summary>
+    /// <param name="netWorth"></param>
+    /// <returns></returns>
+    public bool MeetsDiamondRequirement(long netWorth)
+    {
+        if (!IsConfigured)
+            return false;
+
+        // 현재 5개 티어 중 마지막 티어가 다이아수저임
+        // Inspector의 기준 금액 그대로 사용
+        return FindTierIndex(netWorth) == tiers.Count - 1;
+    }
+
+    public WealthTierSaveData CaptureSave()
+    {
+        return new WealthTierSaveData
+        {
+            currentTierIndex = CurrentTierIndex,
+            appliedTurn = AppliedTurn,
+            netWorthAtTurnStart = NetWorthAtTurnStart
+        };
+    }
+
+    public void RestoreSave(WealthTierSaveData data)
+    {
+        if (!IsConfigured || data.currentTierIndex < 0 || data.currentTierIndex >= tiers.Count)
+        {
+            throw new InvalidOperationException("저장된 재산 등급을 복원할 수 없습니다.");
+        }
+
+        CurrentTierIndex = data.currentTierIndex;
+        AppliedTurn = data.appliedTurn;
+        NetWorthAtTurnStart = data.netWorthAtTurnStart;
+
+        TierEntry tier = tiers[CurrentTierIndex];
+
+        // 현재 순자산으로 다시 판정하지 않고 저장된 외형을 복원
+        backgroundRenderer.sprite = tier.BackgroundSprite;
+        characterAnimator.runtimeAnimatorController = tier.CharacterController;
+        characterAnimator.enabled = true;
+
+        if (characterAnimator.gameObject.activeInHierarchy)
+        {
+            characterAnimator.Rebind();
+            characterAnimator.Update(0f);
+        }
+
+        tierText.text = tier.Name;
+    }
 }

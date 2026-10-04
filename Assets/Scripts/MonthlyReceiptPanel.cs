@@ -126,7 +126,7 @@ public class MonthlyReceiptPanel : MonoBehaviour
         }
         else
         {
-            totalAssetLabelText.text = "총자산";
+            totalAssetLabelText.text = "순자산";
             totalAssetText.text = $"{data.TotalAsset:N0}원";
             totalAssetText.color = Color.black;
         }

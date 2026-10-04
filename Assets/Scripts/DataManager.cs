@@ -275,6 +275,82 @@ public class DataManager : Singleton<DataManager>
         return IsInformationLoaded && marketDialogues.TryGetValue(marketDirection, out dialogues);
     }
 
+    public MarketSaveData CaptureSave()
+    {
+        if (!IsMarketReady)
+            throw new System.InvalidOperationException("시장 데이터가 준비되지 않았습니다.");
+
+        var data = new MarketSaveData
+        {
+            seed = MarketSeed
+        };
+
+        for (int turn = 1; turn <= MarketModelConfig.TurnCount; turn++)
+        {
+            MonthlyMarketRates rates = generatedMarket[turn];
+
+            data.turns.Add(new MarketTurnSaveData
+            {
+                turn = turn,
+                stock = SaveNumber.Write(rates.Stock),
+                leverage = SaveNumber.Write(rates.Leverage),
+                stockInverse = SaveNumber.Write(rates.StockInverse),
+                leverageInverse = SaveNumber.Write(rates.LeverageInverse)
+            });
+        }
+
+        return data;
+    }
+
+    /// <summary>
+    /// 저장된 시장 수익률을 복원.
+    /// 
+    /// ONNX를 다시 실행하지 않고 저장된 60턴 결과를 사용.
+    /// 게임 중 불러오기와 복원 실패 시 되돌리기에도 사용.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <exception cref="FormatException"></exception>
+    public void RestoreSave(MarketSaveData data)
+    {
+        if (data == null || data.turns == null || data.turns.Count != MarketModelConfig.TurnCount)
+        {
+            throw new FormatException("60턴 시장 데이터가 필요합니다.");
+        }
+
+        // 기존 generatedMarket을 바로 비우지 않음
+        // 별도 목록에서 변환과 검증을 먼저 완료해야함
+        var restored = new Dictionary<int, MonthlyMarketRates>();
+
+        foreach (MarketTurnSaveData row in data.turns)
+        {
+            if (row == null || row.turn < 1 || row.turn > MarketModelConfig.TurnCount)
+            {
+                throw new FormatException("시장 턴이 올바르지 않습니다.");
+            }
+
+            // 문자열로 저장했던 decimal 수익률을 복구.
+            var rates = new MonthlyMarketRates(
+                SaveNumber.Read(row.stock),
+                SaveNumber.Read(row.leverage),
+                SaveNumber.Read(row.stockInverse),
+                SaveNumber.Read(row.leverageInverse));
+
+            if (!MarketReturnRules.IsValid(rates))
+            {
+                throw new FormatException("시장 수익률이 올바르지 않습니다.");
+            }
+
+            // 같은 턴 번호가 두 번 존재하면 Add에서 오류가 발생함.
+            restored.Add(row.turn, rates);
+        }
+
+        // 모든 검증이 끝난 시점에 한 번에 교체.
+        generatedMarket = new ReadOnlyDictionary<int, MonthlyMarketRates>(restored);
+
+        MarketSeed = data.seed;
+        IsMarketReady = true;
+    }
+
     // 더 이상 사용하지 않음
     // 시작 시 한번 호출. 런타임 리로드는 현재 지원 X
     /*
