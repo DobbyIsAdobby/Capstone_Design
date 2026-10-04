@@ -1,6 +1,6 @@
 using UnityEngine;
 using TMPro;
-using System.Data;
+using UnityEngine.UI;
 
 public class UIManager : Singleton<UIManager>
 {
@@ -39,6 +39,14 @@ public class UIManager : Singleton<UIManager>
     [Header("Job HUD")]
     [SerializeField] private TMP_Text jobGradeText;
 
+    [Header("AP / Stress Icons")]
+    [SerializeField] private Image apIcon;
+    [SerializeField] private Image stressIcon;
+
+    // 낮은 수치 이미지부터 높은 수치 이미지까지 순서대로 연결
+    [SerializeField] private Sprite[] apStageSprites = new Sprite[5];
+    [SerializeField] private Sprite[] stressStageSprites = new Sprite[5];
+
     /*
     function Zone
     */
@@ -63,6 +71,11 @@ public class UIManager : Singleton<UIManager>
     {
         float stressGauge = GameManager.Instance.stressLevel;
         float apGauge = GameManager.Instance.CurrentAP;
+        
+        // 피로도와 AP 아이콘 갱신
+        UpdateStatusIcon(apIcon, apStageSprites, apGauge);
+        UpdateStatusIcon(stressIcon, stressStageSprites, stressGauge);
+
         // 1. 메인 상태바 갱신
         monthText.text = $"{GameManager.Instance.currentMonth}/{GameManager.Instance.maxMonth}턴";
         // 현재 턴에서 날짜를 계산함. UI 갱신만으로 날짜가 증가하지 않음
@@ -153,6 +166,32 @@ public class UIManager : Singleton<UIManager>
         if (jobGradeText != null && job != null && job.IsConfigured)
         {
             jobGradeText.text = job.IsMaxGrade ? $"{job.GradeName}\nMAX" : $"{job.GradeName}\n";
+        }
+    }
+    /// <summary>
+    /// 수치를 20 단위로 나누어 5단계 이미지를 선택.
+    /// 100~120처럼 범위를 초과하는 값은 마지막 이미지를 사용
+    /// </summary>
+    /// <param name="target"></param>
+    /// <param name="sprites"></param>
+    /// <param name="value"></param>
+    private void UpdateStatusIcon(Image target, Sprite[] sprites, float value)
+    {
+        if (target == null || sprites == null || sprites.Length != 5)
+            return;
+
+        // 0~19.99 → 0, 20~39.99 → 1, ... 80 이상 → 4
+        int index = Mathf.Clamp(Mathf.FloorToInt(Mathf.Max(0f, value) / 20f), 0, 4);
+
+        Sprite selected = sprites[index];
+
+        if (selected == null)
+            return;
+
+        // 단계가 동일하다면 Sprite를 다시 할당하지 않음.
+        if (target.sprite != selected)
+        {
+            target.sprite = selected;
         }
     }
 }
