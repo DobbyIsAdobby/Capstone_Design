@@ -95,6 +95,10 @@ public class JobMinigamePanelUI : MonoBehaviour
 
     private void Update()
     {
+        // 일시정지 중에는 이동과 재시도 상태를 갱신하지 않음.
+        if (PauseController.IsPaused)
+            return;
+
         if (running)
         {
             phase += Time.deltaTime * Job.Rules.TravelSpeed;
@@ -107,7 +111,7 @@ public class JobMinigamePanelUI : MonoBehaviour
         }
 
         // 정지 버튼을 연속 클릭해 다음 게임까지 바로 시작되는 것을 방지
-        if (waitingForRetry && Time.unscaledTime >= retryAvailableTime)
+        if (waitingForRetry && Time.time >= retryAvailableTime)
         {
             waitingForRetry = false;
             RefreshStatus();
@@ -136,6 +140,10 @@ public class JobMinigamePanelUI : MonoBehaviour
 
     private void OnAction()
     {
+        // 일시정지 상태에서 시작 or 판정 버튼이 실행되지 않게 함
+        if(PauseController.IsPaused)
+            return;
+
         if (running)
         {
             StopRound();
@@ -198,7 +206,7 @@ public class JobMinigamePanelUI : MonoBehaviour
         resultText.text = message;
 
         waitingForRetry = retryDelay > 0f;
-        retryAvailableTime = Time.unscaledTime + retryDelay;
+        retryAvailableTime = Time.time + retryDelay;
 
         RefreshStatus();
 
@@ -247,7 +255,7 @@ public class JobMinigamePanelUI : MonoBehaviour
 
         actionButton.interactable = canStart && !waitingForRetry;
 
-        actionButtonText.text = Job.IsMaxGrade ? "최고 직급 달성" : $"{(hasResult ? "다시 도전" : "시작")} · " + $"AP {Job.Rules.APCost}";
+        actionButtonText.text = Job.IsMaxGrade ? "최고 직급 달성" : $"{(hasResult ? "다시 도전" : "시작")}";
 
         if (!canStart && !Job.IsMaxGrade)
             apText.text += $"\n{reason}";
@@ -255,6 +263,10 @@ public class JobMinigamePanelUI : MonoBehaviour
 
     public void Close()
     {
+        // 일시정지 중에는 미니게임 패널을 닫지 못함
+        if (PauseController.IsPaused)
+            return;
+
         // 플레이 중 닫고 다시 열어서 AP 없이 재시도하지 못하게 막음
         if (running)
             return;

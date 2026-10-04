@@ -84,6 +84,10 @@ public class LifeEventTickerUI : MonoBehaviour
 
     private void LateUpdate()
     {
+        // 일시정지 중에는 현재 위치와 대기 시간을 유지함
+        if (PauseController.IsPaused)
+            return;
+
         if (viewport == null || eventText == null)
             return;
 

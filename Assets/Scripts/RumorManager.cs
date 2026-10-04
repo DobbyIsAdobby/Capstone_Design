@@ -45,7 +45,9 @@ public class RumorManager : Singleton<RumorManager>
 
     private readonly HashSet<string> usedTexts = new HashSet<string>(StringComparer.Ordinal);
 
-    private System.Random random;
+    private SaveRandom random;
+    // SaveRandom.random으로 대체함
+    //private System.Random random;
     private int informationTurn = -1;
 
     /// <summary>
@@ -72,7 +74,7 @@ public class RumorManager : Singleton<RumorManager>
         // 정보를 구매해도 이미 생성된 시장에는 영향이 없음
         int seed = unchecked(data.MarketSeed ^ (informationTurn * 397) ^ 0x5317);
 
-        random = new System.Random(seed);
+        random = new SaveRandom(seed);
 
         // 마지막 턴과 게임 종료 상태에서는 무료 정보도 만들지 않아야 함
         if (game.IsGameOver || informationTurn >= game.maxMonth)
@@ -290,6 +292,70 @@ public class RumorManager : Singleton<RumorManager>
             default:
                 throw new ArgumentOutOfRangeException(nameof(grade));
         }
+    }
+
+    public InformationSaveData CaptureSave()
+    {
+        if (random == null)
+            throw new InvalidOperationException("정보 난수가 초기화되지 않았습니다.");
+
+        var data = new InformationSaveData
+        {
+            informationTurn = informationTurn,
+            randomState = random.State
+        };
+
+        foreach (var pair in reveals)
+        {
+            InformationReveal reveal = pair.Value;
+
+            data.reveals.Add(new InformationRevealSaveData
+            {
+                grade = pair.Key,
+                targetTurn = reveal.TargetTurn,
+                asset = reveal.Asset,
+                direction = reveal.Direction,
+                body = reveal.Body,
+                isFree = reveal.IsFree
+            });
+        }
+
+        data.usedTexts.AddRange(usedTexts);
+
+        return data;
+    }
+
+    public void RestoreSave(InformationSaveData data)
+    {
+        var restored = new Dictionary<InformationGrade, InformationReveal>();
+
+        foreach (InformationRevealSaveData saved in data.reveals)
+        {
+            restored.Add(
+                saved.grade,
+                new InformationReveal(
+                    saved.targetTurn,
+                    saved.asset,
+                    saved.direction,
+                    saved.body,
+                    saved.isFree));
+        }
+
+        var restoredRandom = new SaveRandom(1);
+        restoredRandom.Restore(data.randomState);
+
+        informationTurn = data.informationTurn;
+        random = restoredRandom;
+
+        reveals.Clear();
+
+        foreach (var pair in restored)
+            reveals.Add(pair.Key, pair.Value);
+
+        usedTexts.Clear();
+
+        foreach (string text in data.usedTexts)
+            usedTexts.Add(text);
     }
 }
 

@@ -71,7 +71,7 @@ public class UIManager : Singleton<UIManager>
             System.DateTime date = GameManager.Instance.CurrentGameDate;
             dateText.text = $"{date.Year}년 {date.Month}월";
         }
-        totalAssetText.text = $"총 자산 : {GameManager.Instance.TotalAsset:N0} 원";
+        totalAssetText.text = $"순 자산 : {GameManager.Instance.TotalAsset:N0} 원";
         cashText.text = $"보유 현금 : {GameManager.Instance.availableCash:N0} 원";
         stressText.text = $"{stressGauge:0.#}%";
         stressText.color = stressGauge < 50f ? Color.black : (stressGauge < 75f) ? Color.orange : Color.red;

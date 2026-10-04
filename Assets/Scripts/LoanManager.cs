@@ -299,4 +299,97 @@ public class LoanManager : Singleton<LoanManager>
 
         lastSettlementTurn = turn;
     }
+
+    /// <summary>
+    /// 현재 턴 마감에 청구할 대출 이자와 만기 원금을 조회.
+    /// 납부 완료 처리나 계약 종료 처리는 하지 않음.
+    /// </summary>
+    /// <param name="interestTotal"></param>
+    /// <param name="principalTotal"></param>
+    public void GetCurrentMonthExpenses(out long interestTotal, out long principalTotal)
+    {
+        interestTotal = 0;
+        principalTotal = 0;
+
+        GameManager game = GameManager.Instance;
+
+        if (game == null || !IsConfigured)
+            return;
+
+        int turn = game.currentMonth;
+
+        if (turn <= lastSettlementTurn)
+            return;
+
+        foreach (LoanContract contract in contracts)
+        {
+            // 중도 상환 등으로 종료된 계약은 제외
+            if (contract.IsClosed || turn < contract.StartTurn)
+                continue;
+
+            // 계약에 저장된 이자를 사용
+            // 여기서 연이율을 다시 계산하면 반올림 등이 달라질 수 있음
+            interestTotal += contract.GetInterestDue(turn);
+
+            // 이번 턴 마감에 만기라면 원금 전액도 현금으로 필요함
+            if (turn >= contract.MaturityTurn)
+            {
+                principalTotal += contract.Principal;
+            }
+        }
+    }
+
+    public LoanSaveData CaptureSave()
+    {
+        var data = new LoanSaveData
+        {
+            nextContractId = nextContractId,
+            lastSettlementTurn = lastSettlementTurn
+        };
+
+        foreach (LoanContract contract in contracts)
+        {
+            data.contracts.Add(new LoanContractSaveData
+            {
+                id = contract.Id,
+                principal = contract.Principal,
+                startTurn = contract.StartTurn,
+                duration = contract.Duration,
+                annualRate = SaveNumber.Write(contract.AnnualRate),
+                lastInterestPaidTurn = contract.LastInterestPaidTurn,
+                isClosed = contract.IsClosed,
+                closedTurn = contract.ClosedTurn
+            });
+        }
+
+        return data;
+    }
+
+    public void RestoreSave(LoanSaveData data)
+    {
+        var restored = new List<LoanContract>();
+
+        foreach (LoanContractSaveData saved in data.contracts)
+        {
+            var contract = new LoanContract(
+                saved.id,
+                saved.principal,
+                saved.startTurn,
+                saved.duration,
+                SaveNumber.Read(saved.annualRate));
+
+            contract.MarkInterestPaid(saved.lastInterestPaidTurn);
+
+            if (saved.isClosed)
+                contract.Close(saved.closedTurn);
+
+            restored.Add(contract);
+        }
+
+        contracts.Clear();
+        contracts.AddRange(restored);
+
+        nextContractId = data.nextContractId;
+        lastSettlementTurn = data.lastSettlementTurn;
+    }
 }
