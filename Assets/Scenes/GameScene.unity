@@ -33081,7 +33081,7 @@ MonoBehaviour:
   modelAsset: {fileID: 5022602860645237092, guid: 2bbb212e8b3c8a34da6b0bf260c2cf4a, type: 3}
   configJson: {fileID: 4900000, guid: 9048af677b0cb164ea53b0dfc5b59876, type: 3}
   daysPerFrame: 4
-  useFixedSeed: 1
+  useFixedSeed: 0
   fixedSeed: 12345
   loadingRoot: {fileID: 1857039354}
   progressText: {fileID: 1206847821}
