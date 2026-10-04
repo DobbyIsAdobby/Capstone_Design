@@ -119,6 +119,13 @@ public class JobManager : Singleton<JobManager>
     {
         message = "";
 
+        // 일시정지 중에는 결과를 확정하거나 진행 상태를 해제하지 않음.
+        if (PauseController.IsPaused)
+        {
+            message = "일시정지 중에는 결과를 확정할 수 없습니다.";
+            return false;
+        }
+
         if (!IsPlaying)
             return false;
 
@@ -217,5 +224,26 @@ public class JobManager : Singleton<JobManager>
         // 정상 UI에서는 플레이 중 닫기를 허용하지 않음
         // 이미 사용한 AP는 반환하지 않고 경험치도 지급하지 않음
         IsPlaying = false;
+    }
+
+    public JobSaveData CaptureSave()
+    {
+        return new JobSaveData
+        {
+            gradeIndex = GradeIndex,
+            currentExperience = CurrentExperience,
+            lastMonthlyExperienceTurn = lastMonthlyExperienceTurn
+        };
+    }
+
+    public void RestoreSave(JobSaveData data)
+    {
+        GradeIndex = data.gradeIndex;
+        CurrentExperience = data.currentExperience;
+        lastMonthlyExperienceTurn = data.lastMonthlyExperienceTurn;
+
+        // 진행 중 미니게임은 저장 대상이 아님
+        IsPlaying = false;
+        attemptTurn = -1;
     }
 }

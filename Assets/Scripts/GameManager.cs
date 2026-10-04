@@ -13,6 +13,8 @@ public class GameManager : Singleton<GameManager>
     public int currentMonth = 1;
     // Inspector에 기존 값이 남을 수 있으므로 Start에서도 60으로 맞춰줘야함.
     public int maxMonth = MarketModelConfig.TurnCount;
+    //1턴 = 2030/1 -> 경과 개월은 현재 턴의 -1
+    public System.DateTime CurrentGameDate => new System.DateTime(2030,1,1).AddMonths(currentMonth - 1);
 
     [Header("Player Status")]
     public long availableCash = 5000000; // 초기 자본금 500만 원
@@ -56,17 +58,8 @@ public class GameManager : Singleton<GameManager>
     [Header("Market Generation")]
     [SerializeField] private MarketGenerator marketGenerator;
 
-
-    /*
-    function Zone
-    */
-
-    // 싱글톤 패턴
-    /*private void Awake()
-    {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
-    }*/
+    [Header("Opening Story")]
+    [SerializeField] private MarketIntroUI marketIntroUI;
 
     // 자동 구현 프로퍼티
     /// <summary>
@@ -93,8 +86,15 @@ public class GameManager : Singleton<GameManager>
     /// 세팅을 진행해도 되는지 확인. 기본값 : false
     /// </summary>
     public bool IsSetting{ get; private set; }
+
     /// <summary>
-    /// 시장과 월 기록, 직급 게임이 준비됐고, 정산,게임 종료 상태가 아닐 때만 행동
+    /// 동일한 종료 상황에서 Scene 이동이 중복 요청되는 것을 막음.
+    /// </summary>
+    private bool endingTransitionRequested;
+    
+    /*
+    /// <summary>
+    /// 시장과 월 기록, 직급 게임이 준비됐고, 정산,게임 종료 상태가 아닐 때만 행동 - 각 행동에 따라 분리해야할 속성이 많아짐에 따라 3개로 분리하였음.
     /// </summary>
     public bool CanAct =>
         hasMonthBaseLine &&
@@ -105,6 +105,38 @@ public class GameManager : Singleton<GameManager>
         JobManager.Instance != null &&
         JobManager.Instance.IsConfigured &&
         !JobManager.Instance.IsPlaying;
+    */
+
+    /// <summary>
+    /// 일시정지 메뉴를 열 수 있는 기본 게임 상태. 
+    /// 미니게임 도중에도 일시정지 자체는 허용함.
+    /// </summary>
+    public bool CanOpenPause => 
+        hasMonthBaseLine &&
+        !IsGameOver &&
+        !IsSetting &&
+        DataManager.Instance != null &&
+        DataManager.Instance.IsMarketReady &&
+        JobManager.Instance != null &&
+        JobManager.Instance.IsConfigured;
+
+    /// <summary>
+    /// 구매, 거래, 야근 등 일반 행동이 가능한 상태. 
+    /// 일시정지와 미니게임 진행 중에는 행동할 수 없음.
+    /// </summary>
+    public bool CanAct =>
+        CanOpenPause &&
+        !PauseController.IsPaused &&
+        !JobManager.Instance.IsPlaying;
+
+    /// <summary>
+    /// 저장할 수 있는 stable한 게임 상태. 
+    /// 일시정지 중 저장은 허용하지만 진행 중인 미니게임이 존재할 경우 이는 저장을 허용하지 않음.
+    /// </summary>
+    public bool CanSaveCurrentState =>
+        CanOpenPause &&
+        !JobManager.Instance.IsPlaying;
+
     /// <summary>
     /// 총 자산 확인
     /// </summary>
@@ -139,6 +171,39 @@ public class GameManager : Singleton<GameManager>
         // Inspector에 60으로 재조정할 것.
         maxMonth = MarketModelConfig.TurnCount;
 
+        // LobbyScene에서 저장 데이터를 전달했다면 새 게임 초기화 대신 전달받은 데이터를 복원함.
+        if (SceneTransitionManager.TryTakePendingLoad(out GameSaveData saved))
+        {
+            try
+            {
+                if (SceneTransitionManager.Instance == null)
+                {
+                    throw new System.InvalidOperationException("SceneTransitionManager가 없습니다.");
+                }
+
+                // GameScene에 연결된 설정으로 다시 검사
+                SceneTransitionManager.Instance.ValidateSave(saved);
+
+                // 각 Manager 상태를 복원하고 마지막에 HUD를 갱신
+                GameSaveCoordinator.Restore(saved);
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogException(exception, this);
+
+                // 불러오기 실패를 새 게임 시작으로 처리하지 않음.
+                // 실패 안내를 가지고 로비로 돌아감.
+                if (SceneTransitionManager.Instance != null)
+                {
+                    SceneTransitionManager.Instance.ReturnAfterInitialLoadFailure(exception.Message);
+                }
+            }
+
+            // 코루틴 종료
+            // 아래의 ONNX 생성과 BeginMonthRecord가 실행되면 저장된 시장, AP·청구서가 초기화되므로 반드시 필요함.
+            yield break;
+        }
+
         // LoanManager 누락으로 채무 계산이나 청구가 생략되지 않도록
         if (LoanManager.Instance == null || !LoanManager.Instance.IsConfigured)
         {
@@ -168,23 +233,47 @@ public class GameManager : Singleton<GameManager>
             yield break;
         }
 
+        // 스토리 UI가 준비되지 않았다면 새 게임 시작을 중단
+        if (marketIntroUI == null || !marketIntroUI.isActiveAndEnabled || !marketIntroUI.IsConfigured)
+        {
+            Debug.LogError("MarketIntroUI와 로딩 패널 연결을 확인하세요.");
+            yield break;
+        }
+
+        // 스토리와 시장 생성을 함께 시작
+        marketIntroUI.BeginIntro();
         marketGenerator.Begin();
 
-        // 다음 프레임으로 제어를 넘기면서 생성 완료 여부 대기
-        // 이 동안 MarketGenerator.Update가 생성 작업을 진행함
+        // 시장 생성은 Update에서 여러 프레임에 나누어 진행됨
+        // 기다리는 동안 스토리 코루틴도 계속 실행됨
         while (!marketGenerator.IsFinished)
             yield return null;
 
+        // 생성이 끝났더라도 실패했다면 게임 시작을 허용하지 않음.
         if (!marketGenerator.Succeeded)
         {
+            marketIntroUI.NotifyMarketFailed();
+
             Debug.LogError($"시장 생성 실패로 게임을 시작할 수 없습니다: " + marketGenerator.Error);
 
             yield break;
         }
 
-        // 시작 자산 기준을 기록하고 이제부터 행동할 수 있음.
+        // 시장 생성 성공을 알림.
+        // 스토리까지 끝났을 때만 시작 버튼이 표시됨.
+        marketIntroUI.NotifyMarketReady();
+
+        // 유저가 직접 시작 버튼을 누를 때까지 대기
+        // 이 동안 hasMonthBaseLine은 false이므로 게임 행동은 차단됨
+        while (!marketIntroUI.StartRequested)
+            yield return null;
+
+        // 클릭 이후에 첫 달의 AP, 정보, 재산 등급 등을 초기화
         BeginMonthRecord();
         UpdateUI();
+
+        // 첫 달 준비가 끝난 후 로딩 패널을 닫음
+        marketIntroUI.Hide();
     }
 
     /// <summary>
@@ -510,7 +599,7 @@ public class GameManager : Singleton<GameManager>
         // 상점 보유 효과, 할부금, 유지비
         if (ShopManager.Instance != null)
         {
-            ShopManager.Instance.ProcessMonthlySettlement(currentMonth, stockProfit + leverageProfit);
+            ShopManager.Instance.ProcessMonthlySettlement(currentMonth, marketProfit);
         }
 
         // 이번 달 납부 대상 이벤트
@@ -532,24 +621,26 @@ public class GameManager : Singleton<GameManager>
 
     private void CompleteMonthReceipt()
     {
-        if(!IsSetting) return;
+        if (!IsSetting)
+            return;
 
+        // 월말 정산에서 파산했다면 청구서 확인 후 배드엔딩으로 이동.
         if (IsGameOver)
         {
             IsSetting = false;
-            UpdateUI();
+            RequestEndingScene(EndingType.Bad);
             return;
         }
 
-        if(currentMonth >= maxMonth)
+        // 60턴을 정상적으로 마쳤다면 노말, 해피엔딩을 판정.
+        if (currentMonth >= maxMonth)
         {
-            TriggerEnding();
             IsSetting = false;
-            UpdateUI();
+            TriggerEnding();
             return;
         }
 
-        // 기존 규칙은 유지 : 마감한 달의 이벤트를 확인하고 다음 달 납부 대상으로 등록함.
+        // 마지막 턴이 아니면 기존 다음 달 진행 로직을 유지.
         EventManager.Instance.CheckMonthlyEvent(currentMonth);
 
         currentMonth++;
@@ -562,21 +653,55 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
-    /// 게임 오버(파산) 처리 함수
+    /// 병원비,월말 정산에서 호출하는 파산 진입점.
     /// </summary>
     /// <param name="cause"></param>
     public void TriggerBankruptcy(string cause)
     {
+        EndGameEarly(cause, true);
+    }
+
+    /// <summary>
+    /// 추후 과로사 등 파산 이외의 중도 종료 상황에서 호출.
+    /// 사망 조건 자체를 판정하는 메서드는 아님.
+    /// </summary>
+    /// <param name="cause"></param>
+    public void TriggerBadEnding(string cause)
+    {
+        EndGameEarly(cause, false);
+    }
+
+    /// <summary>
+    /// 중도 종료 상태를 설정.
+    /// 월말 정산 중이라면 청구서 확인 후 엔딩으로 이동.
+    /// </summary>
+    /// <param name="cause"></param>
+    /// <param name="bankruptcy"></param>
+    private void EndGameEarly(string cause, bool bankruptcy)
+    {
         if (IsGameOver)
             return;
 
-        IsBankrupt = true;
         IsGameOver = true;
-        BankruptcyCause = cause;
+        IsBankrupt = bankruptcy;
 
-        Debug.Log($"파산 사유: {BankruptcyCause}\n" + $"정산 후 현금: {availableCash:N0}원\n" + $"미납금액: {UnpaidAmount:N0}원\n" + $"총자산: {TotalAsset:N0}원");
+        // 파산 사유 Field에 사망 원인을 넣지는 않음.
+        BankruptcyCause = bankruptcy ? cause : "";
+
+        Debug.Log(
+            $"중도 종료 사유: {cause}\n" +
+            $"보유 현금: {availableCash:N0}원\n" +
+            $"미납금액: {UnpaidAmount:N0}원\n" +
+            $"순자산: {TotalAsset:N0}원");
 
         UpdateUI();
+
+        // 월말 파산은 기존 청구서를 먼저 확인하게 함.
+        // 야근 중 병원비 파산 등 정산 외 종료는 바로 엔딩으로 이동.
+        if (!IsSetting)
+        {
+            RequestEndingScene(EndingType.Bad);
+        }
     }
 
     /// <summary>
@@ -639,12 +764,135 @@ public class GameManager : Singleton<GameManager>
         Debug.Log($"현재 턴 : {currentMonth} / 잔고 : {availableCash} / 스트레스 : {stressLevel}%");
     }
 
+    /// <summary>
+    /// 마지막 턴 정산과 청구서 확인을 마친 뒤 호출.
+    /// </summary>
     private void TriggerEnding()
     {
-        if(IsGameOver) return;
+        if (IsGameOver)
+            return;
+
+        ShopManager shop = ShopManager.Instance;
+        WealthTierManager wealth = WealthTierManager.Instance;
+
+        // 필수 참조 누락을 노말엔딩으로 잘못 처리하면 안됨
+        if (shop == null || wealth == null || !wealth.IsConfigured)
+        {
+            Debug.LogError("엔딩 판정에 필요한 상점·재산 등급 설정을 확인하세요.");
+            return;
+        }
+
+        bool hasPenthouse = shop.HasHappyEndingItem;
+
+        // 마지막 정산이 반영된 순자산으로 판정.
+        bool isDiamond = wealth.MeetsDiamondRequirement(TotalAsset);
+
+        EndingType ending = hasPenthouse && isDiamond ? EndingType.Happy : EndingType.Normal;
 
         IsGameOver = true;
+        RequestEndingScene(ending);
+    }
 
-        Debug.Log("Game Over. Moving to Ending Window.");
+    /// <summary>
+    /// 엔딩 이동 요청
+    /// </summary>
+    /// <param name="ending"></param>
+    private void RequestEndingScene(EndingType ending)
+    {
+        if (endingTransitionRequested)
+            return;
+
+        endingTransitionRequested = true;
+        StartCoroutine(MoveToEndingScene(ending));
+    }
+
+    private IEnumerator MoveToEndingScene(EndingType ending)
+    {
+        // 현재 버튼 이벤트나 정산 호출이 끝난 다음, Scene 이동
+        // 파산을 발생시킨 메서드가 아직 실행 중일 수 있기 때문
+        yield return null;
+
+        SceneTransitionManager transition = SceneTransitionManager.Instance;
+
+        if (transition == null)
+        {
+            endingTransitionRequested = false;
+            Debug.LogError("SceneTransitionManager가 없습니다.");
+            yield break;
+        }
+
+        if (!transition.TryMoveToEnding(ending, out string error))
+        {
+            endingTransitionRequested = false;
+            Debug.LogError($"엔딩 씬 이동 실패: {error}");
+        }
+    }
+
+    public PlayerSaveData CaptureSave()
+    {
+        var data = new PlayerSaveData
+        {
+            currentMonth = currentMonth,
+            availableCash = availableCash,
+            stressLevel = stressLevel,
+            currentAP = CurrentAP,
+            overtimeCount = currentMonthOvertimeCount,
+            lastAPResetTurn = lastAPResetTurn,
+            monthStartTotalAsset = MonthStartTotalAsset
+        };
+
+        foreach (ReceiptLine line in monthlyLines)
+        {
+            data.monthlyLines.Add(new ReceiptLineSaveData
+            {
+                name = line.Name,
+                amount = line.Amount,
+                type = line.Type
+            });
+        }
+
+        return data;
+    }
+
+    public void RestoreSave(PlayerSaveData data)
+    {
+        // 모든 Manager 복원이 끝나기 전까지 일반 행동을 막음
+        hasMonthBaseLine = false;
+
+        currentMonth = data.currentMonth;
+        maxMonth = MarketModelConfig.TurnCount;
+
+        availableCash = data.availableCash;
+        stressLevel = data.stressLevel;
+        CurrentAP = data.currentAP;
+
+        currentMonthOvertimeCount = data.overtimeCount;
+        lastAPResetTurn = data.lastAPResetTurn;
+        MonthStartTotalAsset = data.monthStartTotalAsset;
+
+        monthlyLines.Clear();
+
+        foreach (ReceiptLineSaveData line in data.monthlyLines)
+        {
+            monthlyLines.Add(
+                new ReceiptLine(line.name, line.amount, line.type));
+        }
+
+        // 현재 저장 규칙에서는 종료,정산 상태를 저장하지 않음
+        IsGameOver = false;
+        IsBankrupt = false;
+        IsSetting = false;
+        
+        endingTransitionRequested = false;
+
+        BankruptcyCause = "";
+        pendingBankruptcyCause = "";
+    }
+
+    public void CompleteSaveRestore()
+    {
+        // 다른 Manager까지 전부 복원한 다음 한 번만 호출
+        hasMonthBaseLine = true;
+        UpdateUI();
     }
 }

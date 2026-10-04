@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Data;
 
 public class UIManager : Singleton<UIManager>
 {
@@ -10,6 +11,8 @@ public class UIManager : Singleton<UIManager>
 
     [Header("Main Player HUD")]
     public TextMeshProUGUI monthText;           // 현재 턴 (n/120)
+    [SerializeField]
+    public TMP_Text dateText;                   // 현재 날짜 (2030/1)
     public TextMeshProUGUI totalAssetText;      // 총 자산
     public TextMeshProUGUI cashText;            // 보유 현금
     public TextMeshProUGUI stressText;          // 현재 피로도
@@ -22,7 +25,7 @@ public class UIManager : Singleton<UIManager>
     public TextMeshProUGUI leverageBalanceText; // 레버리지 보유 자산
 
     [Header("Event Notification HUD")]
-    public TextMeshProUGUI warningPanelText;    // 발생 이벤트
+    [SerializeField] private LifeEventTickerUI lifeEventTicker;    // 발생 이벤트
 
     [Header("Trade Panels")]
     [SerializeField] private AssetTradePanel[] tradePanels;
@@ -62,7 +65,13 @@ public class UIManager : Singleton<UIManager>
         float apGauge = GameManager.Instance.CurrentAP;
         // 1. 메인 상태바 갱신
         monthText.text = $"{GameManager.Instance.currentMonth}/{GameManager.Instance.maxMonth}턴";
-        totalAssetText.text = $"총 자산 : {GameManager.Instance.TotalAsset:N0} 원";
+        // 현재 턴에서 날짜를 계산함. UI 갱신만으로 날짜가 증가하지 않음
+        if(dateText != null)
+        {
+            System.DateTime date = GameManager.Instance.CurrentGameDate;
+            dateText.text = $"{date.Year}년 {date.Month}월";
+        }
+        totalAssetText.text = $"순 자산 : {GameManager.Instance.TotalAsset:N0} 원";
         cashText.text = $"보유 현금 : {GameManager.Instance.availableCash:N0} 원";
         stressText.text = $"{stressGauge:0.#}%";
         stressText.color = stressGauge < 50f ? Color.black : (stressGauge < 75f) ? Color.orange : Color.red;
@@ -98,14 +107,24 @@ public class UIManager : Singleton<UIManager>
 
         // 3. 생애 주기 이벤트 경고 갱신
         // EventManager가 활성화 되어있고, 유예된 금액이 0원 이상일 경우
-        if(EventManager.Instance != null && EventManager.Instance.pendingPenaltyAmount > 0)
+        EventManager eventManager = EventManager.Instance;
+
+        if (lifeEventTicker != null)
         {
-            warningPanelText.text = $"<color=red>[이벤트 발생]</color> {EventManager.Instance.pendingEventName} 다음 달 결산까지 <color=yellow>{EventManager.Instance.pendingPenaltyAmount:N0}원</color>을 보유하고 있어야합니다.";
-            warningPanelText.gameObject.SetActive(true); //경고창 활성화
-        }
-        else
-        {
-            warningPanelText.gameObject.SetActive(false); //경고창 비활성화
+            bool hasPendingEvent = eventManager != null && eventManager.pendingPenaltyAmount > 0;
+
+            if (hasPendingEvent)
+            {
+                string message = $"<color=red>[이벤트 발생]</color> " + $"{eventManager.pendingEventName} · " + $"예정 지출 " + $"<color=orange>{eventManager.pendingPenaltyAmount:N0}원</color>";
+
+                // 같은 내용으로 UI가 갱신돼도 이동 위치를 유지
+                lifeEventTicker.Show(message);
+            }
+            else
+            {
+                // EventText뿐 아니라 배경과 경고 아이콘도 숨김
+                lifeEventTicker.Hide();
+            }
         }
 
         foreach(AssetTradePanel panel in tradePanels)

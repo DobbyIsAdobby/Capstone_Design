@@ -240,6 +240,43 @@ public class AssetManager : Singleton<AssetManager>
         return rates;
     }
 
+    // 현재 아래 함수는 저장 및 복원하는 메서드임..
+    // 모든 Manager 스크립트에 들어가야함.
+    // 현재 각 Manager마다 저장해야할 값들이 다 다르기에.. 어쩔 수 없이 다 따로 지정해서 입력해야함..
+    // 나도 이러고 싶지 않았음..
+    // ...
+    // 아래 메서드에 대한 설명은 여기에다가만 달거임.. 궁금하면 이것을 보세요..
+
+    /// <summary>
+    /// 현재 상태를 파일용 데이터로 복사함.
+    /// </summary>
+    /// <returns></returns>
+    public AssetSaveData CaptureSave()
+    {
+        return new AssetSaveData
+        {
+            bankBalance = bankBalance,
+            stockBalance = stockBalance,
+            leverageBalance = leverageBalance,
+            stockInverseBalance = stockInverseBalance,
+            leverageInverseBalance = leverageInverseBalance
+        };
+    }
+
+    /// <summary>
+    /// 검증을 통과한 저장 데이터를 현재 상태에 반영함
+    /// </summary>
+    /// <param name="data"></param>
+    public void RestoreSave(AssetSaveData data)
+    {
+        // 매수, 매도 함수를 호출하지 않고 잔액만 복원
+        bankBalance = data.bankBalance;
+        stockBalance = data.stockBalance;
+        leverageBalance = data.leverageBalance;
+        stockInverseBalance = data.stockInverseBalance;
+        leverageInverseBalance = data.leverageInverseBalance;
+    }
+
     /// <summary>
     /// CSV 우선, 없을 시 RNG 진행 -- ONNX 모델 적용으로 인해 더 이상 사용하지 않음.
     /// </summary>
