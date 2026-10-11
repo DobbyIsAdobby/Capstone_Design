@@ -8,9 +8,9 @@
       "accuracy": 0.60,
       "target_asset": "TECH",
       "prediction_type": "DIRECTION",
-      "lookahead_turns": 1,
+      "lookahead_turns": 0,
       "free_with_item": "SHOP_006",
-      "description": "다음 턴 TECH 시장의 상승 또는 하락 방향을 60% 정확도로 제공한다."
+      "description": "현재 턴 TECH 시장의 상승 또는 하락 방향을 60% 정확도로 제공한다."
     },
     {
       "info_id": "INFO_MID",
@@ -20,9 +20,9 @@
       "accuracy": 0.75,
       "target_asset": "TECH",
       "prediction_type": "DIRECTION",
-      "lookahead_turns": 1,
+      "lookahead_turns": 0,
       "free_with_item": null,
-      "description": "다음 턴 TECH 시장의 상승 또는 하락 방향을 75% 정확도로 제공한다."
+      "description": "현재 턴 TECH 시장의 상승 또는 하락 방향을 75% 정확도로 제공한다."
     },
     {
       "info_id": "INFO_HIGH",
@@ -32,9 +32,9 @@
       "accuracy": 0.90,
       "target_asset": "TECH",
       "prediction_type": "DIRECTION",
-      "lookahead_turns": 1,
+      "lookahead_turns": 0,
       "free_with_item": null,
-      "description": "다음 턴 TECH 시장의 상승 또는 하락 방향을 90% 정확도로 제공한다."
+      "description": "현재 턴 TECH 시장의 상승 또는 하락 방향을 90% 정확도로 제공한다."
     }
   ]
 }

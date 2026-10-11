@@ -71,9 +71,9 @@ public static class InformationJsonParser
                 throw new FormatException($"{row.info_id}: 가격 또는 정확도가 잘못되었습니다.");
             }
 
-            if (row.prediction_type != "DIRECTION" || row.lookahead_turns != 1)
+            if (row.prediction_type != "DIRECTION" || row.lookahead_turns != 0)
             {
-                throw new FormatException("현재는 다음 턴의 방향 정보만 지원합니다.");
+                throw new FormatException("현재는 현재 턴의 방향 정보만 지원합니다.");
             }
 
             if (!ids.Add(row.info_id) || result.ContainsKey(grade))
