@@ -297,7 +297,7 @@ public class SaveDataValidator
                 reveal != null &&
                 Enum.IsDefined(typeof(InformationGrade), reveal.grade) &&
                 grades.Add(reveal.grade) &&
-                reveal.targetTurn == turn + 1 &&
+                reveal.targetTurn == turn &&
                 reveal.targetTurn <= 60 &&
                 Enum.IsDefined(typeof(InformationDirection), reveal.direction) &&
                 !string.IsNullOrWhiteSpace(reveal.body),

@@ -22,9 +22,9 @@ public static class InformationTextProvider
             // CSV에는 수익률이 0인(Flat) 열이 없으므로 아래 텍스트 세개로만 구성. - 애당초 수익률이 0이될 가능성이 극도로 낮음
             candidates = new[]
             {
-                "해당 자산은 변동하지 않을 것으로 전망합니다.",
-                "해당 자산은 다음 턴 보합을 유지할 전망입니다.",
-                "해당 자산의 다음 턴 수익률 변화는 없을 것으로 예상합니다."
+                "해당 자산은 이번 달 변동하지 않을 것으로 전망합니다.",
+                "해당 자산은 이번 달 보합을 유지할 전망입니다.",
+                "해당 자산의 이번 달 수익률 변화는 없을 것으로 예상합니다."
             };
         }
         else
@@ -57,7 +57,9 @@ public static class InformationTextProvider
 
         string outlook = direction == InformationDirection.Up ? "상승 전망" : direction == InformationDirection.Down ? "하락 전망" : "변동 없음 전망";
 
-        string body = direction == InformationDirection.Flat ? $"[{assetName} · {targetTurn}턴]\n{selected}" : $"[{assetName}]\n{outlook}\n" + $"\n기초시장 전망 : {selected}";
+        string header = $"[{assetName} · {targetTurn}달 마감 전망]";
+
+        string body = direction == InformationDirection.Flat ? $"{header}\n{selected}" : $"{header}\n{outlook}\n\n기초시장 전망: {selected}";
 
         // 이제 이 컬렉션에는 표시문 전체가 아니라 원문만 저장함. - RumorManager 내 StoreReveal() 중 userTexts.Add(reveal.Body)를 제거해야함
         usedTexts.Add(selected);

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: f79aa6adc3a59de479cdcc6c63690aeb
+guid: 81e200b33fbe3914d99a720f6d87bc32
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1192409083722286218
-    second: hud_back1_0
+      213: 5458007209331085928
+    second: panel_bar_bottom_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: hud_back1_0
+      name: panel_bar_bottom_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 122
-        width: 512
-        height: 293
+        y: 4
+        width: 340
+        height: 21
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a8447367eb94c8010800000000000000
-      internalID: 1192409083722286218
+      spriteID: 86253bd93acbebb40800000000000000
+      internalID: 5458007209331085928
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      hud_back1_0: 1192409083722286218
+      panel_bar_bottom_0: 5458007209331085928
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

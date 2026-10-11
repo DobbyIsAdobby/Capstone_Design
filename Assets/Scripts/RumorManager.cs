@@ -76,8 +76,8 @@ public class RumorManager : Singleton<RumorManager>
 
         random = new SaveRandom(seed);
 
-        // 마지막 턴과 게임 종료 상태에서는 무료 정보도 만들지 않아야 함
-        if (game.IsGameOver || informationTurn >= game.maxMonth)
+        // 마지막 턴에도 정보 제공
+        if (game.IsGameOver || informationTurn < 1 || informationTurn > game.maxMonth)
             return;
 
         if (data.TryGetInformation(InformationGrade.Low, out InformationItemData low) &&
@@ -123,9 +123,9 @@ public class RumorManager : Singleton<RumorManager>
             return false;
         }
 
-        if (game.currentMonth >= game.maxMonth)
+        if (game.currentMonth < 1 || game.currentMonth > game.maxMonth)
         {
-            reason = "마지막 턴에는 다음 턴 정보가 없습니다.";
+            reason = "정보를 구매할 수 있는 턴이 아닙니다.";
             return false;
         }
 
@@ -143,7 +143,7 @@ public class RumorManager : Singleton<RumorManager>
 
         if (!data.TryGetGeneratedMarketRates(game.currentMonth + item.LookaheadTurns, out _))
         {
-            reason = "다음 턴 시장 데이터가 없습니다.";
+            reason = "현재 턴 시장 데이터가 없습니다.";
             return false;
         }
 

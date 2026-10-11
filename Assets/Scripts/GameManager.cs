@@ -38,6 +38,9 @@ public class GameManager : Singleton<GameManager>
     private float baseMaxStress = 100f;
     public float MaxStress => baseMaxStress + (ShopManager.Instance != null ? ShopManager.Instance.MaxStressBonus : 0f);
 
+    [Header("Notice")]
+    [SerializeField] private HospitalNoticePanelUI hospitalNoticePanelUI;
+
     [Header("AP")]
     [SerializeField, Min(1)]
     private int baseMaxAP = 100;
@@ -46,8 +49,8 @@ public class GameManager : Singleton<GameManager>
 
 
     [Header("Income & Expense")]
-    public long monthlySalary  => JobManager.Instance != null ? JobManager.Instance.MonthlySalary : 0L; // 고정된 값이 아닌 현재 직급의 급여를 사용함 - 직급 시스템 연결 완료
     public long fixedExpense = 1500000; // 고정 지출 (월세, 생활비 등) => 추후 인플레이션에 따른 턴마다 증액 함수 필요.
+    public long monthlySalary  => JobManager.Instance != null ? JobManager.Instance.MonthlySalary : 0L; // 고정된 값이 아닌 현재 직급의 급여를 사용함 - 직급 시스템 연결 완료
 
     [Header("Monthly Receipt")]
     [SerializeField] private MonthlyReceiptPanel receiptPanel;
@@ -583,6 +586,10 @@ public class GameManager : Singleton<GameManager>
         long stockInverseProfit = assets.stockInverseBalance - stockInverseBefore;
         long leverageInverseProfit = assets.leverageInverseBalance - leverageInverseBefore;
 
+        // 현재 HUD의 자산 묶음별로 정산 손익을 보관함
+        // 투자금 입출금이나 노트북의 수익률 보너스는 포함하지 않음
+        assets.RecordLastMonthlyProfits(bankProfit, stockProfit + stockInverseProfit, leverageProfit + leverageInverseProfit);
+
         RecordMonthlyChange("예금 이자", bankProfit);
         RecordMonthlyChange("주식 손익", stockProfit);
         RecordMonthlyChange("레버리지 손익", leverageProfit);
@@ -727,9 +734,19 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
-        ApplyCashChange(50000, "야근 수입");      //탭 1회당 5만 원 추가 -> 로직 변경으로 수정
+        // 야근 수당 지급액 선언
+        long income = 50000;
+        
+        ApplyCashChange(income, "야근 수입");      //탭 1회당 5만 원 추가 -> 로직 변경으로 수정
+        
         stressLevel += 5f;           //탭 1회당 스트레스 5% 증가
         currentMonthOvertimeCount++; //탭 1회당 야근 횟수 1회 추가
+
+        // AP와 야근 횟수 검사를 통과하고 돈을 지급한 경우에만 표시
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowOvertimeIncome(income);
+        }
 
         CheckStressPenalty(); //스트레스 패널티 적용 여부 판단
         UpdateUI();
@@ -739,6 +756,10 @@ public class GameManager : Singleton<GameManager>
     {
         if (stressLevel < MaxStress)
             return;
+
+        // 최대 피로도에 도달하면 안내창을 표시
+        if (hospitalNoticePanelUI != null)
+            hospitalNoticePanelUI.Open();
 
         pendingBankruptcyCause = "";
 
@@ -811,6 +832,12 @@ public class GameManager : Singleton<GameManager>
         // 현재 버튼 이벤트나 정산 호출이 끝난 다음, Scene 이동
         // 파산을 발생시킨 메서드가 아직 실행 중일 수 있기 때문
         yield return null;
+
+        // 치료 안내창이 열려있다면 확인 버튼을 누를 때까지 대기 후 이동하게끔.
+        while (hospitalNoticePanelUI != null && hospitalNoticePanelUI.IsOpen)
+        {
+            yield return null;
+        }
 
         SceneTransitionManager transition = SceneTransitionManager.Instance;
 

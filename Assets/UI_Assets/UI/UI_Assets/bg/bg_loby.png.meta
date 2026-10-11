@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: ded9a4cf212f3f94cbef0b5c07f52bdf
+guid: 74b451420a96c714682a737fb1ca0625
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8240971893219581912
-    second: hud_back2_0
+      213: 8606271876204795482
+    second: bg_loby_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: hud_back2_0
+      name: bg_loby_0
       rect:
         serializedVersion: 2
-        x: 6
-        y: 9
-        width: 200
-        height: 94
+        x: 0
+        y: 0
+        width: 451
+        height: 226
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8dfd45b3640dd5270800000000000000
-      internalID: 8240971893219581912
+      spriteID: a561f956cae9f6770800000000000000
+      internalID: 8606271876204795482
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      hud_back2_0: 8240971893219581912
+      bg_loby_0: 8606271876204795482
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -19,10 +19,23 @@ public class UIManager : Singleton<UIManager>
     public TextMeshProUGUI apText;              // 현재 AP
     public TextMeshProUGUI overtimeCountText;   // 현재 야근 횟수
 
+    [Header("Monthly Expense")]
+    [SerializeField] private MonthlyExpenseHelpUI monthlyExpenseHelpUI;
+
+    [Header("Overtime Income Effect")]
+    [SerializeField] private FloatingMoneyText incomeTextPrefab;    // 야근 수당 프리팹
+    [SerializeField] private RectTransform floatingTextLayer;       // 띄우는 레이어
+    [SerializeField] private RectTransform incomeSpawnPoint;        // 시작 위치
+
     [Header("Asset Balances HUD")]
     public TextMeshProUGUI bankBalanceText;     // 은행 보유 자산
     public TextMeshProUGUI stockBalanceText;    // 주식 보유 자산
     public TextMeshProUGUI leverageBalanceText; // 레버리지 보유 자산
+
+    [Header("Asset Balance Tickers")]
+    [SerializeField] private LifeEventTickerUI bankBalanceTicker;
+    [SerializeField] private LifeEventTickerUI stockBalanceTicker;
+    [SerializeField] private LifeEventTickerUI leverageBalanceTicker;
 
     [Header("Event Notification HUD")]
     [SerializeField] private LifeEventTickerUI lifeEventTicker;    // 발생 이벤트
@@ -98,25 +111,40 @@ public class UIManager : Singleton<UIManager>
 
         if (assets != null)
         {
-            // 주식과 주식 인버스 자산 합산
+            // 앞쪽 잔액은 현재 보유액을 표시.
             long stockGroupBalance = assets.stockBalance + assets.stockInverseBalance;
 
-            // 레버리지와 레버리지 인버스 자산 합산
             long leverageGroupBalance = assets.leverageBalance + assets.leverageInverseBalance;
 
-            bankBalanceText.text = $"예금 : {assets.bankBalance:N0}원";
+            // 괄호는 직전 월말 정산 손익을 표시.
+            string bankMessage = $"예금: {assets.bankBalance:N0}원 " + FormatProfit(assets.LastBankProfit);
 
-            stockBalanceText.text = $"주식 합계 : {stockGroupBalance:N0}원";
+            string stockMessage = $"주식 합계: {stockGroupBalance:N0}원 " + FormatProfit(assets.LastStockGroupProfit);
 
-            leverageBalanceText.text = $"레버리지 합계 : {leverageGroupBalance:N0}원";
+            string leverageMessage = $"레버리지 합계: {leverageGroupBalance:N0}원 " + FormatProfit(assets.LastLeverageGroupProfit);
+
+            // Show를 통해 문구와 스크롤 길이를 같이 갱신함.
+            if (bankBalanceTicker != null)
+                bankBalanceTicker.Show(bankMessage);
+            else
+                bankBalanceText.text = bankMessage;
+
+            if (stockBalanceTicker != null)
+                stockBalanceTicker.Show(stockMessage);
+            else
+                stockBalanceText.text = stockMessage;
+
+            if (leverageBalanceTicker != null)
+                leverageBalanceTicker.Show(leverageMessage);
+            else
+                leverageBalanceText.text = leverageMessage;
+
+            // 현금이나 이번 달 지출이 변경될 때 버튼 글자색도 갱신해야함.
+            if (monthlyExpenseHelpUI != null)
+            {
+                monthlyExpenseHelpUI.RefreshExpenseButtonColor();
+            }
         }
-        /*if(AssetManager.Instance != null)
-        {
-            bankBalanceText.text = $"은행 자산 : {AssetManager.Instance.bankBalance:N0} 원";
-            stockBalanceText.text = $"주식 자산 : {AssetManager.Instance.stockBalance:N0} 원";
-            leverageBalanceText.text = $"레버리지 자산 : {AssetManager.Instance.leverageBalance:N0} 원";
-        }*/
-
 
         // 3. 생애 주기 이벤트 경고 갱신
         // EventManager가 활성화 되어있고, 유예된 금액이 0원 이상일 경우
@@ -193,5 +221,55 @@ public class UIManager : Singleton<UIManager>
         {
             target.sprite = selected;
         }
+    }
+
+    /// <summary>
+    /// 야근 수당이 지급된 후 호출함.
+    /// 클릭할 때마다 별도의 텍스트가 intanciate되도록
+    /// </summary>
+    /// <param name="amount"></param>
+    public void ShowOvertimeIncome(long amount)
+    {
+        if (incomeTextPrefab == null || floatingTextLayer == null || incomeSpawnPoint == null)
+        {
+            return;
+        }
+
+        FloatingMoneyText effect = Instantiate(incomeTextPrefab, floatingTextLayer, false);
+
+        // 같은 Canvas 안에서 발생 지점의 위치에 맞춤
+        // 서로 부모가 달라도 화면상 같은 위치에서 생성됨.
+        effect.transform.position = incomeSpawnPoint.position;
+
+        effect.Play(amount);
+    }
+
+    /// <summary>
+    /// 양수 + 초록색 | 음수 - 빨간색 | 0 - 검정색
+    /// </summary>
+    /// <param name="profit"></param>
+    /// <returns></returns>
+    private static string FormatProfit(long profit)
+    {
+        // 양수 +
+        // 음수는 숫자 서식에서 -가 자동으로 붙음
+        string amount = profit > 0 ? $"+{profit:N0}원" : $"{profit:N0}원";
+
+        if (profit > 0)
+        {
+            // RGB(0, 200, 0) = #00C800
+            // 괄호를 포함한 부분만 초록색으로 표시.
+            return $"<color=#00C800>({amount})</color>";
+        }
+
+        if (profit < 0)
+        {
+            // RGB(200, 0, 0) = #C80000
+            // 괄호를 포함한 부분만 빨간색으로 표시.
+            return $"<color=#C80000>({amount})</color>";
+        }
+
+        // 손익이 0이면 텍스트 색상을 유지.
+        return $"({amount})";
     }
 }
