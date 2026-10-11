@@ -71,10 +71,6 @@ public class InformationPanel : MonoBehaviour
         {
             statusText.text = "정보 데이터를 불러오지 못했습니다.";
         }
-        else if (game != null && game.currentMonth >= game.maxMonth)
-        {
-            statusText.text = "마지막 턴에는 다음 턴 정보가 없습니다.";
-        }
         else
         {
             statusText.text = "";

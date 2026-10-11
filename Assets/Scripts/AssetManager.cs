@@ -240,6 +240,26 @@ public class AssetManager : Singleton<AssetManager>
         return rates;
     }
 
+    // 직전 월 정산에서 발생한 손익
+    // 새 게임에서는 기본값인 0으로 시작함
+    public long LastBankProfit { get; private set; }
+    public long LastStockGroupProfit { get; private set; }
+    public long LastLeverageGroupProfit { get; private set; }
+
+    /// <summary>
+    /// 정산이 끝나고 손익을 갱신함.
+    /// </summary>
+    /// <param name="bankProfit"></param>
+    /// <param name="stockGroupProfit"></param>
+    /// <param name="leverageGroupProfit"></param>
+    public void RecordLastMonthlyProfits(long bankProfit, long stockGroupProfit, long leverageGroupProfit)
+    {
+        LastBankProfit = bankProfit;
+        LastStockGroupProfit = stockGroupProfit;
+        LastLeverageGroupProfit = leverageGroupProfit;
+    }
+
+
     // 현재 아래 함수는 저장 및 복원하는 메서드임..
     // 모든 Manager 스크립트에 들어가야함.
     // 현재 각 Manager마다 저장해야할 값들이 다 다르기에.. 어쩔 수 없이 다 따로 지정해서 입력해야함..
@@ -259,7 +279,12 @@ public class AssetManager : Singleton<AssetManager>
             stockBalance = stockBalance,
             leverageBalance = leverageBalance,
             stockInverseBalance = stockInverseBalance,
-            leverageInverseBalance = leverageInverseBalance
+            leverageInverseBalance = leverageInverseBalance,
+            
+            // 현재 잔액과 직전 정산 손익을 함께 저장.
+            lastBankProfit = LastBankProfit,
+            lastStockGroupProfit = LastStockGroupProfit,
+            lastLeverageGroupProfit = LastLeverageGroupProfit
         };
     }
 
@@ -275,6 +300,10 @@ public class AssetManager : Singleton<AssetManager>
         leverageBalance = data.leverageBalance;
         stockInverseBalance = data.stockInverseBalance;
         leverageInverseBalance = data.leverageInverseBalance;
+
+        LastBankProfit = data.lastBankProfit;
+        LastStockGroupProfit = data.lastStockGroupProfit;
+        LastLeverageGroupProfit = data.lastLeverageGroupProfit;
     }
 
     /// <summary>

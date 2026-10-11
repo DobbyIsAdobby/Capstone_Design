@@ -5,10 +5,10 @@ using System;
 /// </summary>
 public static class GameSaveCoordinator
 {
-    public const int FormatVersion = 1;
+    public const int FormatVersion = 2;
 
     // 상품 효과나 직급 규칙 등 저장 호환성이 달라지면 올림.
-    public const int ContentVersion = 1;
+    public const int ContentVersion = 2;
 
     public static GameSaveData Capture()
     {

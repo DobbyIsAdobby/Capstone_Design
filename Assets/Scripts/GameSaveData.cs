@@ -81,6 +81,9 @@ public sealed class AssetSaveData
     public long leverageBalance;
     public long stockInverseBalance;
     public long leverageInverseBalance;
+    public long lastBankProfit;
+    public long lastStockGroupProfit;
+    public long lastLeverageGroupProfit;
 }
 
 /// <summary>
