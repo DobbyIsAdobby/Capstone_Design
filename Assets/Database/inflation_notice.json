@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "notices": [
+    {
+      "id": "TURN11_INFLATION_NOTICE",
+      "trigger": "TURN_END_REQUESTED",
+      "turn": 11,
+      "once": true,
+      "forced": false,
+      "guideTarget": "NONE",
+      "dialogues": [
+        "다음 달부터 인플레이션이 적용되는구나.",
+        "물가가 오르면 같은 소비에도 이전보다 더 많은 돈이 필요할 수 있겠어.",
+        "지출 관리에 조금 더 신경 써야겠다."
+      ]
+    },
+    {
+      "id": "TURN23_INFLATION_NOTICE",
+      "trigger": "TURN_END_REQUESTED",
+      "turn": 23,
+      "once": true,
+      "forced": false,
+      "guideTarget": "NONE",
+      "dialogues": [
+        "또 물가가 오를 시기가 왔네.",
+        "다음 달부터는 라이프 자산의 유지비도 오를 수 있겠어.",
+        "보유하고 있는 라이프 자산의 유지비를 잘 확인해보자."
+      ]
+    },
+    {
+      "id": "TURN35_INFLATION_NOTICE",
+      "trigger": "TURN_END_REQUESTED",
+      "turn": 35,
+      "once": true,
+      "forced": false,
+      "guideTarget": "NONE",
+      "dialogues": [
+        "물가가 다시 상승하는구나.",
+        "다음 달부터는 투자 정보의 가격도 오를 수 있겠어.",
+        "정보를 구매하기 전에 가격을 잘 확인해보자."
+      ]
+    },
+    {
+      "id": "TURN47_INFLATION_NOTICE",
+      "trigger": "TURN_END_REQUESTED",
+      "turn": 47,
+      "once": true,
+      "forced": false,
+      "guideTarget": "NONE",
+      "dialogues": [
+        "또 한 번 물가가 오를 시기가 왔네.",
+        "앞으로의 지출도 이전보다 커질 수 있겠어.",
+        "마지막까지 지출과 여유 자금을 잘 관리해보자."
+      ]
+    }
+  ]
+}
