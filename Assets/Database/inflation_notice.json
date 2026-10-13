@@ -1,57 +1,56 @@
 {
-  "version": 1,
-  "notices": [
+  "inflation_news": [
     {
-      "id": "TURN11_INFLATION_NOTICE",
-      "trigger": "TURN_END_REQUESTED",
+      "id": "INFLATION_NEWS_001",
       "turn": 11,
-      "once": true,
-      "forced": false,
-      "guideTarget": "NONE",
-      "dialogues": [
-        "다음 달부터 인플레이션이 적용되는구나.",
-        "물가가 오르면 같은 소비에도 이전보다 더 많은 돈이 필요할 수 있겠어.",
-        "지출 관리에 조금 더 신경 써야겠다."
-      ]
+      "title": "물가 상승 전망",
+      "text": "원자재와 유통 비용이 증가하면서 시장 전반의 물가가 상승할 것으로 예상됩니다.",
+      "notice": {
+        "message": "이번 달부터 물가가 상승됩니다.",
+        "targets": [
+          "상점"
+        ]
+      }
     },
     {
-      "id": "TURN23_INFLATION_NOTICE",
-      "trigger": "TURN_END_REQUESTED",
+      "id": "INFLATION_NEWS_002",
       "turn": 23,
-      "once": true,
-      "forced": false,
-      "guideTarget": "NONE",
-      "dialogues": [
-        "또 물가가 오를 시기가 왔네.",
-        "다음 달부터는 라이프 자산의 유지비도 오를 수 있겠어.",
-        "보유하고 있는 라이프 자산의 유지비를 잘 확인해보자."
-      ]
+      "title": "생활비 부담 확대",
+      "text": "생활 물가와 관리 비용이 증가하면서 가계의 전반적인 지출 부담이 커질 것으로 전망됩니다.",
+      "notice": {
+        "message": "이번 달부터 물가가 추가 상승됩니다.",
+        "targets": [
+          "상점",
+          "라이프 자산 유지비"
+        ]
+      }
     },
     {
-      "id": "TURN35_INFLATION_NOTICE",
-      "trigger": "TURN_END_REQUESTED",
+      "id": "INFLATION_NEWS_003",
       "turn": 35,
-      "once": true,
-      "forced": false,
-      "guideTarget": "NONE",
-      "dialogues": [
-        "물가가 다시 상승하는구나.",
-        "다음 달부터는 투자 정보의 가격도 오를 수 있겠어.",
-        "정보를 구매하기 전에 가격을 잘 확인해보자."
-      ]
+      "title": "서비스 비용 상승",
+      "text": "시장 운영과 서비스 비용이 증가하면서 소비자 부담이 더욱 커질 것으로 예상됩니다.",
+      "notice": {
+        "message": "이번 달부터 물가가 추가 상승됩니다.",
+        "targets": [
+          "상점",
+          "정보"
+        ]
+      }
     },
     {
-      "id": "TURN47_INFLATION_NOTICE",
-      "trigger": "TURN_END_REQUESTED",
+      "id": "INFLATION_NEWS_004",
       "turn": 47,
-      "once": true,
-      "forced": false,
-      "guideTarget": "NONE",
-      "dialogues": [
-        "또 한 번 물가가 오를 시기가 왔네.",
-        "앞으로의 지출도 이전보다 커질 수 있겠어.",
-        "마지막까지 지출과 여유 자금을 잘 관리해보자."
-      ]
+      "title": "물가 상승세 확대",
+      "text": "지속적인 비용 증가로 시장 전반의 물가 상승세가 더욱 확대될 것으로 전망됩니다.",
+      "notice": {
+        "message": "이번 달부터 물가가 추가 상승됩니다.",
+        "targets": [
+          "상점",
+          "라이프 자산 유지비",
+          "정보"
+        ]
+      }
     }
   ]
 }
