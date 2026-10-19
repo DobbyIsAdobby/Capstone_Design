@@ -104,6 +104,18 @@ public class MarketGenerator : MonoBehaviour
             // 테스트 중에는 고정 시드, 일반 플레이에서는 새 시드를 사용.
             Seed = useFixedSeed ? fixedSeed : Guid.NewGuid().GetHashCode();
 
+            // 시장을 생성하기 전에 이벤트가 발생할 턴부터 확정.
+            // 이후 월 수익률을 만들 때 이 일정을 참고함. - 미리 랜덤이벤트 턴을 확정지어야함.
+            // 그렇다고 해당 턴의 수익률을 모델이 생성하지 않는 것은 절대로 아님 - 교체하는 것임.
+            EventManager events = EventManager.Instance;
+
+            if (events == null || !events.IsConfigured)
+            {
+                throw new InvalidOperationException("EventManager의 이벤트 데이터와 UI 연결을 확인하세요.");
+            }
+
+            events.InitializeNewGame(Seed);
+
             // 시장 생성 전용 난수 생성기(RNG).
             // UnityEngine.Random을 사용하는 다른 시스템과 분리됨.
             random = new System.Random(Seed);
@@ -251,8 +263,13 @@ public class MarketGenerator : MonoBehaviour
         // 주식 r / 레버리지 2r / 주식 인버스 -r / 레버리지 인버스 -2r
         //results.Add(turn, new MonthlyMarketRates(r, 2m * r, -r, -2m * r));
 
-        // 월 주식 수익률 r에 이번 턴에 사용할 상품별 랜덤 배율을 적용
-        MonthlyMarketRates rates = MarketReturnRules.Create(r, multiplierRandom);
+        // 일반 턴: 모델의 월 수익률 r 사용.
+        // 이벤트 턴: JSON의 tech_return으로 교체.
+        decimal finalTechReturn = EventManager.Instance.GetTechReturn(turn, r);
+
+        // 확정한 TECH 수익률에 상품별 배율을 적용.
+        // 배율은 이 시점에 한 번만 추출하고 저장함.
+        MonthlyMarketRates rates = MarketReturnRules.Create(finalTechReturn, multiplierRandom);
 
         // 확정한 수익률 보관
         // 정보 열람이나 결산 시점에는 배율을 다시 추출하지 않음.

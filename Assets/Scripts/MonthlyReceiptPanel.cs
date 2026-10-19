@@ -84,8 +84,8 @@ public class MonthlyReceiptPanel : MonoBehaviour
         // 버튼 인터렉션 비활성화
         continueButton.interactable = false;
 
-        // 파산 시(True) : 파산 확인 Text, 아닐 시 최종 턴 돌입 여부 확인 및 결과에 따라 True/False Text 출력
-        continueButtonText.text = data.IsBankrupt ? "파산 확인" : data.IsFinalMonth ? "최종 결과 확인" : "새로운 달 시작";
+        // 파산 시(True) : 파산 확인 Text 아니면 신문으로 넘어감.
+        continueButtonText.text = data.IsBankrupt ? "파산 확인" : "오늘의 신문 확인";
 
         detailsScroll.StopMovement();
         SetScrollInput(false);

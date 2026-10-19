@@ -76,6 +76,13 @@ public class RumorManager : Singleton<RumorManager>
 
         random = new SaveRandom(seed);
 
+        // 이전 턴 정보 초기화와 난수 준비까지는 정상적으로 수행.
+        // 시장 이벤트 턴에는 긴급속보로 방향을 알려주므로, 휴대폰 보유 혜택을 포함해 정보를 생성하지 않음.
+        if (EventManager.Instance != null && EventManager.Instance.IsInformationBlocked(informationTurn))
+        {
+            return;
+        }
+
         // 마지막 턴에도 정보 제공
         if (game.IsGameOver || informationTurn < 1 || informationTurn > game.maxMonth)
             return;
@@ -114,6 +121,14 @@ public class RumorManager : Singleton<RumorManager>
         if (game == null || !game.CanAct)
         {
             reason = "지금은 정보를 구매할 수 없습니다.";
+            return false;
+        }
+
+        // 신문을 닫은 이후에도 해당 턴에는 구매 불가.
+        // 등급과 무관하게 동일하게 적용.
+        if (EventManager.Instance != null && EventManager.Instance.IsInformationBlocked(game.currentMonth))
+        {
+            reason = "이번 달은 구매할 수 없습니다.";
             return false;
         }
 

@@ -231,6 +231,37 @@ public sealed class InformationRevealSaveData
 }
 
 /// <summary>
+/// 확정된 이벤트 일정 한 건.
+/// 발생 턴과 이벤트 ID를 저장하여 불러올 때 재추첨하지 않음.
+/// </summary>
+[Serializable]
+public sealed class EventScheduleEntry
+{
+    public int turn;
+    public string id;
+}
+
+/// <summary>
+/// 이벤트 일정과 처리 완료 상태.
+/// </summary>
+[Serializable]
+public sealed class EventSaveData
+{
+    public string catalogHash;
+
+    public List<EventScheduleEntry> fixedEvents = new List<EventScheduleEntry>();
+
+    public List<EventScheduleEntry> marketEvents = new List<EventScheduleEntry>();
+
+    // 1턴 시작에는 이전 정산이 없으니 0
+    public int lastSettledTurn;
+
+    // 해당 턴 시작 안내를 모두 확인했는지 기록
+    public int lastPresentedTurn;
+}
+
+/*
+/// <summary>
 /// 이벤트 내역(내야하는 금액, 이벤트 명, 랜덤 상태)
 /// </summary>
 [Serializable]
@@ -242,6 +273,7 @@ public sealed class EventSaveData
     // 추후 이벤트 추첨도 저장 전후 동일하게 이어지도록 보존
     public long randomState;
 }
+*/
 
 /// <summary>
 /// 자산 등급 내역(현재 티어 Index, 적용 턴, 시작 시 순자산)
