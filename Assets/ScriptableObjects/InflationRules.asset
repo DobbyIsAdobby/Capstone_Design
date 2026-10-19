@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94e98e6aff0d0f641b5b5ac0d023f15d, type: 3}
+  m_Name: InflationRules
+  m_EditorClassIdentifier: Assembly-CSharp::InflationRules
+  generalSteps:
+  - startTurn: 12
+    increasePercent: 100
+  - startTurn: 24
+    increasePercent: 100
+  - startTurn: 36
+    increasePercent: 100
+  - startTurn: 48
+    increasePercent: 100
+  informationSteps:
+  - startTurn: 36
+    increasePercent: 100

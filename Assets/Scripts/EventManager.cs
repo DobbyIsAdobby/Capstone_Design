@@ -335,6 +335,13 @@ public class EventManager : Singleton<EventManager>
         if (previous != null)
             yield return eventUI.ShowSettlementResult(previous);
 
+        // 인플레이션 적용 턴에는 기존 NoticeRoot로 대상 안내.
+        // 이 안내가 끝날 때까지 IsPresenting 상태가 유지됨.
+        if (InflationManager.Instance.TryGetNoticeForStartTurn(turn, out InflationNewsData inflationNews))
+        {
+            yield return eventUI.ShowInflationNotice(inflationNews);
+        }
+
         // 2. 이번 달 고정 이벤트 사전 대사.
         FixedEventData current = GetFixedEvent(turn);
 

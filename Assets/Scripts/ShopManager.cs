@@ -46,6 +46,8 @@ public class ShopManager : Singleton<ShopManager>
         public ShopItemData Data;
         public int PurchaseTurn;
 
+        // 구매 시 보관한 기본 유지비.
+        // 인플레이션 적용 전 금액이며, 청구할 때는 턴수에 따라 배율을 적용함.
         public long MonthlyMaintenance;
         public int MaintenanceStartTurn;
 
@@ -95,6 +97,27 @@ public class ShopManager : Singleton<ShopManager>
     public int GetPurchaseCount(string itemId)
     {
         return purchaseCounts.TryGetValue(itemId, out int count) ? count : 0;
+    }
+
+    /// <summary>
+    /// JSON의 기본 가격에 현재 턴 인플레이션을 적용.
+    /// item.Price 자체는 변경하지 않음.
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
+    public long GetPurchasePrice(ShopItemData item)
+    {
+        if (item == null)
+            throw new ArgumentNullException(nameof(item));
+
+        GameManager game = GameManager.Instance;
+
+        if (game == null)
+            throw new InvalidOperationException("상품 가격을 계산할 GameManager가 없습니다.");
+
+        return InflationManager.Instance.CalculateGeneralPrice(item.Price, game.currentMonth);
     }
 
     public bool IsOwned(string itemId)
@@ -149,16 +172,22 @@ public class ShopManager : Singleton<ShopManager>
         if (!TryGetPaymentSettings(item, out bool allow, out _) || !allow)
             return 0;
 
+        long price = GetPurchasePrice(item);
+
         return (int)Math.Min(Mathf.Clamp(maxInstallmentMonths, 1, 12), item.Price);
     }
 
     public long GetMonthlyPayment(ShopItemData item, int months)
     {
+        long price = GetPurchasePrice(item);
+
         return months > 0 ? item.Price / months : item.Price;
     }
 
     public long GetLastPayment(ShopItemData item, int months)
     {
+        long price = GetPurchasePrice(item);
+
         return months > 0 ? item.Price / months + item.Price % months : item.Price;
     }
 
@@ -197,7 +226,12 @@ public class ShopManager : Singleton<ShopManager>
             return false;
         }
 
-        long immediateCost = months == 0 ? item.Price : 0;
+        //long immediateCost = months == 0 ? item.Price : 0;
+
+        // 구매 시점의 가격을 한 번 계산하여 계약 금액으로 사용.
+        long purchasePrice = GetPurchasePrice(item);
+
+        long immediateCost = months == 0 ? purchasePrice : 0;
 
         if (game.availableCash < immediateCost)
         {
@@ -244,8 +278,10 @@ public class ShopManager : Singleton<ShopManager>
                 // 유지비는 다음 달부터.
                 MaintenanceStartTurn = game.currentMonth + 1,
 
-                RemainingDebt = months > 0 ? item.Price : 0,
-                MonthlyPayment = months > 0 ? item.Price / months : 0,
+                // 할부 원금은 구매 당시 가격으로 확정.
+                // 다음 인플레이션 때 기존 할부 원금을 다시 올리지 않음.
+                RemainingDebt = months > 0 ? purchasePrice : 0,
+                MonthlyPayment = months > 0 ? purchasePrice / months : 0,
                 RemainingPayments = months,
 
                 // 첫 할부금은 구매한 달 마감에 납부
@@ -304,7 +340,7 @@ public class ShopManager : Singleton<ShopManager>
             long bonus = (long)(marketProfit * bonusRate);
 
             if (bonus > 0)
-                game.ApplyCashChange(bonus, "보유 상품 투자 보너스");
+                game.ApplyCashChange(bonus, "투자 보너스");
         }
 
         game.stressLevel = Mathf.Max(0, game.stressLevel + fatigueChange);
@@ -324,7 +360,10 @@ public class ShopManager : Singleton<ShopManager>
 
             if (turn >= owned.MaintenanceStartTurn && owned.MonthlyMaintenance > 0)
             {
-                game.ApplyMandatoryExpense(owned.MonthlyMaintenance, $"{owned.Data.DisplayName} 유지비", ReceiptLineType.FixedExpense);
+                // 예전에 구매한 상품도 현재 턴의 인상률 적용.
+                long maintenance = InflationManager.Instance.CalculateGeneralPrice(owned.MonthlyMaintenance, turn);
+
+                game.ApplyMandatoryExpense(maintenance, $"{owned.Data.DisplayName} 유지비", ReceiptLineType.FixedExpense);
             }
         }
     }
@@ -492,7 +531,9 @@ public class ShopManager : Singleton<ShopManager>
             // 구매한 턴에는 유지비가 없고, 설정된 시작 턴부터 청구
             if (turn >= owned.MaintenanceStartTurn && owned.MonthlyMaintenance > 0)
             {
-                maintenanceTotal += owned.MonthlyMaintenance;
+                long maintenance = InflationManager.Instance.CalculateGeneralPrice(owned.MonthlyMaintenance, turn);
+
+                maintenanceTotal = checked(maintenanceTotal + maintenance);
             }
         }
     }
