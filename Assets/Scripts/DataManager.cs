@@ -38,6 +38,14 @@ public class DataManager : Singleton<DataManager>
     // 상승/하락별 읽기 전용 스크립트 목록
     private Dictionary<InformationDirection, IReadOnlyList<string>> marketDialogues = new Dictionary<InformationDirection, IReadOnlyList<string>>();
 
+    [Header("Newspaper Data")]
+    [SerializeField] private TextAsset newsJson;
+
+    private NewsCatalogData newsCatalog;
+
+    // 신문 선택용 난수
+    private readonly System.Random newsRandom = new System.Random();
+
     // 수익률 자동 생성 ONNX 모델 적용으로 인해 더 이상 Market Data 인스펙터는 사용하지 않음
     /*
     [Header("Market Data")]
@@ -85,6 +93,8 @@ public class DataManager : Singleton<DataManager>
 
     public bool IsInformationLoaded { get; private set; }
 
+    public bool IsNewsLoaded { get; private set; }
+
     protected override void OnSingletonAwake()
     {
         //LoadAllData();
@@ -92,6 +102,9 @@ public class DataManager : Singleton<DataManager>
         // 상점 데이터만 읽기.
         LoadShopData();
         LoadInformationData();
+
+        // 신문 데이터 읽기.
+        LoadNewsData();
     }
 
     /// <summary>
@@ -273,6 +286,135 @@ public class DataManager : Singleton<DataManager>
         dialogues = null;
 
         return IsInformationLoaded && marketDialogues.TryGetValue(marketDirection, out dialogues);
+    }
+
+    /// <summary>
+    /// Inspector에 연결한 new.json을 읽어옴.
+    /// 데이터 오류는 명시적으로 알림.
+    /// </summary>
+    private void LoadNewsData()
+    {
+        IsNewsLoaded = false;
+        newsCatalog = null;
+
+        try
+        {
+            if (newsJson == null)
+                throw new InvalidOperationException("News Json을 연결하세요.");
+
+            NewsCatalogData loaded = JsonUtility.FromJson<NewsCatalogData>(newsJson.text);
+
+            if (loaded == null)
+                throw new InvalidOperationException("뉴스 JSON을 읽지 못했습니다.");
+
+            ValidateNewsArticles(loaded.positive_news, "positive_news");
+            ValidateNewsArticles(loaded.negative_news, "negative_news");
+
+            newsCatalog = loaded;
+            IsNewsLoaded = true;
+
+            Debug.Log($"신문 데이터 로드 완료: " + $"상승 {loaded.positive_news.Length}개 / " + $"하락 {loaded.negative_news.Length}개");
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"신문 데이터 오류: {exception.Message}", this);
+        }
+    }
+
+    /// <summary>
+    /// 각 분류에 신문 데이터가 있고 필수 내용이 채워져 있는지 확인. 
+    /// 필수 내용 - id, title, text.
+    /// </summary>
+    /// <param name="articles"></param>
+    /// <param name="categoryName"></param>
+    /// <exception cref="InvalidOperationException"></exception>
+    private static void ValidateNewsArticles(NewsArticleData[] articles, string categoryName)
+    {
+        if (articles == null || articles.Length == 0)
+        {
+            throw new InvalidOperationException($"{categoryName}에 기사가 없습니다.");
+        }
+
+        foreach (NewsArticleData article in articles)
+        {
+            if (article == null ||
+                string.IsNullOrWhiteSpace(article.id) ||
+                string.IsNullOrWhiteSpace(article.title) ||
+                string.IsNullOrWhiteSpace(article.text))
+            {
+                throw new InvalidOperationException($"{categoryName}의 id, title, text를 확인하세요.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// 지정한 턴의 시장 수익률로 기사 한 건을 선택.
+    /// 기사는 반드시 수익률과 동일한 방향만 알려줌. 4개 중 1개
+    /// </summary>
+    /// <param name="turn"></param>
+    /// <param name="article"></param>
+    /// <returns></returns>
+    public bool TryCreateMonthlyNews(int turn, out NewsArticleData article)
+    {
+        article = null;
+
+        if (!IsNewsLoaded || !TryGetGeneratedMarketRates(turn, out MonthlyMarketRates rates))
+        {
+            return false;
+        }
+
+        // 각 자산의 선택 확률 : 25%
+        int selectedAsset = newsRandom.Next(4);
+
+        decimal selectedReturn;
+        bool isInverse;
+
+        switch (selectedAsset)
+        {
+            case 0:
+                selectedReturn = rates.Stock;
+                isInverse = false;
+                break;
+
+            case 1:
+                selectedReturn = rates.Leverage;
+                isInverse = false;
+                break;
+
+            case 2:
+                selectedReturn = rates.StockInverse;
+                isInverse = true;
+                break;
+
+            default:
+                selectedReturn = rates.LeverageInverse;
+                isInverse = true;
+                break;
+        }
+
+        // 수익률이 정확히 0이면 임시 보합 기사를 사용. - 이거 나오면 로또 사러감
+        if (selectedReturn == 0m)
+        {
+            article = new NewsArticleData
+            {
+                id = "NEWS_FLAT",
+                title = "시장, 이번 달 보합 마감",
+                text = "이번 달 시장은 가격 변동 없이 보합으로 마감했습니다."
+            };
+
+            return true;
+        }
+
+        // JSON은 기본 시장의 상승/하락을 설명함. - 따라서 인버스는 반대가 되어야함.
+        // 인버스 하락 → 시장 상승 → positive_news.
+        // 인버스 상승 → 시장 하락 → negative_news.
+        bool marketRose = isInverse ? selectedReturn < 0m : selectedReturn > 0m;
+
+        NewsArticleData[] candidates = marketRose ? newsCatalog.positive_news : newsCatalog.negative_news;
+
+        // 한 객체를 선택하므로 제목과 본문이 서로 섞이지 않음.
+        article = candidates[newsRandom.Next(candidates.Length)];
+        return true;
     }
 
     public MarketSaveData CaptureSave()

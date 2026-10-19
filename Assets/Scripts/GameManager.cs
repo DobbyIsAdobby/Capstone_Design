@@ -58,6 +58,13 @@ public class GameManager : Singleton<GameManager>
     
     private bool hasMonthBaseLine;
 
+    [Header("Newspaper")]
+    [SerializeField] private NewspaperPanelUI newspaperPanel;
+
+    // 이번 결산 후 보여줄 기사
+    // 청구서에서 신문으로 넘어갈 때 다시 뽑아서 주는게 아님.
+    private NewsArticleData pendingNewsArticle;
+
     [Header("Market Generation")]
     [SerializeField] private MarketGenerator marketGenerator;
 
@@ -113,15 +120,19 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// 일시정지 메뉴를 열 수 있는 기본 게임 상태. 
     /// 미니게임 도중에도 일시정지 자체는 허용함.
+    /// ++ 추가 내역 :
+    /// 이벤트 안내가 끝나기 전에는 행동, 저장, 일시정지를 열지 못하도록 함.
     /// </summary>
-    public bool CanOpenPause => 
+    public bool CanOpenPause =>
         hasMonthBaseLine &&
         !IsGameOver &&
         !IsSetting &&
         DataManager.Instance != null &&
         DataManager.Instance.IsMarketReady &&
         JobManager.Instance != null &&
-        JobManager.Instance.IsConfigured;
+        JobManager.Instance.IsConfigured &&
+        EventManager.Instance != null &&
+        EventManager.Instance.IsTurnReady(currentMonth);
 
     /// <summary>
     /// 구매, 거래, 야근 등 일반 행동이 가능한 상태. 
@@ -376,6 +387,9 @@ public class GameManager : Singleton<GameManager>
 
         // 새 턴의 순자산으로 외형과 등급을 확정.
         WealthTierManager.Instance.ApplyAtTurnStart(currentMonth, TotalAsset);
+
+        // 모든 월 초 데이터 준비 후 이벤트 안내 시작.
+        EventManager.Instance.PresentTurnStart(currentMonth);
     }
 
     /// <summary>
@@ -493,8 +507,25 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
-        IsSetting = true;
+        // 돈과 자산을 변경하기 전에 신문 UI와 데이터를 검사.
+        // 정산 후 참조 누락으로 진행이 막히는 상황을 방지. - NullReferenceException 방지.
+        if (newspaperPanel == null || !newspaperPanel.IsConfigured)
+        {
+            Debug.LogError("신문 패널의 Inspector 연결을 확인하세요.");
+            return;
+        }
 
+        if (!DataManager.Instance.TryCreateMonthlyNews(currentMonth, out NewsArticleData selectedNews))
+        {
+            Debug.LogError($"{currentMonth}턴 신문 생성에 필요한 JSON과 시장 데이터를 확인하세요.");
+            return;
+        }
+
+        // 지금 마감할 턴의 기사를 선택해 보관.
+        // 화면에는 청구서를 확인한 뒤 표시.
+        pendingNewsArticle = selectedNews;
+
+        IsSetting = true;
         ProcessMonthlySettlement();
 
         // 고정지출을 먼저 표시하고 나머지는 기록 순서에 따라 출력
@@ -610,7 +641,8 @@ public class GameManager : Singleton<GameManager>
         }
 
         // 이번 달 납부 대상 이벤트
-        EventManager.Instance.ResolvePendingPenalty();
+        // + : 지급 & - : 차감.
+        EventManager.Instance.SettleFixedEvent(currentMonth);
 
         // 대출 이자 및 만기 원금 청구
         LoanManager.Instance.ProcessMonthlySettlement(currentMonth);
@@ -626,20 +658,44 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    /// <summary>
+    /// 청구서를 확인한 뒤 호출.
+    /// 파산이면 기존처럼 엔딩으로 이동하고, 정상 종료한 턴이면 신문을 표시.
+    /// </summary>
     private void CompleteMonthReceipt()
     {
         if (!IsSetting)
             return;
 
-        // 월말 정산에서 파산했다면 청구서 확인 후 배드엔딩으로 이동.
         if (IsGameOver)
         {
+            // 파산 시 신문은 표시하지 않음.
+            pendingNewsArticle = null;
             IsSetting = false;
             RequestEndingScene(EndingType.Bad);
             return;
         }
 
-        // 60턴을 정상적으로 마쳤다면 노말, 해피엔딩을 판정.
+        // currentMonth는 아직 마감한 턴.
+        // 60턴도 이 단계에서는 신문을 먼저 보여줌.
+        newspaperPanel.Show(pendingNewsArticle, currentMonth >= maxMonth, CompleteMonthNewspaper);
+
+        // 신문을 읽는 동안에도 월말 처리 상태를 유지함.
+        // 여기서 IsSetting을 false로 바꾸거나 턴을 증가시키면 안됨. - CompleteMonthNewspaper에서 처리할거임.
+    }
+
+    /// <summary>
+    /// 신문의 하단 버튼을 누른 경우 호출.
+    /// 일반 턴은 다음 달을 시작하고, 마지막 턴은 엔딩을 판정.
+    /// </summary>
+    private void CompleteMonthNewspaper()
+    {
+        if (!IsSetting)
+            return;
+
+        pendingNewsArticle = null;
+
+        // 마지막 달은 엔딩 판정으로 연결합니다.
         if (currentMonth >= maxMonth)
         {
             IsSetting = false;
@@ -647,12 +703,14 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
-        // 마지막 턴이 아니면 기존 다음 달 진행 로직을 유지.
-        EventManager.Instance.CheckMonthlyEvent(currentMonth);
+        // CompleteMonthReceipt에 있던 순서 유지. - 사용하지 않음.
+        // 다음 달 이벤트는 이미 확정된 일정에서 확인함.
+        //EventManager.Instance.CheckMonthlyEvent(currentMonth);
 
         currentMonth++;
         currentMonthOvertimeCount = 0;
 
+        // 다음 달 기록 시작과 기존 월초 처리를 실행.
         BeginMonthRecord();
 
         IsSetting = false;

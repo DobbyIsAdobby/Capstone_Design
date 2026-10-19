@@ -1,0 +1,1404 @@
+fileFormatVersion: 2
+guid: 2299cb2735677d44baf8e06cbc0b14ce
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6720452350196300359
+    second: panel_news_text_0
+  - first:
+      213: 3279830877219260462
+    second: panel_news_text_1
+  - first:
+      213: -4595545940422843035
+    second: panel_news_text_2
+  - first:
+      213: -2235989982995541201
+    second: panel_news_text_3
+  - first:
+      213: -1176879209625399763
+    second: panel_news_text_4
+  - first:
+      213: -2891949054659499590
+    second: panel_news_text_5
+  - first:
+      213: 416498704343663240
+    second: panel_news_text_6
+  - first:
+      213: 721449374409173288
+    second: panel_news_text_7
+  - first:
+      213: -1275149697384794616
+    second: panel_news_text_8
+  - first:
+      213: -8421218678730457291
+    second: panel_news_text_9
+  - first:
+      213: 405320174967660724
+    second: panel_news_text_10
+  - first:
+      213: -9033575190300910493
+    second: panel_news_text_11
+  - first:
+      213: 6543305809331801605
+    second: panel_news_text_12
+  - first:
+      213: 8056085569003757638
+    second: panel_news_text_13
+  - first:
+      213: 6830497551753542977
+    second: panel_news_text_14
+  - first:
+      213: 2129244912321873371
+    second: panel_news_text_15
+  - first:
+      213: 3941890015634491582
+    second: panel_news_text_16
+  - first:
+      213: 8535552389754124739
+    second: panel_news_text_17
+  - first:
+      213: -7337746341510963095
+    second: panel_news_text_18
+  - first:
+      213: 3712420040332872852
+    second: panel_news_text_19
+  - first:
+      213: 4317945251410417675
+    second: panel_news_text_20
+  - first:
+      213: 5464857939292057372
+    second: panel_news_text_21
+  - first:
+      213: -7351099615465775703
+    second: panel_news_text_22
+  - first:
+      213: 400488990038860146
+    second: panel_news_text_23
+  - first:
+      213: -5611219605558951755
+    second: panel_news_text_24
+  - first:
+      213: 6148391431911828603
+    second: panel_news_text_25
+  - first:
+      213: 8618687683301956551
+    second: panel_news_text_26
+  - first:
+      213: 1633930931766490310
+    second: panel_news_text_27
+  - first:
+      213: -7932296877772301652
+    second: panel_news_text_28
+  - first:
+      213: -3926906164383739174
+    second: panel_news_text_29
+  - first:
+      213: 8165576930371814018
+    second: panel_news_text_30
+  - first:
+      213: 4424115505010781798
+    second: panel_news_text_31
+  - first:
+      213: -7213101497507053898
+    second: panel_news_text_32
+  - first:
+      213: -1111047969373060389
+    second: panel_news_text_33
+  - first:
+      213: -321477008713620859
+    second: panel_news_text_34
+  - first:
+      213: 4450903651936005739
+    second: panel_news_text_35
+  - first:
+      213: 292155890616302743
+    second: panel_news_text_36
+  - first:
+      213: 6053598541452513584
+    second: panel_news_text_37
+  - first:
+      213: 6794934646039131211
+    second: panel_news_text_38
+  - first:
+      213: -8828507375681223277
+    second: panel_news_text_39
+  - first:
+      213: -8317471904129610584
+    second: panel_news_text_40
+  - first:
+      213: -6270972729774265272
+    second: panel_news_text_41
+  - first:
+      213: 8575100152221195812
+    second: panel_news_text_42
+  - first:
+      213: 752508224123206519
+    second: panel_news_text_43
+  - first:
+      213: -5922918881817572378
+    second: panel_news_text_44
+  - first:
+      213: 7607664276605725843
+    second: panel_news_text_45
+  - first:
+      213: 3344299677212672772
+    second: panel_news_text_46
+  - first:
+      213: -8125293383307941900
+    second: panel_news_text_47
+  - first:
+      213: 917918707718890524
+    second: panel_news_text_48
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: panel_news_text_0
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 544
+        width: 273
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74ab3675ec7d34d50800000000000000
+      internalID: 6720452350196300359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_1
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 490
+        width: 95
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2803083ecc448d20800000000000000
+      internalID: 3279830877219260462
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_2
+      rect:
+        serializedVersion: 2
+        x: 221
+        y: 490
+        width: 91
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 565ab10c0575930c0800000000000000
+      internalID: -4595545940422843035
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_3
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 440
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f23183e05fa28f0e0800000000000000
+      internalID: -2235989982995541201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_4
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 342
+        width: 162
+        height: 107
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2e4cbe1892eaafe0800000000000000
+      internalID: -1176879209625399763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_5
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 442
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab96e7038abbdd7d0800000000000000
+      internalID: -2891949054659499590
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_6
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 429
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 88280d96d53b7c500800000000000000
+      internalID: 416498704343663240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_7
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 431
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8292615326a130a00800000000000000
+      internalID: 721449374409173288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_8
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 418
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 806bee33b12cd4ee0800000000000000
+      internalID: -1275149697384794616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_9
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 420
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53ff26eaa32d12b80800000000000000
+      internalID: -8421218678730457291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_10
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 407
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b02f393d8cff9500800000000000000
+      internalID: 405320174967660724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_11
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 409
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36c1552f93b42a280800000000000000
+      internalID: -9033575190300910493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_12
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 396
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50ec8f537fd7eca50800000000000000
+      internalID: 6543305809331801605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_13
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 398
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 640ae9c5427fccf60800000000000000
+      internalID: 8056085569003757638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_14
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 385
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14df173755dcace50800000000000000
+      internalID: 6830497551753542977
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_15
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 387
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd5c0ce67f89c8d10800000000000000
+      internalID: 2129244912321873371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_16
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 374
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb88d8d851864b630800000000000000
+      internalID: 3941890015634491582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_17
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 377
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c9f709dcaf547670800000000000000
+      internalID: 8535552389754124739
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_18
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 363
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 960215654961b2a90800000000000000
+      internalID: -7337746341510963095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_19
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 366
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49c05118b5a258330800000000000000
+      internalID: 3712420040332872852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_20
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 352
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0817e5245c6ceb30800000000000000
+      internalID: 4317945251410417675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_21
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 355
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1fe97b775317db40800000000000000
+      internalID: 5464857939292057372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_22
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 341
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9add6a7f8d5abf990800000000000000
+      internalID: -7351099615465775703
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_23
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 344
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 271a8b35d92de8500800000000000000
+      internalID: 400488990038860146
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_24
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 330
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b083fd8f71f022b0800000000000000
+      internalID: -5611219605558951755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_25
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 286
+        width: 91
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7ce8278e69735550800000000000000
+      internalID: 6148391431911828603
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_26
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 333
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7cb5f31c8cabb9770800000000000000
+      internalID: 8618687683301956551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_27
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 319
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c4f6778683eca610800000000000000
+      internalID: 1633930931766490310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_28
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 324
+        width: 62
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: caa117b4402dae190800000000000000
+      internalID: -7932296877772301652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_29
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 317
+        width: 62
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad29d9d26a3d089c0800000000000000
+      internalID: -3926906164383739174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_30
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 322
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 282cfe084f4f15170800000000000000
+      internalID: 8165576930371814018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_31
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 310
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66e2771ac9d956d30800000000000000
+      internalID: 4424115505010781798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_32
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 310
+        width: 62
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6bef048976ae5eb90800000000000000
+      internalID: -7213101497507053898
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_33
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 312
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd2891922c3c490f0800000000000000
+      internalID: -1111047969373060389
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_34
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 299
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5826b242d52e98bf0800000000000000
+      internalID: -321477008713620859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_35
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 303
+        width: 62
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6e622f1a49c4cd30800000000000000
+      internalID: 4450903651936005739
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_36
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 296
+        width: 62
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79cf83f0c32fd0400800000000000000
+      internalID: 292155890616302743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_37
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 301
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0319914dcc3b20450800000000000000
+      internalID: 6053598541452513584
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_38
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 288
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4438293f057c4e50800000000000000
+      internalID: 6794934646039131211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_39
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 289
+        width: 62
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 395ca973157da7580800000000000000
+      internalID: -8828507375681223277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_40
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 290
+        width: 51
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ac001dfe57629c80800000000000000
+      internalID: -8317471904129610584
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_41
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 265
+        width: 98
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84ca4adf68709f8a0800000000000000
+      internalID: -6270972729774265272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_42
+      rect:
+        serializedVersion: 2
+        x: 150
+        y: 210
+        width: 160
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42eda86d720e00770800000000000000
+      internalID: 8575100152221195812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_43
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 254
+        width: 98
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77b7c6d2e32717a00800000000000000
+      internalID: 752508224123206519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_44
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 243
+        width: 98
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6eb4fcf68a09dcda0800000000000000
+      internalID: -5922918881817572378
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_45
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 232
+        width: 98
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39c63893a5ad39960800000000000000
+      internalID: 7607664276605725843
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_46
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 221
+        width: 98
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40307ba66d6596e20800000000000000
+      internalID: 3344299677212672772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_47
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 210
+        width: 98
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f72910b7b82d3f80800000000000000
+      internalID: -8125293383307941900
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: panel_news_text_48
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 88
+        width: 273
+        height: 116
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c14254a833a1dbc00800000000000000
+      internalID: 917918707718890524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      panel_news_text_0: 6720452350196300359
+      panel_news_text_1: 3279830877219260462
+      panel_news_text_10: 405320174967660724
+      panel_news_text_11: -9033575190300910493
+      panel_news_text_12: 6543305809331801605
+      panel_news_text_13: 8056085569003757638
+      panel_news_text_14: 6830497551753542977
+      panel_news_text_15: 2129244912321873371
+      panel_news_text_16: 3941890015634491582
+      panel_news_text_17: 8535552389754124739
+      panel_news_text_18: -7337746341510963095
+      panel_news_text_19: 3712420040332872852
+      panel_news_text_2: -4595545940422843035
+      panel_news_text_20: 4317945251410417675
+      panel_news_text_21: 5464857939292057372
+      panel_news_text_22: -7351099615465775703
+      panel_news_text_23: 400488990038860146
+      panel_news_text_24: -5611219605558951755
+      panel_news_text_25: 6148391431911828603
+      panel_news_text_26: 8618687683301956551
+      panel_news_text_27: 1633930931766490310
+      panel_news_text_28: -7932296877772301652
+      panel_news_text_29: -3926906164383739174
+      panel_news_text_3: -2235989982995541201
+      panel_news_text_30: 8165576930371814018
+      panel_news_text_31: 4424115505010781798
+      panel_news_text_32: -7213101497507053898
+      panel_news_text_33: -1111047969373060389
+      panel_news_text_34: -321477008713620859
+      panel_news_text_35: 4450903651936005739
+      panel_news_text_36: 292155890616302743
+      panel_news_text_37: 6053598541452513584
+      panel_news_text_38: 6794934646039131211
+      panel_news_text_39: -8828507375681223277
+      panel_news_text_4: -1176879209625399763
+      panel_news_text_40: -8317471904129610584
+      panel_news_text_41: -6270972729774265272
+      panel_news_text_42: 8575100152221195812
+      panel_news_text_43: 752508224123206519
+      panel_news_text_44: -5922918881817572378
+      panel_news_text_45: 7607664276605725843
+      panel_news_text_46: 3344299677212672772
+      panel_news_text_47: -8125293383307941900
+      panel_news_text_48: 917918707718890524
+      panel_news_text_5: -2891949054659499590
+      panel_news_text_6: 416498704343663240
+      panel_news_text_7: 721449374409173288
+      panel_news_text_8: -1275149697384794616
+      panel_news_text_9: -8421218678730457291
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

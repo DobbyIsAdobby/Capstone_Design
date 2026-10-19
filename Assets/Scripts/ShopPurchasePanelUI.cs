@@ -30,6 +30,9 @@ public class ShopPurchasePanelUI : MonoBehaviour
     [SerializeField] private Color successColor = new Color(0.1f, 0.5f, 0.2f);
     [SerializeField] private Color errorColor = Color.red;
 
+    [Header("Prestige Decoration")]
+    [SerializeField] private GameObject prestigeDecoration;
+
     private ShopItemData item;
     private ShopPanelUI owner;
     private int selectedMonths;
@@ -51,6 +54,12 @@ public class ShopPurchasePanelUI : MonoBehaviour
         priceText.text = $"{item.Price:N0}원";
 
         bool prestige = item.Category == ShopCategory.Prestige;
+
+        // 과시성 상품을 열면 표시하고, 일회성 상품을 열면 숨김.
+        prestigeDecoration.SetActive(prestige);
+
+        maintenanceRow.SetActive(prestige);
+        installmentSection.SetActive(prestige);
 
         maintenanceRow.SetActive(prestige);
         installmentSection.SetActive(prestige);
