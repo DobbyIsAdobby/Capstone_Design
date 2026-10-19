@@ -5,22 +5,10 @@ using UnityEngine;
 public class TutorialManager : MonoBehaviour
 {
     // =========================================================
-    // Singleton / 자동 생성
+    // SINGLETON
     // =========================================================
 
     public static TutorialManager Instance { get; private set; }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void Bootstrap()
-    {
-        if (Instance != null)
-            return;
-
-        GameObject obj = new GameObject("TutorialManager");
-        DontDestroyOnLoad(obj);
-
-        Instance = obj.AddComponent<TutorialManager>();
-    }
 
 
     // =========================================================
@@ -78,12 +66,9 @@ public class TutorialManager : MonoBehaviour
     public class ContextGuideData
     {
         public string id;
-
         public string trigger;
-
         public bool once;
 
-        // 이 고정형 튜토리얼을 본 뒤에만 실행
         public string required_completed_id;
 
         public List<string> dialogues;
@@ -91,20 +76,24 @@ public class TutorialManager : MonoBehaviour
 
 
     // =========================================================
-    // 클라이언트 연결용 EVENT
+    // JSON
     // =========================================================
 
-    /// <summary>
-    /// 기존 대사 UI가 구독.
-    /// 두 번째 Action은 모든 대사 출력이 끝난 뒤 반드시 호출.
-    /// </summary>
+    [Header("Tutorial JSON")]
+    [SerializeField]
+    private TextAsset tutorialJson;
+
+
+    // =========================================================
+    // CLIENT CONNECTION
+    // =========================================================
+
+    // 기존 대사 UI에서 구독
+    // 모든 대사 출력이 끝나면 전달된 Action을 반드시 호출
     public static event Action<List<string>, Action>
         OnDialogueRequested;
 
-    /// <summary>
-    /// 향후 기능 해금 시스템이 구독.
-    /// 예: STOCK, BANK, LOAN 등.
-    /// </summary>
+    // 향후 기능 해금 시스템에서 구독
     public static event Action<List<string>>
         OnUnlockRequested;
 
@@ -126,12 +115,10 @@ public class TutorialManager : MonoBehaviour
 
     private TutorialDatabase database;
 
-    // turn → 고정형 튜토리얼
     private Dictionary<int, FixedTutorialData>
         fixedTutorials =
         new Dictionary<int, FixedTutorialData>();
 
-    // Event → 상황형 가이드
     private Dictionary<GameEventType, List<ContextGuideData>>
         contextGuides =
         new Dictionary<GameEventType, List<ContextGuideData>>();
@@ -147,7 +134,6 @@ public class TutorialManager : MonoBehaviour
 
     private TutorialStepData currentWaitStep;
 
-    // 현재 고정형 튜토리얼 중 발생한 이벤트 횟수
     private Dictionary<GameEventType, int>
         currentEventCounts =
         new Dictionary<GameEventType, int>();
@@ -166,7 +152,10 @@ public class TutorialManager : MonoBehaviour
         new HashSet<string>();
 
 
-    // 고정형이 실행 중인데 다음 턴이 들어온 경우
+    // =========================================================
+    // PENDING FIXED
+    // =========================================================
+
     private Queue<int> pendingFixedTurns =
         new Queue<int>();
 
@@ -209,15 +198,10 @@ public class TutorialManager : MonoBehaviour
 
     private void LoadTutorialJson()
     {
-        TextAsset json =
-            Resources.Load<TextAsset>(
-                "Database/tutorial_triggers"
-            );
-
-        if (json == null)
+        if (tutorialJson == null)
         {
             Debug.LogError(
-                "[Tutorial] tutorial_triggers.json을 찾을 수 없습니다."
+                "[Tutorial] tutorial_triggers.json이 연결되지 않았습니다."
             );
 
             return;
@@ -225,15 +209,20 @@ public class TutorialManager : MonoBehaviour
 
         database =
             JsonUtility.FromJson<TutorialDatabase>(
-                json.text
+                tutorialJson.text
             );
 
         if (database == null)
         {
             Debug.LogError(
-                "[Tutorial] JSON 파싱 실패"
+                "[Tutorial] tutorial_triggers.json 파싱 실패"
             );
+            return;
         }
+
+        Debug.Log(
+            "[Tutorial] tutorial_triggers.json 로드 완료"
+        );
     }
 
 
@@ -308,20 +297,21 @@ public class TutorialManager : MonoBehaviour
         GameEventType eventType,
         int value)
     {
-        // 고정형 튜토리얼 도중 발생한 이벤트 횟수 기록
+        // 고정형 튜토리얼이 진행 중이라면
+        // 이벤트 횟수를 누적
         if (currentFixed != null)
         {
             AddEventCount(eventType);
         }
 
-        // 현재 특정 행동을 기다리는 중이라면 검사
+        // 특정 행동을 기다리고 있는 상태
         if (CurrentState ==
             TutorialState.WaitingForEvent)
         {
             CheckWaitingEvent(eventType);
         }
 
-        // 턴 시작 이벤트는 고정형 우선
+        // 새로운 턴 시작
         if (eventType ==
             GameEventType.TurnStarted)
         {
@@ -340,7 +330,7 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
-        // 상황형 이벤트 확인
+        // 상황형 튜토리얼 확인
         TryHandleContextEvent(
             eventType
         );
@@ -370,11 +360,9 @@ public class TutorialManager : MonoBehaviour
     private int GetEventCount(
         GameEventType eventType)
     {
-        int count;
-
         if (currentEventCounts.TryGetValue(
                 eventType,
-                out count))
+                out int count))
         {
             return count;
         }
@@ -390,11 +378,9 @@ public class TutorialManager : MonoBehaviour
     private bool TryStartFixedTutorial(
         int turn)
     {
-        FixedTutorialData tutorial;
-
         if (!fixedTutorials.TryGetValue(
                 turn,
-                out tutorial))
+                out FixedTutorialData tutorial))
         {
             return false;
         }
@@ -437,6 +423,7 @@ public class TutorialManager : MonoBehaviour
             );
         }
 
+
         RunCurrentStep();
     }
 
@@ -472,9 +459,9 @@ public class TutorialManager : MonoBehaviour
                     : step.type.ToUpper();
 
 
-            // -------------------------
+            // =========================
             // DIALOGUE
-            // -------------------------
+            // =========================
 
             if (stepType == "DIALOGUE")
             {
@@ -483,7 +470,7 @@ public class TutorialManager : MonoBehaviour
 
                 RequestDialogues(
                     step.dialogues,
-                    delegate
+                    () =>
                     {
                         currentStepIndex++;
                         RunCurrentStep();
@@ -494,18 +481,16 @@ public class TutorialManager : MonoBehaviour
             }
 
 
-            // -------------------------
-            // WAIT_EVENT
-            // -------------------------
+            // =========================
+            // WAIT EVENT
+            // =========================
 
             if (stepType == "WAIT_EVENT")
             {
-                GameEventType waitType;
-
                 if (!Enum.TryParse(
                         step.event_name,
                         true,
-                        out waitType))
+                        out GameEventType waitType))
                 {
                     Debug.LogWarning(
                         "[Tutorial] 잘못된 wait event: "
@@ -523,7 +508,9 @@ public class TutorialManager : MonoBehaviour
                         step.count
                     );
 
-                // 이미 조건 충족된 경우
+
+                // 앞에서 이미 이벤트가 발생했다면
+                // 누적 횟수 기준으로 검사
                 if (GetEventCount(waitType)
                     >= requiredCount)
                 {
@@ -531,6 +518,7 @@ public class TutorialManager : MonoBehaviour
 
                     continue;
                 }
+
 
                 currentWaitStep = step;
 
@@ -541,9 +529,9 @@ public class TutorialManager : MonoBehaviour
             }
 
 
-            // -------------------------
+            // =========================
             // COMPLETE
-            // -------------------------
+            // =========================
 
             if (stepType == "COMPLETE")
             {
@@ -561,6 +549,7 @@ public class TutorialManager : MonoBehaviour
             currentStepIndex++;
         }
 
+
         CompleteFixedTutorial();
     }
 
@@ -575,18 +564,19 @@ public class TutorialManager : MonoBehaviour
         if (currentWaitStep == null)
             return;
 
-        GameEventType waitType;
 
         if (!Enum.TryParse(
                 currentWaitStep.event_name,
                 true,
-                out waitType))
+                out GameEventType waitType))
         {
             return;
         }
 
+
         if (waitType != eventType)
             return;
+
 
         int requiredCount =
             Mathf.Max(
@@ -594,11 +584,13 @@ public class TutorialManager : MonoBehaviour
                 currentWaitStep.count
             );
 
+
         if (GetEventCount(eventType)
             < requiredCount)
         {
             return;
         }
+
 
         currentWaitStep = null;
 
@@ -620,11 +612,13 @@ public class TutorialManager : MonoBehaviour
         if (currentFixed == null)
             return;
 
+
         string id =
             currentFixed.id;
 
         bool once =
             currentFixed.once;
+
 
         currentFixed = null;
 
@@ -635,10 +629,12 @@ public class TutorialManager : MonoBehaviour
         CurrentState =
             TutorialState.Idle;
 
+
         if (once)
         {
             AddCompleted(id);
         }
+
 
         ContinuePendingTutorial();
     }
@@ -651,14 +647,13 @@ public class TutorialManager : MonoBehaviour
     private void TryHandleContextEvent(
         GameEventType eventType)
     {
-        List<ContextGuideData> guides;
-
         if (!contextGuides.TryGetValue(
                 eventType,
-                out guides))
+                out List<ContextGuideData> guides))
         {
             return;
         }
+
 
         foreach (
             ContextGuideData guide
@@ -672,6 +667,7 @@ public class TutorialManager : MonoBehaviour
                 continue;
             }
 
+
             if (currentContext != null &&
                 currentContext.id ==
                 guide.id)
@@ -679,11 +675,13 @@ public class TutorialManager : MonoBehaviour
                 continue;
             }
 
+
             if (queuedContextIds.Contains(
                     guide.id))
             {
                 continue;
             }
+
 
             if (CurrentState ==
                     TutorialState.Idle &&
@@ -706,6 +704,7 @@ public class TutorialManager : MonoBehaviour
         }
     }
 
+
     private bool IsRequirementMet(
         ContextGuideData guide)
     {
@@ -715,10 +714,12 @@ public class TutorialManager : MonoBehaviour
             return true;
         }
 
+
         return completedTutorials.Contains(
             guide.required_completed_id
         );
     }
+
 
     private void StartContextGuide(
         ContextGuideData guide)
@@ -728,24 +729,29 @@ public class TutorialManager : MonoBehaviour
         CurrentState =
             TutorialState.RunningContext;
 
+
         RequestDialogues(
             guide.dialogues,
             CompleteCurrentContext
         );
     }
 
+
     private void CompleteCurrentContext()
     {
         if (currentContext == null)
             return;
 
+
         ContextGuideData guide =
             currentContext;
+
 
         currentContext = null;
 
         CurrentState =
             TutorialState.Idle;
+
 
         if (guide.once)
         {
@@ -753,6 +759,7 @@ public class TutorialManager : MonoBehaviour
                 guide.id
             );
         }
+
 
         ContinuePendingTutorial();
     }
@@ -764,13 +771,14 @@ public class TutorialManager : MonoBehaviour
 
     private void ContinuePendingTutorial()
     {
-        // 고정형이 항상 상황형보다 우선
+        // 고정형 튜토리얼 우선
         while (
             pendingFixedTurns.Count > 0
         )
         {
             int turn =
                 pendingFixedTurns.Dequeue();
+
 
             if (TryStartFixedTutorial(
                     turn))
@@ -779,8 +787,10 @@ public class TutorialManager : MonoBehaviour
             }
         }
 
+
         TryRunNextContextGuide();
     }
+
 
     private void TryRunNextContextGuide()
     {
@@ -790,19 +800,25 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
+
         int count =
             contextQueue.Count;
 
-        for (int i = 0;
-             i < count;
-             i++)
+
+        for (
+            int i = 0;
+            i < count;
+            i++
+        )
         {
             ContextGuideData guide =
                 contextQueue.Dequeue();
 
+
             queuedContextIds.Remove(
                 guide.id
             );
+
 
             if (guide.once &&
                 completedTutorials.Contains(
@@ -810,6 +826,7 @@ public class TutorialManager : MonoBehaviour
             {
                 continue;
             }
+
 
             if (!IsRequirementMet(
                     guide))
@@ -825,6 +842,7 @@ public class TutorialManager : MonoBehaviour
                 continue;
             }
 
+
             StartContextGuide(
                 guide
             );
@@ -835,7 +853,7 @@ public class TutorialManager : MonoBehaviour
 
 
     // =========================================================
-    // DIALOGUE REQUEST
+    // DIALOGUE
     // =========================================================
 
     private void RequestDialogues(
@@ -849,9 +867,11 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
+
         Action<List<string>, Action>
             handler =
                 OnDialogueRequested;
+
 
         if (handler == null)
         {
@@ -864,10 +884,12 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
+
         bool completed = false;
 
+
         Action completeOnce =
-            delegate
+            () =>
             {
                 if (completed)
                     return;
@@ -876,6 +898,7 @@ public class TutorialManager : MonoBehaviour
 
                 onComplete?.Invoke();
             };
+
 
         handler(
             dialogues,
@@ -892,17 +915,20 @@ public class TutorialManager : MonoBehaviour
     {
         completedTutorials.Clear();
 
+
         string saved =
             PlayerPrefs.GetString(
                 SaveKey,
                 ""
             );
 
+
         if (string.IsNullOrEmpty(
                 saved))
         {
             return;
         }
+
 
         string[] ids =
             saved.Split(
@@ -911,6 +937,7 @@ public class TutorialManager : MonoBehaviour
                     .RemoveEmptyEntries
             );
 
+
         foreach (string id in ids)
         {
             completedTutorials.Add(
@@ -918,6 +945,7 @@ public class TutorialManager : MonoBehaviour
             );
         }
     }
+
 
     private void AddCompleted(
         string tutorialId)
@@ -928,12 +956,15 @@ public class TutorialManager : MonoBehaviour
             return;
         }
 
+
         completedTutorials.Add(
             tutorialId
         );
 
+
         SaveProgress();
     }
+
 
     private void SaveProgress()
     {
@@ -943,10 +974,12 @@ public class TutorialManager : MonoBehaviour
                 completedTutorials
             );
 
+
         PlayerPrefs.SetString(
             SaveKey,
             data
         );
+
 
         PlayerPrefs.Save();
     }
@@ -962,13 +995,16 @@ public class TutorialManager : MonoBehaviour
             SaveKey
         );
 
+
         PlayerPrefs.Save();
+
 
         if (Instance != null)
         {
             Instance.ResetRuntimeProgress();
         }
     }
+
 
     private void ResetRuntimeProgress()
     {
@@ -982,11 +1018,16 @@ public class TutorialManager : MonoBehaviour
 
         currentEventCounts.Clear();
 
+
         currentFixed = null;
+
         currentContext = null;
+
         currentWaitStep = null;
 
+
         currentStepIndex = 0;
+
 
         CurrentState =
             TutorialState.Idle;
