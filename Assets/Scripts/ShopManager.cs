@@ -100,8 +100,8 @@ public class ShopManager : Singleton<ShopManager>
     }
 
     /// <summary>
-    /// JSON의 기본 가격에 현재 턴 인플레이션을 적용.
-    /// item.Price 자체는 변경하지 않음.
+    /// 상품 분류에 따라 구매 가격 반환.
+    /// 기분 전환 상품은 인플레이션을 적용, 라이프 자산은 JSON에 기록된 기본 구매가를 유지.
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
@@ -112,11 +112,19 @@ public class ShopManager : Singleton<ShopManager>
         if (item == null)
             throw new ArgumentNullException(nameof(item));
 
+        // 라이프 자산은 구매한 턴과 관계없이 기본 가격으로 판매.
+        // 펜트하우스도 이 분류에 포함.
+        if (item.Category == ShopCategory.Prestige)
+            return item.Price;
+
         GameManager game = GameManager.Instance;
 
         if (game == null)
+        {
             throw new InvalidOperationException("상품 가격을 계산할 GameManager가 없습니다.");
+        }
 
+        // 기분 전환 상품은 인플레이션 규칙을 적용.
         return InflationManager.Instance.CalculateGeneralPrice(item.Price, game.currentMonth);
     }
 
@@ -174,21 +182,21 @@ public class ShopManager : Singleton<ShopManager>
 
         long price = GetPurchasePrice(item);
 
-        return (int)Math.Min(Mathf.Clamp(maxInstallmentMonths, 1, 12), item.Price);
+        return (int)Math.Min(Mathf.Clamp(maxInstallmentMonths, 1, 12), price);
     }
 
     public long GetMonthlyPayment(ShopItemData item, int months)
     {
         long price = GetPurchasePrice(item);
 
-        return months > 0 ? item.Price / months : item.Price;
+        return months > 0 ? item.Price / months : price;
     }
 
     public long GetLastPayment(ShopItemData item, int months)
     {
         long price = GetPurchasePrice(item);
 
-        return months > 0 ? item.Price / months + item.Price % months : item.Price;
+        return months > 0 ? price / months + price % months : price;
     }
 
     public bool TryBuy(string itemId, int months, out string message)
