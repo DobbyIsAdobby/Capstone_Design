@@ -35,6 +35,8 @@ public class InformationCardUI : MonoBehaviour
             return;
         }
 
+        long price = rumors.GetPurchasePrice(item);
+
         gradeText.text = item.Name;
 
         bool revealed = rumors.TryGetReveal(grade, out InformationReveal reveal);
@@ -47,13 +49,13 @@ public class InformationCardUI : MonoBehaviour
         {
             bodyText.text = reveal.Body;
 
-            priceText.text = reveal.IsFree ? "휴대폰 보유 혜택 : 무료 열람" : $"{item.Price:N0}원 · 구매 완료";
+            priceText.text = reveal.IsFree ? "휴대폰 보유 혜택 : 무료 열람" : $"{price:N0}원 · 구매 완료";
 
             return;
         }
 
         bodyText.text = "";
-        priceText.text = $"필요 금액: {item.Price:N0}원";
+        priceText.text = $"필요 금액: {price:N0}원";
 
         bool canPurchase = rumors.CanPurchase(grade, out string reason);
 

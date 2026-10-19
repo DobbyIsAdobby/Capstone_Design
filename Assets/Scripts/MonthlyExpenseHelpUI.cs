@@ -64,26 +64,28 @@ public class MonthlyExpenseHelpUI : MonoBehaviour
         ShopManager shop = ShopManager.Instance;
         LoanManager loan = LoanManager.Instance;
         EventManager events = EventManager.Instance;
+        HousingCostManager housing = HousingCostManager.Instance;
 
-        if (game == null || shop == null || loan == null || !loan.IsConfigured || events == null)
+        if (game == null || shop == null || loan == null || !loan.IsConfigured || events == null || housing == null)
         {
             return false;
         }
 
-        // 이번 달 청구 예정인 할부금과 유지비.
+        if (!housing.TryGetCurrent(out HousingMonthlyCost housingCost))
+            return false;
+
+        // 유지비는 ShopManager에서 현재 턴 인플레이션을 적용해 반환.
         shop.GetCurrentMonthExpenses(out long installment, out long maintenance);
 
-        // 이번 달 대출 이자와 만기 상환 원금.
         loan.GetCurrentMonthExpenses(out long interest, out long principal);
 
-        // 안내 패널과 동일한 기준으로 합산.
-        total =
-            System.Math.Max(0L, game.fixedExpense) +
+        total = checked(
+            housingCost.Total +
             installment +
             maintenance +
             interest +
             principal +
-            System.Math.Max(0L, events.pendingPenaltyAmount);
+            System.Math.Max(0L, events.pendingPenaltyAmount));
 
         return true;
     }

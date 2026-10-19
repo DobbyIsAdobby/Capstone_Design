@@ -51,7 +51,7 @@ public class ShopPurchasePanelUI : MonoBehaviour
 
         productNameText.text = item.DisplayName;
         effectText.text = item.Description;
-        priceText.text = $"{item.Price:N0}원";
+        //priceText.text = $"{item.Price:N0}원";
 
         bool prestige = item.Category == ShopCategory.Prestige;
 
@@ -118,12 +118,24 @@ public class ShopPurchasePanelUI : MonoBehaviour
         ShopManager shop = ShopManager.Instance;
         GameManager game = GameManager.Instance;
 
+        long currentPrice = shop.GetPurchasePrice(item);
+        priceText.text = $"{currentPrice:N0}원";
+
         cashText.text = $"{game.availableCash:N0}원";
 
-        bool configured = shop.TryGetPaymentSettings(
-            item, out bool allowInstallment, out long maintenance);
+        // TryGetPaymentSettings가 반환하는 maintenance는 기본 유지비.
+        bool configured = shop.TryGetPaymentSettings(item, out bool allowInstallment, out long maintenance);
 
-        maintenanceText.text = configured ? $"{maintenance:N0}원" : "설정 필요";
+        if (configured)
+        {
+            long currentMaintenance = InflationManager.Instance.CalculateGeneralPrice(maintenance, game.currentMonth);
+
+            maintenanceText.text = $"{currentMaintenance:N0}원";
+        }
+        else
+        {
+            maintenanceText.text = "설정 필요";
+        }
 
         bool limited = shop.HasReachedPurchaseLimit(item);
 
@@ -136,7 +148,7 @@ public class ShopPurchasePanelUI : MonoBehaviour
 
         paymentPeriodText.text = selectedMonths == 0 ? "결제 방식: 일시불" : $"결제 방식: {selectedMonths}개월 할부";
 
-        long immediateCost = selectedMonths == 0 ? item.Price : 0;
+        long immediateCost = selectedMonths == 0 ? currentPrice : 0;
         paymentSummaryText.text = $"{immediateCost:N0}원";
 
         if (!configured)

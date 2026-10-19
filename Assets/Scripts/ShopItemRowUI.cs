@@ -43,7 +43,7 @@ public class ShopItemRowUI : MonoBehaviour
         productIcon.enabled = icon != null;
 
         productNameText.text = item.DisplayName;
-        priceText.text = $"비용 : {item.Price:N0}원";
+        //priceText.text = $"비용 : {item.Price:N0}원";
         effectText.text = item.Description;
 
         purchaseButton.onClick.RemoveListener(OnClickPurchase);
@@ -57,6 +57,10 @@ public class ShopItemRowUI : MonoBehaviour
 
     public void Refresh()
     {
+        // 목록이 갱신될 때도 현재 턴 가격을 표시. - Bind에서는 더이상 쓰지 않음 - 턴에 따라 실시간으로 가격이 바뀌기 때문.
+        long price = ShopManager.Instance.GetPurchasePrice(item);
+        priceText.text = $"비용 : {price:N0}원";
+
         bool limited =
             ShopManager.Instance.HasReachedPurchaseLimit(item);
 
