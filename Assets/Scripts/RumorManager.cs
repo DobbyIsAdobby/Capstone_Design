@@ -106,6 +106,27 @@ public class RumorManager : Singleton<RumorManager>
     }
 
     /// <summary>
+    /// 정보 가격에는 일반 물가가 아닌 정보 전용 규칙을 적용.
+    /// 현재 설정에서는 36턴부터 기본 가격의 2배.
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
+    public long GetPurchasePrice(InformationItemData item)
+    {
+        if (item == null)
+            throw new ArgumentNullException(nameof(item));
+
+        GameManager game = GameManager.Instance;
+
+        if (game == null)
+            throw new InvalidOperationException("정보 가격을 계산할 GameManager가 없습니다.");
+
+        return InflationManager.Instance.CalculateInformationPrice(item.Price, game.currentMonth);
+    }
+
+    /// <summary>
     /// UI 표시와 실제 결제 직전 검사에 함께 사용. 검사만 하며 현금이나 정보 상태를 변경하지 않음.
     /// </summary>
     /// <param name="grade"></param>
@@ -162,7 +183,9 @@ public class RumorManager : Singleton<RumorManager>
             return false;
         }
 
-        if (game.availableCash < item.Price)
+        long price = GetPurchasePrice(item);
+
+        if (game.availableCash < price)
         {
             reason = "보유 현금이 부족합니다.";
             return false;
@@ -199,6 +222,9 @@ public class RumorManager : Singleton<RumorManager>
 
         DataManager.Instance.TryGetInformation(grade, out InformationItemData item);
 
+        // 결제 직전에 현재 턴 가격을 다시 계산.
+        long price = GetPurchasePrice(item);
+
         InformationReveal reveal;
 
         // 결과 생성에 실패하면 돈을 차감하지 않음
@@ -220,7 +246,7 @@ public class RumorManager : Singleton<RumorManager>
         StoreReveal(grade, reveal);
 
         // 현금 차감과 청구서 기록을 기존 경로로 함께 처리
-        game.ApplyCashChange(-item.Price, "정보 구매");
+        game.ApplyCashChange(-price, "정보 구매");
 
         if (UIManager.Instance != null)
             UIManager.Instance.RefreshUI();

@@ -33,7 +33,8 @@ public class NewspaperPanelUI : MonoBehaviour
     /// <param name="article"></param>
     /// <param name="isFinalMonth"></param>
     /// <param name="completed"></param>
-    public void Show(NewsArticleData article, bool isFinalMonth, Action completed)
+    /// <param name="buttonLabel"></param>
+    public void Show(NewsArticleData article, bool isFinalMonth, Action completed, string buttonLabel = null)
     {
         gameObject.SetActive(true);
 
@@ -45,7 +46,9 @@ public class NewspaperPanelUI : MonoBehaviour
         titleText.text = $"오늘의 경제 소식 : " + article.title;
         bodyText.text = article.text;
 
-        continueButtonText.text = isFinalMonth ? "최종 결과 확인" : "새로운 달 시작";
+        // 추가 기사가 있으면 "물가 상승 소식 확인" 같은 문구를 전달.
+        // 별도 문구가 없으면 기존 동작 유지.
+        continueButtonText.text = buttonLabel ?? (isFinalMonth ? "최종 결과 확인" : "새로운 달 시작");
 
         onContinue = completed;
         readyToContinue = true;

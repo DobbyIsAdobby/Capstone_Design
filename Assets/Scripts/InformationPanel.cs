@@ -101,7 +101,9 @@ public class InformationPanel : MonoBehaviour
         hasPendingPurchase = true;
 
         questionText.text = $"{item.Name}를 구매하시겠습니까?";
-        priceText.text = $"필요 금액: {item.Price:N0}원";
+        
+        long price = rumors.GetPurchasePrice(item);
+        priceText.text = $"필요 금액: {price:N0}원";
 
         positiveButton.interactable = true;
         confirmRoot.SetActive(true);

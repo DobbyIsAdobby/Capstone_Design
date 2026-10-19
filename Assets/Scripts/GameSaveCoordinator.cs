@@ -8,7 +8,8 @@ public static class GameSaveCoordinator
     public const int FormatVersion = 3;
 
     // 상품 효과나 직급 규칙 등 저장 호환성이 달라지면 올림.
-    public const int ContentVersion = 3;
+    // v4 : 인플레이션 및 주거비 계산 규칙 추가.
+    public const int ContentVersion = 4;
 
     public static GameSaveData Capture()
     {
@@ -89,7 +90,9 @@ public static class GameSaveCoordinator
             JobManager.Instance == null ||
             RumorManager.Instance == null ||
             EventManager.Instance == null ||
-            WealthTierManager.Instance == null)
+            WealthTierManager.Instance == null ||
+            InflationManager.Instance == null ||
+            HousingCostManager.Instance == null)
         {
             throw new InvalidOperationException("필수 게임 매니저가 누락되었습니다.");
         }
@@ -99,7 +102,9 @@ public static class GameSaveCoordinator
             !LoanManager.Instance.IsConfigured ||
             !JobManager.Instance.IsConfigured ||
             !WealthTierManager.Instance.IsConfigured ||
-            !EventManager.Instance.IsConfigured)
+            !EventManager.Instance.IsConfigured ||
+            !InflationManager.Instance.IsConfigured ||
+            !HousingCostManager.Instance.IsConfigured)
         {
             throw new InvalidOperationException("게임 데이터 또는 규칙 설정이 준비되지 않았습니다.");
         }

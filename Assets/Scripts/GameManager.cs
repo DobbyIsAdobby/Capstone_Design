@@ -49,7 +49,7 @@ public class GameManager : Singleton<GameManager>
 
 
     [Header("Income & Expense")]
-    public long fixedExpense = 1500000; // 고정 지출 (월세, 생활비 등) => 추후 인플레이션에 따른 턴마다 증액 함수 필요.
+    //public long fixedExpense = 1500000; // 고정 지출 (월세, 생활비 등) => 추후 인플레이션에 따른 턴마다 증액 함수 필요. -구현 완료 : HousingCostManager에서 이제 따로 관리함.
     public long monthlySalary  => JobManager.Instance != null ? JobManager.Instance.MonthlySalary : 0L; // 고정된 값이 아닌 현재 직급의 급여를 사용함 - 직급 시스템 연결 완료
 
     [Header("Monthly Receipt")]
@@ -251,6 +251,14 @@ public class GameManager : Singleton<GameManager>
         if (marketIntroUI == null || !marketIntroUI.isActiveAndEnabled || !marketIntroUI.IsConfigured)
         {
             Debug.LogError("MarketIntroUI와 로딩 패널 연결을 확인하세요.");
+            yield break;
+        }
+
+        // 플레이 시작 전에 새 시스템의 필수 설정 검사.
+        if (InflationManager.Instance == null || !InflationManager.Instance.IsConfigured || HousingCostManager.Instance == null || !HousingCostManager.Instance.IsConfigured)
+        {
+            Debug.LogError("InflationManager와 HousingCostManager 설정을 확인하세요.");
+
             yield break;
         }
 
@@ -574,7 +582,10 @@ public class GameManager : Singleton<GameManager>
         // 현재 함수에서는 IsSetting을 헤제하거나 다음 턴으로 더이상 넘어가지 않음.
     }
 
-    // 수익률을 다시 계산하지 않고 기존 계산 전후 잔고 차이를 기록하도록 수정.
+    /// <summary>
+    /// 수익률을 다시 계산하지 않고 기존 계산 전후 잔고 차이를 기록하도록 수정.
+    /// </summary>
+    /// <exception cref="System.InvalidOperationException"></exception>
     private void ProcessMonthlySettlement()
     {
         /*
@@ -594,6 +605,14 @@ public class GameManager : Singleton<GameManager>
         {
             EventManager.Instance.CheckMonthlyEvent(currentMonth);
         }*/
+
+        // 금액을 변경하기 전에 이번 달 주거비 계산이 가능한지 확인.
+        HousingCostManager housing = HousingCostManager.Instance;
+
+        if (housing == null || !housing.TryGetCurrent(out HousingMonthlyCost housingCost))
+        {
+            throw new System.InvalidOperationException("이번 달 재산 티어와 주거비 설정을 확인하세요.");
+        }
 
         pendingBankruptcyCause = "";
 
@@ -629,7 +648,15 @@ public class GameManager : Singleton<GameManager>
         RecordMonthlyChange("레버리지 인버스", leverageInverseProfit);
 
         // 생활비
-        ApplyMandatoryExpense(fixedExpense, "생활비", ReceiptLineType.FixedExpense);
+        // 해당 턴 시작에 확정된 티어의 월세.
+        ApplyMandatoryExpense(housingCost.Rent, $"{housingCost.HousingName} 월세", ReceiptLineType.FixedExpense);
+
+        // 관리비가 있는 주거만 별도 행으로 기록.
+        if (housingCost.Maintenance > 0)
+        {
+            ApplyMandatoryExpense(housingCost.Maintenance, $"{housingCost.HousingName} 관리비", ReceiptLineType.FixedExpense);
+        }
+        //ApplyMandatoryExpense(fixedExpense, "생활비", ReceiptLineType.FixedExpense);
 
         //전체 자산 상품 이익(노트북 보너스 계산용)
         long marketProfit = stockProfit + leverageProfit + stockInverseProfit + leverageInverseProfit;
@@ -676,12 +703,52 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
+        InflationManager inflation = InflationManager.Instance;
+
+        if (inflation.TryGetNewsForClosingTurn(currentMonth, out _))
+        {
+            // 첫 번째 신문을 확인해도 아직 턴을 넘기지 않음.
+            newspaperPanel.Show(pendingNewsArticle, false, ShowInflationNewspaper, "물가 상승 소식 확인");
+        }
+        else
+        {
+            // 일반적인 달은 기존 흐름.
+            newspaperPanel.Show(pendingNewsArticle, currentMonth >= maxMonth, CompleteMonthNewspaper);
+        }
+
         // currentMonth는 아직 마감한 턴.
         // 60턴도 이 단계에서는 신문을 먼저 보여줌.
-        newspaperPanel.Show(pendingNewsArticle, currentMonth >= maxMonth, CompleteMonthNewspaper);
+        //newspaperPanel.Show(pendingNewsArticle, currentMonth >= maxMonth, CompleteMonthNewspaper);
 
         // 신문을 읽는 동안에도 월말 처리 상태를 유지함.
         // 여기서 IsSetting을 false로 바꾸거나 턴을 증가시키면 안됨. - CompleteMonthNewspaper에서 처리할거임.
+    }
+
+    /// <summary>
+    /// 기존 경제 신문을 확인한 뒤 같은 패널에 예고 기사 표시.
+    /// 이 시점의 currentMonth는 아직 11, 23, 35, 47턴.
+    /// </summary>
+    /// <exception cref="System.InvalidOperationException"></exception>
+    private void ShowInflationNewspaper()
+    {
+        if (!IsSetting)
+            return;
+
+        if (!InflationManager.Instance.TryGetNewsForClosingTurn(currentMonth, out InflationNewsData news))
+        {
+            throw new System.InvalidOperationException("표시할 인플레이션 예고 기사가 없습니다.");
+        }
+
+        // 신문 UI가 사용하는 데이터 형태로 전달.
+        var article = new NewsArticleData
+        {
+            id = news.id,
+            title = news.title,
+            text = news.text
+        };
+
+        // 두 번째 신문을 확인한 뒤에만 다음 달로 이동.
+        newspaperPanel.Show(article, false, CompleteMonthNewspaper);
     }
 
     /// <summary>

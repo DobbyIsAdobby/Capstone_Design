@@ -44,6 +44,21 @@ public class EventFlowUI : MonoBehaviour
     [SerializeField]
     private Color expenseColor = new Color32(200, 0, 0, 255);
 
+    [Header("Inflation Notice Layout")]
+    [SerializeField] private GameObject noticeMainDivider;
+
+    [SerializeField]
+    private Vector2 inflationBodyPosition = new Vector2(0f, 25f);
+
+    [SerializeField]
+    private Vector2 inflationBodySize = new Vector2(700f, 450f);
+
+    // 일반 금액 안내창으로 돌아갈 때 복원할 원래 배치.
+    private bool noticeLayoutCached;
+    private Vector2 originalNoticeBodyPosition;
+    private Vector2 originalNoticeBodySize;
+    private bool originalMainDividerActive;
+
     // 현재 클릭을 기다리고 있는 버튼.
     // null이면 버튼을 눌러도 진행하지 않음.
     private Button waitingButton;
@@ -67,10 +82,13 @@ public class EventFlowUI : MonoBehaviour
         newspaperTitleText != null &&
         newspaperBodyText != null &&
         newspaperDateText != null &&
-        newspaperConfirmButton != null;
+        newspaperConfirmButton != null &&
+        noticeMainDivider != null;
 
     private void Awake()
     {
+        CacheNoticeLayout();
+
         // 버튼 이벤트는 코드에서 연결.
         // Inspector의 On Click에는 같은 동작을 등록하지 않음.
         RegisterButton(dialogueButton);
@@ -79,6 +97,77 @@ public class EventFlowUI : MonoBehaviour
         RegisterButton(newspaperConfirmButton);
 
         CloseAll();
+    }
+
+    /// <summary>
+    /// 현재 직접 배치한 일반 안내창의 좌표와 크기를 보관.
+    /// </summary>
+    private void CacheNoticeLayout()
+    {
+        if (noticeLayoutCached || noticeMainText == null)
+            return;
+
+        RectTransform rect = noticeMainText.rectTransform;
+
+        originalNoticeBodyPosition = rect.anchoredPosition;
+        originalNoticeBodySize = rect.sizeDelta;
+
+        originalMainDividerActive = noticeMainDivider != null && noticeMainDivider.activeSelf;
+
+        noticeLayoutCached = true;
+    }
+
+    /// <summary>
+    /// 지출, 수입 안내에서 원래 배치를 다시 사용.
+    /// </summary>
+    private void RestoreNoticeLayout()
+    {
+        CacheNoticeLayout();
+
+        if (!noticeLayoutCached)
+            return;
+
+        noticeMainText.rectTransform.anchoredPosition = originalNoticeBodyPosition;
+
+        noticeMainText.rectTransform.sizeDelta = originalNoticeBodySize;
+
+        if (paymentTitleText != null)
+            paymentTitleText.gameObject.SetActive(true);
+
+        if (noticeMainDivider != null)
+            noticeMainDivider.SetActive(originalMainDividerActive);
+    }
+
+    /// <summary>
+    /// 물가가 적용된 턴 시작에 message와 targets를 표시.
+    /// 금액을 지급하거나 차감하지 않음.
+    /// </summary>
+    /// <param name="news"></param>
+    /// <returns></returns>
+    public IEnumerator ShowInflationNotice(InflationNewsData news)
+    {
+        RestoreNoticeLayout();
+        OpenPage(noticeRoot);
+
+        noticeTitleText.text = "물가 안내";
+
+        string[] targetLines = Array.ConvertAll(news.notice.targets, target => "- " + target);
+
+        noticeMainText.text = news.notice.message + "\n\n인상 대상\n" + string.Join("\n", targetLines);
+
+        // 대상 목록이 들어갈 공간 확보.
+        noticeMainText.rectTransform.anchoredPosition = inflationBodyPosition;
+
+        noticeMainText.rectTransform.sizeDelta = inflationBodySize;
+
+        // PaymentText는 PaymentTitleText의 자식이므로 함께 숨겨짐.
+        paymentTitleText.gameObject.SetActive(false);
+        noticeMainDivider.SetActive(false);
+
+        yield return WaitForClick(noticeConfirmButton);
+
+        // 이후 지출, 수입 결과 안내가 정상 배치로 나오도록 복원.
+        RestoreNoticeLayout();
     }
 
     private void RegisterButton(Button button)
@@ -165,6 +254,8 @@ public class EventFlowUI : MonoBehaviour
     /// <returns></returns>
     private IEnumerator ShowNotice(string title, string message, string paymentTitle, long amount)
     {
+        RestoreNoticeLayout();
+
         OpenPage(noticeRoot);
 
         noticeTitleText.text = title;
@@ -282,6 +373,8 @@ public class EventFlowUI : MonoBehaviour
     /// </summary>
     public void CloseAll()
     {
+        RestoreNoticeLayout();
+
         DisableButtons();
 
         waitingButton = null;

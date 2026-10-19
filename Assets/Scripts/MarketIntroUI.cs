@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -8,24 +9,35 @@ public class MarketIntroUI : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GameObject loadingRoot;
     [SerializeField] private TMP_Text storyText;
+
+    // 대사에 맞는 그림을 표시할 StoryImage 컴포넌트.
+    [SerializeField] private Image storyImage;
+
     [SerializeField] private Button startMonthButton;
 
     [Header("Story")]
     [SerializeField, Min(0.1f)]
     private float secondsPerLine = 3f;
 
-    [SerializeField, TextArea(2, 4)]
-    private string[] storyLines =
+    // 배열 순서대로 대사와 이미지를 함께 표시합니다.
+    [SerializeField]
+    private StoryPage[] storyPages = new StoryPage[8];
+
+    // Inspector에서 대사와 이미지를 한 Element 안에 설정하기 위한 자료형.
+    [Serializable]
+    private class StoryPage
     {
-        "아~ 드디어 전역이다. 군 적금 덕분에 3천만 원이나 모았네.",
-        "요즘 군 적금이 좋다더니 진짜 괜찮네.",
-        "",
-        "몇 달 뒤...",
-        "뭐야, 벌써 천만 원이나 썼어? 이제 2천만 원밖에 안 남았잖아!",
-        "이제부터라도 제대로 자산관리를 해보자.",
-        "5년 뒤에는 어떤 모습이 되어 있을까?",
-        "목표는 내 집 마련. 이번에는 제대로 해보자."
-    };
+        [SerializeField, TextArea(2, 4)]
+        private string dialogue;
+
+        [SerializeField]
+        private Sprite illustration;
+
+        // 빈 대사도 허용. 그림만 보여주는 장면을 구성할 수 있음.
+        public string Dialogue => dialogue ?? string.Empty;
+
+        public Sprite Illustration => illustration;
+    }
 
     // 스토리와 시장 생성의 완료 상태를 따로 관리.
     private bool storyCompleted;
@@ -38,12 +50,28 @@ public class MarketIntroUI : MonoBehaviour
     public bool StartRequested { get; private set; }
 
     // Inspector 연결 누락을 게임 시작 전에 검사
-    public bool IsConfigured =>
-        loadingRoot != null &&
-        storyText != null &&
-        startMonthButton != null &&
-        storyLines != null &&
-        storyLines.Length > 0;
+    public bool IsConfigured
+    {
+        get
+        {
+            if (loadingRoot == null || storyText == null || storyImage == null || startMonthButton == null)
+            {
+                return false;
+            }
+
+            if (storyPages == null || storyPages.Length == 0)
+                return false;
+
+            foreach (StoryPage page in storyPages)
+            {
+                // 대사는 비어 있어도 되지만 이미지는 반드시 필요함.
+                if (page == null || page.Illustration == null)
+                    return false;
+            }
+
+            return true;
+        }
+    }
 
     private void Awake()
     {
@@ -74,6 +102,8 @@ public class MarketIntroUI : MonoBehaviour
         StartRequested = false;
 
         storyText.text = "";
+        storyImage.sprite = null;
+        storyImage.enabled = false;
 
         startMonthButton.interactable = false;
         startMonthButton.gameObject.SetActive(false);
@@ -84,21 +114,30 @@ public class MarketIntroUI : MonoBehaviour
         storyRoutine = StartCoroutine(PlayStory());
     }
 
+    /// <summary>
+    /// 각 장면의 대사와 이미지를 동시에 표시.
+    /// 지정된 시간이 지나면 다음 Element로 넘어감.
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator PlayStory()
     {
-        foreach (string line in storyLines)
+        foreach (StoryPage page in storyPages)
         {
-            // 한 문장을 표시한 뒤 지정된 시간만큼 대기.
-            storyText.text = line;
+            // 같은 프레임에 대사와 이미지를 함께 변경.
+            storyText.text = page.Dialogue;
+            storyImage.sprite = page.Illustration;
+            storyImage.enabled = true;
 
-            // 게임 시간 배율과 무관하게 스토리 표시 시간을 계산함
+            // 스토리 재생 방식을 유지합니다.
+            // Inspector의 Seconds Per Line만큼 보여준 뒤 넘어감.
             yield return new WaitForSecondsRealtime(Mathf.Max(0.1f, secondsPerLine));
         }
 
-        // 마지막 문장까지 표시한 후 완료 처리
+        // 마지막 장면도 지정된 시간만큼 표시한 뒤 완료 처리.
         storyCompleted = true;
         storyRoutine = null;
 
+        // 시장 생성까지 완료되어야 시작 버튼이 표시됨.
         RefreshStartButton();
     }
 
