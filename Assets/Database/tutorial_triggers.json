@@ -1,383 +1,335 @@
 {
-  "version": 1,
-  "tutorials": [
-    {
-      "id": "BASIC_ASSET_TERMINAL",
-      "trigger": "BASIC_GUIDE_START",
-      "turn": 1,
-      "once": true,
-      "forced": false,
-      "unlock": [],
-      "guideTarget": "ASSET_TERMINAL",
-      "dialogues": [
-        "먼저 내 자산부터 확인해보자.",
-        "보유 현금은 지금 바로 사용할 수 있는 돈이고, 순자산은 내가 가진 자산과 빚을 모두 반영한 금액이야."
-      ]
-    },
-    {
-      "id": "BASIC_AP",
-      "trigger": "BASIC_GUIDE_STEP",
-      "turn": 1,
-      "after": "BASIC_ASSET_TERMINAL",
-      "once": true,
-      "forced": false,
-      "unlock": [],
-      "guideTarget": "AP",
-      "dialogues": [
-        "행동을 하려면 AP가 필요하네.",
-        "AP는 이번 달에 내가 얼마나 행동할 수 있는지를 나타내고, 새로운 달이 시작되면 다시 회복돼."
-      ]
-    },
-    {
-      "id": "BASIC_MONTHLY_EXPENSE",
-      "trigger": "BASIC_GUIDE_STEP",
-      "turn": 1,
-      "after": "BASIC_AP",
-      "once": true,
-      "forced": false,
-      "unlock": [],
-      "guideTarget": "MONTHLY_EXPENSE",
-      "dialogues": [
-        "이번 달에 나갈 돈도 미리 확인할 수 있네.",
-        "예정된 지출보다 보유 현금이 부족하면 파산할 수도 있으니 여유 자금을 남겨두자."
-      ]
-    },
+  "version": 2,
 
+  "fixed_tutorials": [
     {
-      "id": "TURN1_START",
-      "trigger": "TURN_START",
+      "id": "TURN1_BASIC_AND_OVERTIME",
       "turn": 1,
-      "after": "BASIC_MONTHLY_EXPENSE",
       "once": true,
-      "forced": true,
       "unlock": [
         "OVERTIME"
       ],
-      "guideTarget": "OVERTIME_BUTTON",
-      "dialogues": [
-        "일단 지금은 일을 해서 돈부터 벌어보자.",
-        "야근을 한번 해볼까?"
-      ]
-    },
-    {
-      "id": "TURN1_FIRST_OVERTIME",
-      "trigger": "ACTION_COUNT",
-      "turn": 1,
-      "after": "TURN1_START",
-      "once": true,
-      "forced": true,
-      "action": "OVERTIME",
-      "count": 1,
-      "guideTarget": "OVERTIME_BUTTON",
-      "dialogues": [
-        "야근을 하면 수입은 늘지만 피로도도 같이 올라가네.",
-        "이번에는 야근을 10번 채워보자."
-      ],
-      "objective": {
-        "action": "OVERTIME",
-        "count": 10
-      }
-    },
-    {
-      "id": "TURN1_OVERTIME_10",
-      "trigger": "ACTION_COUNT",
-      "turn": 1,
-      "after": "TURN1_FIRST_OVERTIME",
-      "once": true,
-      "forced": true,
-      "action": "OVERTIME",
-      "count": 10,
-      "guideTarget": "SHOP_BUTTON",
-      "dialogues": [
-        "어느새 피로도가 절반이나 쌓였네.",
-        "계속 일만 할 수는 없겠어. 상점에서 잠깐 기분전환을 해보자."
-      ]
-    },
-    {
-      "id": "TURN1_SHOP_OPEN",
-      "trigger": "UI_OPEN",
-      "turn": 1,
-      "after": "TURN1_OVERTIME_10",
-      "once": true,
-      "forced": false,
-      "target": "SHOP",
-      "guideTarget": "SHOP_BUTTON",
-      "dialogues": [
-        "상점에서는 다양한 소비를 통해 피로도를 관리할 수 있겠네.",
-        "필요할 때 적절하게 활용해보자."
-      ]
-    },
-    {
-      "id": "TURN1_FATIGUE_RECOVERY",
-      "trigger": "PURCHASE_EFFECT",
-      "turn": 1,
-      "after": "TURN1_SHOP_OPEN",
-      "once": true,
-      "forced": false,
-      "effect": "FATIGUE_DECREASE",
-      "guideTarget": "NONE",
-      "dialogues": [
-        "이렇게 소비를 통해 피로도를 낮출 수도 있구나.",
-        "돈을 아끼는 것도 중요하지만 피로도가 너무 많이 쌓이지 않도록 관리해야겠다."
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "먼저 내 자산부터 확인해보자.",
+            "보유 현금은 지금 바로 사용할 수 있는 돈이고, 순자산은 내가 가진 자산과 빚을 모두 반영한 금액이야.",
+            "행동을 하려면 AP가 필요하네.",
+            "AP는 이번 달에 내가 얼마나 행동할 수 있는지를 나타내고, 새로운 달이 시작되면 다시 회복돼.",
+            "이번 달에 나갈 돈도 미리 확인할 수 있네.",
+            "예정된 지출보다 보유 현금이 부족하면 파산할 수도 있으니 여유 자금을 남겨두자."
+          ]
+        },
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "일단 지금은 일을 해서 돈부터 벌어보자.",
+            "야근을 한번 해볼까?"
+          ]
+        },
+        {
+          "type": "WAIT_EVENT",
+          "event_name": "OvertimeUsed",
+          "count": 1
+        },
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "야근을 하면 수입은 늘지만 피로도도 같이 올라가네.",
+            "이번에는 야근을 10번 채워보자."
+          ]
+        },
+        {
+          "type": "WAIT_EVENT",
+          "event_name": "OvertimeUsed",
+          "count": 10
+        },
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "어느새 피로도가 절반이나 쌓였네.",
+            "계속 일만 할 수는 없겠어. 상점에서 잠깐 기분전환을 해보자."
+          ]
+        },
+        {
+          "type": "WAIT_EVENT",
+          "event_name": "ShopOpened",
+          "count": 1
+        },
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "상점에서는 다양한 소비를 통해 피로도를 관리할 수 있겠네.",
+            "필요할 때 적절하게 활용해보자."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
       ]
     },
 
     {
-      "id": "TURN2_START",
-      "trigger": "TURN_START",
+      "id": "TURN2_INVESTMENT_GUIDE",
       "turn": 2,
       "once": true,
-      "forced": false,
       "unlock": [
         "STOCK",
         "STOCK_INVERSE"
       ],
-      "guideTarget": "ASSET_BUTTON",
-      "dialogues": [
-        "일해서 버는 돈만으로는 자산을 크게 늘리는 데 한계가 있겠어.",
-        "이번에는 투자를 알아보자."
-      ]
-    },
-    {
-      "id": "TURN2_ASSET_OPEN",
-      "trigger": "UI_OPEN",
-      "turn": 2,
-      "after": "TURN2_START",
-      "once": true,
-      "forced": false,
-      "target": "ASSET",
-      "guideTarget": "ASSET_BUTTON",
-      "dialogues": [
-        "주식은 시장이 오르면 투자한 자산의 가치도 올라가는 기본적인 투자 방법이야.",
-        "인버스는 반대로 시장이 내려갈 때 수익을 기대할 수 있는 상품이네.",
-        "시장이 오를 것 같다면 주식, 내려갈 것 같다면 인버스를 활용할 수 있겠어."
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "일해서 버는 돈만으로는 자산을 크게 늘리는 데 한계가 있겠어.",
+            "이번에는 투자를 알아보자.",
+            "주식은 시장이 오르면 투자한 자산의 가치도 올라가는 기본적인 투자 방법이야.",
+            "인버스는 반대로 시장이 내려갈 때 수익을 기대할 수 있는 상품이네.",
+            "시장이 오를 것 같다면 주식, 내려갈 것 같다면 인버스를 활용할 수 있겠어."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
       ]
     },
 
     {
-      "id": "TURN3_START",
-      "trigger": "TURN_START",
+      "id": "TURN3_JOB_GUIDE",
       "turn": 3,
       "once": true,
-      "forced": false,
       "unlock": [
         "JOB"
       ],
-      "guideTarget": "JOB_BUTTON",
-      "dialogues": [
-        "야근 말고도 수입을 늘릴 방법이 있겠어.",
-        "공부를 통해 경험치를 쌓고 직급을 올려보자."
-      ]
-    },
-    {
-      "id": "TURN3_JOB_OPEN",
-      "trigger": "UI_OPEN",
-      "turn": 3,
-      "after": "TURN3_START",
-      "once": true,
-      "forced": false,
-      "target": "JOB",
-      "guideTarget": "JOB_BUTTON",
-      "dialogues": [
-        "미니게임에 성공하면 더 많은 경험치를 얻을 수 있네.",
-        "직급이 올라가면 월급도 늘어나니 열심히 해보자."
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "야근 말고도 수입을 늘릴 방법이 있겠어.",
+            "공부를 통해 경험치를 쌓고 직급을 올려보자.",
+            "미니게임에 성공하면 더 많은 경험치를 얻을 수 있네.",
+            "직급이 올라가면 월급도 늘어나니 열심히 해보자."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
       ]
     },
 
     {
       "id": "TURN4_FREE",
-      "trigger": "TURN_START",
       "turn": 4,
       "once": true,
-      "forced": false,
       "unlock": [],
-      "guideTarget": "NONE",
-      "dialogues": [
-        "조금씩 감이 잡히는 것 같다.",
-        "이번 달은 지금까지 배운 기능을 자유롭게 활용해보자."
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "조금씩 감이 잡히는 것 같다.",
+            "이번 달은 지금까지 배운 기능을 자유롭게 활용해보자."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
       ]
     },
 
     {
-      "id": "TURN5_START",
-      "trigger": "TURN_START",
+      "id": "TURN5_BANK_GUIDE",
       "turn": 5,
       "once": true,
-      "forced": false,
       "unlock": [
         "BANK"
       ],
-      "guideTarget": "BANK_BUTTON",
-      "dialogues": [
-        "투자도 좋지만 모든 돈을 위험에 노출할 필요는 없겠지.",
-        "일부는 은행에 안전하게 모아둘 수도 있겠다."
-      ]
-    },
-    {
-      "id": "TURN5_BANK_OPEN",
-      "trigger": "UI_OPEN",
-      "turn": 5,
-      "after": "TURN5_START",
-      "once": true,
-      "forced": false,
-      "target": "BANK",
-      "guideTarget": "BANK_BUTTON",
-      "dialogues": [
-        "예금해둔 돈은 매달 이자도 받을 수 있네.",
-        "어떻게 나눠서 관리할지 고민해보자."
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "투자도 좋지만 모든 돈을 위험에 노출할 필요는 없겠지.",
+            "일부는 은행에 안전하게 모아둘 수도 있겠다.",
+            "예금해둔 돈은 매달 이자도 받을 수 있네.",
+            "어떻게 나눠서 관리할지 고민해보자."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
       ]
     },
 
     {
-      "id": "TURN6_START",
-      "trigger": "TURN_START",
+      "id": "TURN6_ADVANCED_INVESTMENT",
       "turn": 6,
       "once": true,
-      "forced": false,
       "unlock": [
         "LEVERAGE",
         "LEVERAGE_INVERSE",
         "INFORMATION"
       ],
-      "guideTarget": "ASSET_BUTTON",
-      "dialogues": [
-        "새로운 투자 상품도 사용할 수 있게 됐네."
-      ]
-    },
-    {
-      "id": "TURN6_ASSET_OPEN",
-      "trigger": "UI_OPEN",
-      "turn": 6,
-      "after": "TURN6_START",
-      "once": true,
-      "forced": false,
-      "target": "ASSET",
-      "guideTarget": "ASSET_BUTTON",
-      "dialogues": [
-        "레버리지는 일반 주식보다 시장 움직임이 크게 반영되는 상품이야.",
-        "수익이 커질 수도 있지만 손실도 그만큼 커질 수 있겠어.",
-        "레버리지 인버스는 시장이 하락하는 방향을 따라가면서 변동 폭도 큰 상품이네.",
-        "일반 주식과 인버스보다 위험이 큰 만큼 신중하게 사용해야겠다."
-      ]
-    },
-    {
-      "id": "TURN6_ASSET_CLOSE",
-      "trigger": "UI_CLOSE",
-      "turn": 6,
-      "after": "TURN6_ASSET_OPEN",
-      "once": true,
-      "forced": false,
-      "target": "ASSET",
-      "guideTarget": "INFO_BUTTON",
-      "dialogues": [
-        "위험이 큰 상품까지 사용하려면 시장을 판단할 정보가 더 필요하겠어.",
-        "투자 정보도 한번 확인해보자."
-      ]
-    },
-    {
-      "id": "TURN6_INFO_OPEN",
-      "trigger": "UI_OPEN",
-      "turn": 6,
-      "after": "TURN6_ASSET_CLOSE",
-      "once": true,
-      "forced": false,
-      "target": "INFORMATION",
-      "guideTarget": "INFO_BUTTON",
-      "dialogues": [
-        "정보마다 가격이 다르네.",
-        "가격이 높은 정보일수록 더 높은 신뢰도를 기대할 수 있는 것 같아.",
-        "그래도 정보가 무조건 맞는 건 아니야.",
-        "결국 어떤 정보를 믿을지는 내가 판단해야겠어."
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "새로운 투자 상품도 사용할 수 있게 됐네.",
+            "레버리지는 일반 주식보다 시장 움직임이 크게 반영되는 상품이야.",
+            "수익이 커질 수도 있지만 손실도 그만큼 커질 수 있겠어.",
+            "레버리지 인버스는 시장이 하락하는 방향을 따라가면서 변동 폭도 큰 상품이네.",
+            "일반 주식과 인버스보다 위험이 큰 만큼 신중하게 사용해야겠다.",
+            "위험이 큰 상품까지 사용하려면 시장을 판단할 정보도 필요하겠어.",
+            "정보마다 가격과 신뢰도가 다르네.",
+            "가격이 높은 정보일수록 높은 신뢰도를 기대할 수 있지만 무조건 맞는 것은 아니야.",
+            "결국 어떤 정보를 믿을지는 내가 판단해야겠어."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
       ]
     },
 
     {
       "id": "TURN7_FREE",
-      "trigger": "TURN_START",
       "turn": 7,
       "once": true,
-      "forced": false,
       "unlock": [],
-      "guideTarget": "NONE",
-      "dialogues": [
-        "이제 활용할 수 있는 방법이 꽤 많아졌다.",
-        "이번 달은 지금까지 배운 기능을 자유롭게 활용해보자."
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "이제 활용할 수 있는 방법이 꽤 많아졌다.",
+            "이번 달은 지금까지 배운 기능을 자유롭게 활용해보자."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
       ]
     },
 
     {
-      "id": "TURN8_START",
-      "trigger": "TURN_START",
+      "id": "TURN8_LOAN_GUIDE",
       "turn": 8,
       "once": true,
-      "forced": false,
       "unlock": [
         "LOAN"
       ],
-      "guideTarget": "LOAN_BUTTON",
-      "dialogues": [
-        "은행에서 대출도 이용할 수 있게 됐네."
-      ]
-    },
-    {
-      "id": "TURN8_LOAN_OPEN",
-      "trigger": "UI_OPEN",
-      "turn": 8,
-      "after": "TURN8_START",
-      "once": true,
-      "forced": false,
-      "target": "LOAN",
-      "guideTarget": "LOAN_BUTTON",
-      "dialogues": [
-        "대출은 필요한 돈을 먼저 빌려 활용하는 대신 매달 이자를 내는 방식이야.",
-        "빌리는 기간을 정할 수 있고, 만기가 되면 원금도 갚아야 한다.",
-        "예금 규모에 따라 이용할 수 있는 대출 한도도 달라지는구나.",
-        "투자할 자금을 늘릴 수도 있지만 결국 갚아야 할 돈이니 신중하게 사용해야겠다."
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "은행에서 대출도 이용할 수 있게 됐네.",
+            "대출은 필요한 돈을 먼저 빌려 활용하는 대신 매달 이자를 내는 방식이야.",
+            "빌리는 기간을 정할 수 있고, 만기가 되면 원금도 갚아야 한다.",
+            "예금 규모에 따라 이용할 수 있는 대출 한도도 달라지는구나.",
+            "투자할 자금을 늘릴 수도 있지만 결국 갚아야 할 돈이니 신중하게 사용해야겠다."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
       ]
     },
 
     {
-      "id": "TURN9_START",
-      "trigger": "TURN_START",
+      "id": "TURN9_NEWS_GUIDE",
       "turn": 9,
       "once": true,
-      "forced": false,
       "unlock": [
         "NEWS"
       ],
-      "guideTarget": "NEWS_BUTTON",
-      "dialogues": [
-        "뉴스도 확인할 수 있게 됐네."
-      ]
-    },
-    {
-      "id": "TURN9_NEWS_OPEN",
-      "trigger": "UI_OPEN",
-      "turn": 9,
-      "after": "TURN9_START",
-      "once": true,
-      "forced": false,
-      "target": "NEWS",
-      "guideTarget": "NEWS_BUTTON",
-      "dialogues": [
-        "시장 움직임을 숫자로만 보는 것보다 왜 움직였는지 같이 보면 이해하는 데 도움이 되겠어.",
-        "앞으로 일어날 일에 대한 암시도 해줄지 몰라."
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "뉴스도 확인할 수 있게 됐네.",
+            "시장 움직임을 숫자로만 보는 것보다 왜 움직였는지 같이 보면 이해하는 데 도움이 되겠어.",
+            "앞으로 일어날 일에 대한 암시도 해줄지 몰라."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
       ]
     },
 
     {
       "id": "TURN10_TUTORIAL_END",
-      "trigger": "TURN_START",
       "turn": 10,
       "once": true,
-      "forced": false,
       "unlock": [],
-      "guideTarget": "NONE",
+      "steps": [
+        {
+          "type": "DIALOGUE",
+          "dialogues": [
+            "이제 필요한 기능은 거의 다 익혔다.",
+            "앞으로 어떤 방식으로 돈을 벌고, 쓰고, 모으고 투자할지는 내 선택이야.",
+            "가끔 예상치 못한 상황들이 일어날 수도 있으니 여유 자금은 항상 남겨두자.",
+            "5년 뒤의 모습은, 지금부터 내가 만들어가는 거야."
+          ]
+        },
+        {
+          "type": "COMPLETE"
+        }
+      ]
+    }
+  ],
+
+  "context_guides": [
+    {
+      "id": "FIRST_FATIGUE_RECOVERY",
+      "trigger": "FatigueRecoveredByShop",
+      "once": true,
+      "required_completed_id": "TURN1_BASIC_AND_OVERTIME",
       "dialogues": [
-        "이제 필요한 기능은 거의 다 익혔다.",
-        "앞으로 어떤 방식으로 돈을 벌고, 쓰고, 모으고 투자할지는 내 선택이야.",
-        "가끔 예상치 못한 상황들이 일어날 수도 있으니 여유 자금은 항상 남겨두자.",
-        "5년 뒤의 모습은, 지금부터 내가 만들어가는 거야."
+        "피로도가 조금 줄었네.",
+        "일만 하는 것보다 가끔은 기분전환을 해주는 것도 필요하겠다."
+      ]
+    },
+
+    {
+      "id": "FIRST_INVESTMENT_PURCHASE",
+      "trigger": "InvestmentPurchased",
+      "once": true,
+      "required_completed_id": "TURN2_INVESTMENT_GUIDE",
+      "dialogues": [
+        "드디어 투자를 시작했네.",
+        "과연 다음 달에는 이 선택이 수익으로 돌아올까?"
+      ]
+    },
+
+    {
+      "id": "FIRST_INFORMATION_PURCHASE",
+      "trigger": "InformationPurchased",
+      "once": true,
+      "required_completed_id": "TURN6_ADVANCED_INVESTMENT",
+      "dialogues": [
+        "정보마다 가격과 신뢰도가 다르네.",
+        "내 상황에 필요한 정보인지 잘 판단해서 구매해야겠어."
+      ]
+    },
+
+    {
+      "id": "FIRST_LOAN_CREATED",
+      "trigger": "LoanCreated",
+      "once": true,
+      "required_completed_id": "TURN8_LOAN_GUIDE",
+      "dialogues": [
+        "대출을 받으니 매달 나가는 이자도 늘어났네.",
+        "만기 전까지 예정 지출과 보유 현금을 잘 확인해야겠다."
+      ]
+    },
+
+    {
+      "id": "FIRST_PROMOTION",
+      "trigger": "JobPromoted",
+      "once": true,
+      "required_completed_id": "TURN3_JOB_GUIDE",
+      "dialogues": [
+        "승진하니 월급도 올라가는구나.",
+        "수입을 늘리려면 공부해서 승진하는 것도 게을리하지 말아야겠어."
       ]
     }
   ]
