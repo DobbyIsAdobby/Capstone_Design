@@ -94,7 +94,8 @@ public class SaveDataValidator
 
         ValidateInformation(data.information, turn);
 
-        Require(
+        // 이벤트 시스템 리뉴얼로 인해 더 이상 사용하지 않음.
+        /*Require(
             data.pendingEvent.pendingPenaltyAmount >= 0 &&
             ValidRandom(data.pendingEvent.randomState),
             "이벤트 기록이 올바르지 않습니다.");
@@ -106,6 +107,10 @@ public class SaveDataValidator
                     data.pendingEvent.pendingEventName),
                 "납부 예정 이벤트 이름이 없습니다.");
         }
+        */
+
+        // 새 이벤트 일정과 처리 완료 상태를 검사
+        ValidateEvents(data.pendingEvent, turn);
 
         Require(
             data.wealthTier.currentTierIndex >= 0 &&
@@ -215,6 +220,62 @@ public class SaveDataValidator
                         item.monthlyPayment * item.remainingPayments),
                     "남은 할부 일정이 올바르지 않습니다.");
             }
+        }
+    }
+
+    /// <summary>
+    /// 로비에서도 검사할 수 있는 이벤트 저장 구조 검증.
+    /// JSON과의 상세 대조는 GameScene의 EventManager가 수행.
+    /// </summary>
+    /// <param name="events"></param>
+    /// <param name="currentTurn"></param>
+    private static void ValidateEvents(EventSaveData events, int currentTurn)
+    {
+        Require(
+            events != null &&
+            !string.IsNullOrWhiteSpace(events.catalogHash) &&
+            events.fixedEvents != null &&
+            events.marketEvents != null,
+            "이벤트 저장 항목이 누락되었습니다.");
+
+        Require(
+            events.fixedEvents.Count == 4 &&
+            events.marketEvents.Count >= 4 &&
+            events.marketEvents.Count <= 8,
+            "이벤트 일정 개수가 올바르지 않습니다.");
+
+        // 현재 턴 안내는 끝났고, 현재 턴 정산은 아직 하지 않은 상태에서만 저장 가능.
+        Require(
+            events.lastPresentedTurn == currentTurn &&
+            events.lastSettledTurn == currentTurn - 1,
+            "이벤트 안내 또는 정산 상태가 올바르지 않습니다.");
+
+        var usedIds = new HashSet<string>(StringComparer.Ordinal);
+        var usedTurns = new HashSet<int>();
+
+        ValidateEventEntries(events.fixedEvents, usedIds, usedTurns);
+
+        ValidateEventEntries(events.marketEvents, usedIds, usedTurns);
+    }
+
+    /// <summary>
+    /// 고정,랜덤 목록 전체에서 중복 ID와 중복 발생 턴 검사.
+    /// </summary>
+    /// <param name="entries"></param>
+    /// <param name="usedIds"></param>
+    /// <param name="usedTurns"></param>
+    private static void ValidateEventEntries(List<EventScheduleEntry> entries, HashSet<string> usedIds, HashSet<int> usedTurns)
+    {
+        foreach (EventScheduleEntry entry in entries)
+        {
+            Require(
+                entry != null &&
+                entry.turn >= 1 &&
+                entry.turn <= 60 &&
+                !string.IsNullOrWhiteSpace(entry.id) &&
+                usedIds.Add(entry.id) &&
+                usedTurns.Add(entry.turn),
+                "이벤트 ID 또는 발생 턴이 중복되거나 올바르지 않습니다.");
         }
     }
 

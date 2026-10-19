@@ -120,15 +120,19 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// 일시정지 메뉴를 열 수 있는 기본 게임 상태. 
     /// 미니게임 도중에도 일시정지 자체는 허용함.
+    /// ++ 추가 내역 :
+    /// 이벤트 안내가 끝나기 전에는 행동, 저장, 일시정지를 열지 못하도록 함.
     /// </summary>
-    public bool CanOpenPause => 
+    public bool CanOpenPause =>
         hasMonthBaseLine &&
         !IsGameOver &&
         !IsSetting &&
         DataManager.Instance != null &&
         DataManager.Instance.IsMarketReady &&
         JobManager.Instance != null &&
-        JobManager.Instance.IsConfigured;
+        JobManager.Instance.IsConfigured &&
+        EventManager.Instance != null &&
+        EventManager.Instance.IsTurnReady(currentMonth);
 
     /// <summary>
     /// 구매, 거래, 야근 등 일반 행동이 가능한 상태. 
@@ -383,6 +387,9 @@ public class GameManager : Singleton<GameManager>
 
         // 새 턴의 순자산으로 외형과 등급을 확정.
         WealthTierManager.Instance.ApplyAtTurnStart(currentMonth, TotalAsset);
+
+        // 모든 월 초 데이터 준비 후 이벤트 안내 시작.
+        EventManager.Instance.PresentTurnStart(currentMonth);
     }
 
     /// <summary>
@@ -634,7 +641,8 @@ public class GameManager : Singleton<GameManager>
         }
 
         // 이번 달 납부 대상 이벤트
-        EventManager.Instance.ResolvePendingPenalty();
+        // + : 지급 & - : 차감.
+        EventManager.Instance.SettleFixedEvent(currentMonth);
 
         // 대출 이자 및 만기 원금 청구
         LoanManager.Instance.ProcessMonthlySettlement(currentMonth);
@@ -695,8 +703,9 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
-        // CompleteMonthReceipt에 있던 순서 유지.
-        EventManager.Instance.CheckMonthlyEvent(currentMonth);
+        // CompleteMonthReceipt에 있던 순서 유지. - 사용하지 않음.
+        // 다음 달 이벤트는 이미 확정된 일정에서 확인함.
+        //EventManager.Instance.CheckMonthlyEvent(currentMonth);
 
         currentMonth++;
         currentMonthOvertimeCount = 0;
