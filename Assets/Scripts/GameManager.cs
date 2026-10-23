@@ -841,39 +841,56 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public void OnClickOvertimeWork()
     {
-        //게임 오버 상태라면 더 이상 클릭되지 않도록
-        if (!CanAct) return;
+        // 일시정지, 결산, 게임 종료 등 행동할 수 없는 상태에서는 중단.
+        if (!CanAct)
+            return;
 
-        //야근 횟수 제한
-        if(currentMonthOvertimeCount >= maxOvertimePerMonth)
+        // 월 최대 야근 횟수를 먼저 검사.
+        if (currentMonthOvertimeCount >= maxOvertimePerMonth)
         {
             Debug.Log("이번 달 가능한 야근 횟수를 초과하였습니다.");
             return;
         }
 
-        // 야근 가능 횟수를 먼저 검사한 후 AP를 차감함.
-        // 횟수 초과로 인해 실행하지 못한 야근은 현금/피로도/야근 횟수가 변경되지 않음.
-        if (!TrySpendAP(overtimeAPCost, out string reason))
+        JobManager job = JobManager.Instance;
+
+        if (job == null)
+        {
+            Debug.LogError("야근 수당을 계산할 JobManager가 없습니다.");
+            return;
+        }
+
+        // AP를 사용하기 전에 지급액부터 확인.
+        // 설정 오류 때문에 AP만 차감되는 상황을 방지.
+        if (!job.TryGetOvertimeIncome(currentMonthOvertimeCount, out long income, out string reason))
+        {
+            Debug.LogError(reason);
+            return;
+        }
+
+        // AP가 부족하면 현금, 피로도, 야근 횟수는 변경하지 않음.
+        if (!TrySpendAP(overtimeAPCost, out reason))
         {
             Debug.Log(reason);
             return;
         }
 
-        // 야근 수당 지급액 선언
-        long income = 50000;
-        
-        ApplyCashChange(income, "야근 수입");      //탭 1회당 5만 원 추가 -> 로직 변경으로 수정
-        
-        stressLevel += 5f;           //탭 1회당 스트레스 5% 증가
-        currentMonthOvertimeCount++; //탭 1회당 야근 횟수 1회 추가
+        // 검사를 모두 통과했을 때 야근 수입을 지급.
+        // 청구서에도 기록
+        ApplyCashChange(income, "야근 수입");
 
-        // AP와 야근 횟수 검사를 통과하고 돈을 지급한 경우에만 표시
+        // 지급액 계산이 끝난 다음 횟수를 증가시킴.
+        stressLevel += 5f;
+        currentMonthOvertimeCount++;
+
+        // 데미지 폰트에도 실제 지급한 금액을 전달.
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowOvertimeIncome(income);
         }
 
-        CheckStressPenalty(); //스트레스 패널티 적용 여부 판단
+        // 피로도 초과 처리와 화면 갱신.
+        CheckStressPenalty();
         UpdateUI();
     }
 

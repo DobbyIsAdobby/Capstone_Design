@@ -1,0 +1,55 @@
+{
+  "properties": [
+    {
+      "id": "PROPERTY_001",
+      "name": "옥탑방",
+      "basePrice": 30000000,
+      "baseRent": 300000
+    },
+    {
+      "id": "PROPERTY_002",
+      "name": "원룸",
+      "basePrice": 100000000,
+      "baseRent": 1000000
+    },
+    {
+      "id": "PROPERTY_003",
+      "name": "오피스텔",
+      "basePrice": 200000000,
+      "baseRent": 2000000
+    },
+    {
+      "id": "PROPERTY_004",
+      "name": "빌라",
+      "basePrice": 300000000,
+      "baseRent": 3000000
+    },
+    {
+      "id": "PROPERTY_005",
+      "name": "아파트",
+      "basePrice": 500000000,
+      "baseRent": 5000000
+    }
+  ],
+  "positive_news": [
+    {
+      "id": "PROPERTY_NEWS_POS_001",
+      "title": "{name} 매매가격 상승",
+      "text": "이번 달 {name} 매매가격이 상승했습니다. 현재 시세는 {price}원입니다."
+    }
+  ],
+  "negative_news": [
+    {
+      "id": "PROPERTY_NEWS_NEG_001",
+      "title": "{name} 매매가격 하락",
+      "text": "이번 달 {name} 매매가격이 하락했습니다. 현재 시세는 {price}원입니다."
+    }
+  ],
+  "neutral_news": [
+    {
+      "id": "PROPERTY_NEWS_ZERO_001",
+      "title": "{name} 매매가격 보합",
+      "text": "이번 달 {name} 매매가격은 변동하지 않았습니다. 현재 시세는 {price}원입니다."
+    }
+  ]
+}
