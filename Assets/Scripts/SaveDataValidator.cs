@@ -40,13 +40,18 @@ public class SaveDataValidator
             data.job != null &&
             data.information != null &&
             data.pendingEvent != null &&
-            data.wealthTier != null,
+            data.wealthTier != null &&
+            data.realEstate != null,
             "필수 저장 항목이 누락되었습니다.");
 
         PlayerSaveData player = data.player;
         int turn = player.currentMonth;
 
         Require(turn >= 1 && turn <= 60, "턴 범위가 올바르지 않습니다.");
+
+        // 로비에서도 실행할 수 있게 Instance 없이 검사해야함.
+        RealEstateManager.ValidateSave(data.realEstate, turn, out long propertyValue, out long propertyDebt);
+
         Require(player.availableCash >= 0, "저장된 현금이 올바르지 않습니다.");
         Require(player.currentAP >= 0, "저장된 AP가 올바르지 않습니다.");
 
@@ -125,9 +130,11 @@ public class SaveDataValidator
             assets.stockBalance +
             assets.leverageBalance +
             assets.stockInverseBalance +
-            assets.leverageInverseBalance -
-            debt);
-
+            assets.leverageInverseBalance +
+            propertyValue -
+            debt -
+            propertyDebt);
+            
         Require(
             data.summary.turn == turn &&
             data.summary.netWorth == netWorth,

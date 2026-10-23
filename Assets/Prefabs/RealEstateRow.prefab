@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 322, y: 25}
+  m_AnchoredPosition: {x: 315, y: 25}
   m_SizeDelta: {x: 175, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6252469981489713560
@@ -99,7 +99,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 4
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -149,7 +149,7 @@ GameObject:
   - component: {fileID: 6477294681885959089}
   - component: {fileID: 4244712646610979247}
   m_Layer: 5
-  m_Name: EffectText
+  m_Name: RentText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -472,6 +472,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2230708865746827966}
   - component: {fileID: 1679386648125327316}
+  - component: {fileID: 1891509773736935321}
   m_Layer: 5
   m_Name: RealEstateRow
   m_TagString: Untagged
@@ -523,6 +524,24 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: 0
   m_LayoutPriority: 1
+--- !u!114 &1891509773736935321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3120418496579246225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efe9adac9e58774d9af57b99242c565, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RealEstateRowUI
+  icon: {fileID: 1644098713872746652}
+  nameText: {fileID: 5929049156162217510}
+  priceText: {fileID: 2374378232010818794}
+  rentText: {fileID: 4244712646610979247}
+  stateText: {fileID: 7115496540991822547}
+  detailButton: {fileID: 5966389903886575780}
 --- !u!1 &4189611499697426217
 GameObject:
   m_ObjectHideFlags: 0

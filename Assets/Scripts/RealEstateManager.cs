@@ -251,6 +251,12 @@ public class RealEstateManager : Singleton<RealEstateManager>
     /// <returns></returns>
     private string ActionError(int index, int requestedTurn)
     {
+        // 부동산 관련 사용자 행동을 공통으로 검사.
+        if (!TutorialManager.Check(TutorialFeature.RealEstate, out string lockReason))
+        {
+            return lockReason;
+        }
+        
         GameManager game = GameManager.Instance;
 
         if (!IsInitialized || index < 0 || index >= Count)

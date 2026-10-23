@@ -76,6 +76,13 @@ public class RumorManager : Singleton<RumorManager>
 
         random = new SaveRandom(seed);
 
+        // 정보 기록 초기화와 난수 준비는 먼저 수행.
+        // 이후 6턴 전이라면 무료 정보 공개를 생략.
+        if (!TutorialManager.IsUnlocked(TutorialFeature.Information))
+        {
+            return;
+        }
+
         // 이전 턴 정보 초기화와 난수 준비까지는 정상적으로 수행.
         // 시장 이벤트 턴에는 긴급속보로 방향을 알려주므로, 휴대폰 보유 혜택을 포함해 정보를 생성하지 않음.
         if (EventManager.Instance != null && EventManager.Instance.IsInformationBlocked(informationTurn))
@@ -135,6 +142,11 @@ public class RumorManager : Singleton<RumorManager>
     public bool CanPurchase(InformationGrade grade, out string reason)
     {
         reason = "";
+
+        if (!TutorialManager.Check(TutorialFeature.Information, out reason))
+        {
+            return false;
+        }
 
         GameManager game = GameManager.Instance;
         DataManager data = DataManager.Instance;

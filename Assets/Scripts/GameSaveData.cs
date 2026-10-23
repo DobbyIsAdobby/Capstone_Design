@@ -23,6 +23,7 @@ public sealed class GameSaveData
     public InformationSaveData information;
     public EventSaveData pendingEvent;
     public WealthTierSaveData wealthTier;
+    public RealEstateSaveData realEstate;
 }
 
 /// <summary>

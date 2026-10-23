@@ -94,6 +94,12 @@ public class LoanManager : Singleton<LoanManager>
     private bool CanOperate(int requestedTurn, out string reason)
     {
         reason = "";
+ 
+        if (!TutorialManager.Check(TutorialFeature.BankLoan, out reason))
+        {
+            return false;
+        }
+
         GameManager game = GameManager.Instance;
 
         if (!IsConfigured || AssetManager.Instance == null)

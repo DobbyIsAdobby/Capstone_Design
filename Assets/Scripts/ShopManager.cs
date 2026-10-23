@@ -210,6 +210,11 @@ public class ShopManager : Singleton<ShopManager>
             return false;
         }
 
+        if (!TutorialManager.Check(TutorialFeature.Shop, out message))
+        {
+            return false;
+        }
+
         if (data == null || !data.TryGetShopItem(itemId, out ShopItemData item))
         {
             message = "상품 데이터를 찾을 수 없습니다.";

@@ -21,14 +21,28 @@ public class GameManager : Singleton<GameManager>
     public float stressLevel = 0f; // 스트레스 지수
     
     /// <summary>
-    /// 대출을 차감하기 전의 자산 합계
+    /// 현금 + 금융자산 + 보유 부동산의 현재 시세.
     /// </summary>
-    public long GrossAsset => availableCash + (AssetManager.Instance != null ? AssetManager.Instance.GetTotalInvestedValue() : 0L);
+    public long GrossAsset =>
+        availableCash
+        + (AssetManager.Instance != null
+            ? AssetManager.Instance.GetTotalInvestedValue()
+            : 0L)
+        + (RealEstateManager.Instance != null
+            ? RealEstateManager.Instance.GrossValue
+            : 0L);
 
     /// <summary>
-    /// TotalAsset을 참조하는 HUD/청구서는 순자산을 사용함.
+    /// 은행 대출과 부동산 대출은 각각 한 번씩 차감.
     /// </summary>
-    public long TotalAsset => GrossAsset - (LoanManager.Instance != null ? LoanManager.Instance.OutstandingPrincipal : 0L);
+    public long TotalAsset =>
+        GrossAsset
+        - (LoanManager.Instance != null
+            ? LoanManager.Instance.OutstandingPrincipal
+            : 0L)
+        - (RealEstateManager.Instance != null
+            ? RealEstateManager.Instance.OutstandingPrincipal
+            : 0L);
 
     public int currentMonthOvertimeCount = 0; // 이번 달 야근 횟수
     public readonly int maxOvertimePerMonth = 30; // 한 달 최대 야근 가능 횟수(불변성 적용)
@@ -64,6 +78,9 @@ public class GameManager : Singleton<GameManager>
     // 이번 결산 후 보여줄 기사
     // 청구서에서 신문으로 넘어갈 때 다시 뽑아서 주는게 아님.
     private NewsArticleData pendingNewsArticle;
+
+    [Header("RealEstate Dialog")]
+    [SerializeField] private PropertyDialogUI propertyDialog;
 
     [Header("Market Generation")]
     [SerializeField] private MarketGenerator marketGenerator;
@@ -132,7 +149,11 @@ public class GameManager : Singleton<GameManager>
         JobManager.Instance != null &&
         JobManager.Instance.IsConfigured &&
         EventManager.Instance != null &&
-        EventManager.Instance.IsTurnReady(currentMonth);
+        EventManager.Instance.IsTurnReady(currentMonth) &&
+        RealEstateManager.Instance != null &&
+        RealEstateManager.Instance.IsInitialized &&
+        TutorialManager.Instance != null &&
+        TutorialManager.Instance.IsConfigured;
 
     /// <summary>
     /// 구매, 거래, 야근 등 일반 행동이 가능한 상태. 
@@ -184,6 +205,14 @@ public class GameManager : Singleton<GameManager>
 
         // Inspector에 60으로 재조정할 것.
         maxMonth = MarketModelConfig.TurnCount;
+
+        // 새 게임과 불러오기 모두 스토리 설정을 먼저 확인함.
+        if (TutorialManager.Instance == null || !TutorialManager.Instance.IsConfigured)
+        {
+            Debug.LogError("TutorialManager와 story.json 연결을 확인하세요.");
+
+            yield break;
+        }
 
         // LobbyScene에서 저장 데이터를 전달했다면 새 게임 초기화 대신 전달받은 데이터를 복원함.
         if (SceneTransitionManager.TryTakePendingLoad(out GameSaveData saved))
@@ -261,6 +290,18 @@ public class GameManager : Singleton<GameManager>
 
             yield break;
         }
+
+        // 부동산 설정과 월말 안내 UI가 준비되었는지 검사.
+        RealEstateManager realEstate = RealEstateManager.Instance;
+
+        if (realEstate == null || !realEstate.IsConfigured || propertyDialog == null || !propertyDialog.IsConfigured)
+        {
+            Debug.LogError("부동산 Manager, Rules, 확인창 연결을 확인하세요.");
+            yield break;
+        }
+
+        // 새 게임에서 한 번만 시장을 생성.
+        realEstate.InitializeNewGame();
 
         // 스토리와 시장 생성을 함께 시작
         marketIntroUI.BeginIntro();
@@ -529,6 +570,13 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
+        // 정산 후 안내창 누락으로 진행이 막히는 것을 방지합니다.
+        if (RealEstateManager.Instance == null || !RealEstateManager.Instance.IsInitialized || propertyDialog == null || !propertyDialog.IsConfigured)
+        {
+            Debug.LogError("부동산 초기화와 안내창 연결을 확인하세요.");
+            return;
+        }
+
         // 지금 마감할 턴의 기사를 선택해 보관.
         // 화면에는 청구서를 확인한 뒤 표시.
         pendingNewsArticle = selectedNews;
@@ -614,6 +662,14 @@ public class GameManager : Singleton<GameManager>
             throw new System.InvalidOperationException("이번 달 재산 티어와 주거비 설정을 확인하세요.");
         }
 
+        // 금액을 변경하기 전에 이번 달 부동산 시장이 초기화 되었는지 확인.
+        RealEstateManager realEstate = RealEstateManager.Instance;
+
+        if (realEstate == null || !realEstate.IsInitialized)
+        {
+            throw new System.InvalidOperationException("부동산 시장이 초기화되지 않았습니다.");
+        }
+
         pendingBankruptcyCause = "";
 
         // 급여 지급
@@ -643,9 +699,12 @@ public class GameManager : Singleton<GameManager>
         RecordMonthlyChange("예금 이자", bankProfit);
         RecordMonthlyChange("주식 손익", stockProfit);
         RecordMonthlyChange("레버리지 손익", leverageProfit);
-        // 청구서의 긴 라벨 문제를 피하도록 짧게 표기합니다.
+        // 청구서의 긴 라벨 문제를 피하도록 짧게 표기.
         RecordMonthlyChange("주식 인버스", stockInverseProfit);
         RecordMonthlyChange("레버리지 인버스", leverageInverseProfit);
+
+        // 부동산 평가손익, 임대료, 매각 완료 대금을 반영.
+        realEstate.SettleMarketAndIncome(currentMonth);
 
         // 생활비
         // 해당 턴 시작에 확정된 티어의 월세.
@@ -674,6 +733,9 @@ public class GameManager : Singleton<GameManager>
         // 대출 이자 및 만기 원금 청구
         LoanManager.Instance.ProcessMonthlySettlement(currentMonth);
 
+        // 부동산 대출 납부 실패는 해당 부동산의 경매로 처리.
+        realEstate.SettleLoans(currentMonth);
+
         // 모든 정산을 반영한 뒤 파산 판정
         ResolveBankruptcyAfterSettlement();
 
@@ -688,6 +750,7 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// 청구서를 확인한 뒤 호출.
     /// 파산이면 기존처럼 엔딩으로 이동하고, 정상 종료한 턴이면 신문을 표시.
+    /// + 경제와 부동산 신문을 분리하였음.
     /// </summary>
     private void CompleteMonthReceipt()
     {
@@ -696,25 +759,31 @@ public class GameManager : Singleton<GameManager>
 
         if (IsGameOver)
         {
-            // 파산 시 신문은 표시하지 않음.
+            // 일반 파산은 배드 엔딩으로 이동.
             pendingNewsArticle = null;
             IsSetting = false;
             RequestEndingScene(EndingType.Bad);
             return;
         }
 
-        InflationManager inflation = InflationManager.Instance;
+        RealEstateManager realEstate = RealEstateManager.Instance;
 
-        if (inflation.TryGetNewsForClosingTurn(currentMonth, out _))
+        if (realEstate.AuctionMessages.Count > 0)
         {
-            // 첫 번째 신문을 확인해도 아직 턴을 넘기지 않음.
-            newspaperPanel.Show(pendingNewsArticle, false, ShowInflationNewspaper, "물가 상승 소식 확인");
+            string message =
+                string.Join("\n\n", realEstate.AuctionMessages);
+
+            // 경매 안내를 확인한 뒤 신문으로 이동.
+            propertyDialog.Show(message, () =>
+            {
+                realEstate.ClearAuctionMessages();
+                ShowEconomicNewspaper();
+            }, false);
+
+            return;
         }
-        else
-        {
-            // 일반적인 달은 기존 흐름.
-            newspaperPanel.Show(pendingNewsArticle, currentMonth >= maxMonth, CompleteMonthNewspaper);
-        }
+
+        ShowEconomicNewspaper();
 
         // currentMonth는 아직 마감한 턴.
         // 60턴도 이 단계에서는 신문을 먼저 보여줌.
@@ -725,7 +794,51 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
-    /// 기존 경제 신문을 확인한 뒤 같은 패널에 예고 기사 표시.
+    /// 경제 신문
+    /// </summary>
+    private void ShowEconomicNewspaper()
+    {
+        if (!IsSetting)
+        {
+            return;
+        }
+
+        // 1턴부터 8턴까지는 신문을 생략하고 다음 달로 이동.
+        if (!TutorialManager.IsUnlocked(TutorialFeature.Newspaper))
+        {
+            CompleteMonthNewspaper();
+            return;
+        }
+
+        // 9턴부터 기존 신문 순서를 진행.
+        newspaperPanel.Show(pendingNewsArticle, false, ShowRealEstateNewspaper, "부동산 소식 확인");
+    }
+
+    /// <summary>
+    /// 부동산 신문
+    /// </summary>
+    private void ShowRealEstateNewspaper()
+    {
+        if (!IsSetting)
+            return;
+
+        NewsArticleData article = RealEstateManager.Instance.CreateMonthlyNews(currentMonth);
+
+        bool hasInflationNews = InflationManager.Instance.TryGetNewsForClosingTurn(currentMonth, out _);
+
+        if (hasInflationNews)
+        {
+            newspaperPanel.Show(article, false, ShowInflationNewspaper, "물가 상승 소식 확인",
+                "부동산 소식");
+        }
+        else
+        {
+            newspaperPanel.Show(article, currentMonth >= maxMonth, CompleteMonthNewspaper, null, "부동산 소식");
+        }
+    }
+
+    /// <summary>
+    /// 경제 신문을 확인한 뒤 같은 패널에 예고 기사 표시.
     /// 이 시점의 currentMonth는 아직 11, 23, 35, 47턴.
     /// </summary>
     /// <exception cref="System.InvalidOperationException"></exception>
@@ -748,7 +861,7 @@ public class GameManager : Singleton<GameManager>
         };
 
         // 두 번째 신문을 확인한 뒤에만 다음 달로 이동.
-        newspaperPanel.Show(article, false, CompleteMonthNewspaper);
+        newspaperPanel.Show(article, false, CompleteMonthNewspaper, null, "물가 소식");
     }
 
     /// <summary>
@@ -844,6 +957,12 @@ public class GameManager : Singleton<GameManager>
         // 일시정지, 결산, 게임 종료 등 행동할 수 없는 상태에서는 중단.
         if (!CanAct)
             return;
+
+        // 해금 전에는 돈, AP, 피로도를 변경하지 않음.
+        if (!TutorialManager.Check(TutorialFeature.Overtime, out _))
+        {
+            return;
+        }
 
         // 월 최대 야근 횟수를 먼저 검사.
         if (currentMonthOvertimeCount >= maxOvertimePerMonth)

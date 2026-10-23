@@ -57,6 +57,12 @@ public class JobManager : Singleton<JobManager>
     {
         reason = "";
 
+        // AP 차감 전에 기능 잠금을 검사.
+        if (!TutorialManager.Check(TutorialFeature.JobMinigame, out reason))
+        {
+            return false;
+        }
+
         if (!IsConfigured)
         {
             reason = "직급 시스템 설정을 확인하세요.";
