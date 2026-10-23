@@ -105,8 +105,10 @@ public class HousingCostManager : Singleton<HousingCostManager>
 
         HousingEntry entry = entries[tierIndex];
 
-        long rent = inflation.CalculateGeneralPrice(entry.BaseRent, game.currentMonth);
+        // 월세 전용 규칙: 인상 시마다 최초 월세의 25% 추가.
+        long rent = inflation.CalculateRent(entry.BaseRent, game.currentMonth);
 
+        // 관리비는 동일하게 100%씩 증가. - 이거라도 해야 더 어렵지 않을까?
         long maintenance = inflation.CalculateGeneralPrice(entry.BaseMaintenance, game.currentMonth);
 
         cost = new HousingMonthlyCost(entry.HousingName, rent, maintenance);

@@ -23,4 +23,4 @@ MonoBehaviour:
     increasePercent: 100
   informationSteps:
   - startTurn: 36
-    increasePercent: 100
+    increasePercent: 50

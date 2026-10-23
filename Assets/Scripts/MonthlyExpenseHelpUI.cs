@@ -65,11 +65,16 @@ public class MonthlyExpenseHelpUI : MonoBehaviour
         LoanManager loan = LoanManager.Instance;
         EventManager events = EventManager.Instance;
         HousingCostManager housing = HousingCostManager.Instance;
+        RealEstateManager realEstate = RealEstateManager.Instance;
 
         if (game == null || shop == null || loan == null || !loan.IsConfigured || events == null || housing == null)
         {
             return false;
         }
+
+        if (realEstate == null || !realEstate.IsInitialized)
+            return false;
+
 
         if (!housing.TryGetCurrent(out HousingMonthlyCost housingCost))
             return false;
@@ -79,12 +84,17 @@ public class MonthlyExpenseHelpUI : MonoBehaviour
 
         loan.GetCurrentMonthExpenses(out long interest, out long principal);
 
+        // 이번 달 납부할 부동산 이자와 만기 원금.
+        realEstate.GetCurrentMonthExpenses(out long propertyInterest, out long propertyPrincipal);
+
         total = checked(
             housingCost.Total +
             installment +
             maintenance +
             interest +
             principal +
+            propertyInterest + 
+            propertyPrincipal + 
             System.Math.Max(0L, events.pendingPenaltyAmount));
 
         return true;

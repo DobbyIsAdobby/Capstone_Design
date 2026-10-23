@@ -11,6 +11,10 @@ public class ShopPurchasePanelUI : MonoBehaviour
     [SerializeField] private TMP_Text priceText;
     [SerializeField] private TMP_Text cashText;
 
+    [Header("Current Stress")]
+    [SerializeField] private GameObject stressRow;
+    [SerializeField] private TMP_Text stressText;
+
     [Header("Maintenance")]
     [SerializeField] private GameObject maintenanceRow;
     [SerializeField] private TMP_Text maintenanceText;
@@ -123,6 +127,9 @@ public class ShopPurchasePanelUI : MonoBehaviour
 
         cashText.text = $"{game.availableCash:N0}원";
 
+        // 구매창을 열거나, 상품을 구매한 뒤 현재 피로도를 갱신함.
+        RefreshStress();
+
         // TryGetPaymentSettings가 반환하는 maintenance는 기본 유지비.
         bool configured = shop.TryGetPaymentSettings(item, out bool allowInstallment, out long maintenance);
 
@@ -176,6 +183,28 @@ public class ShopPurchasePanelUI : MonoBehaviour
 
         if (last != monthly)
             paymentScheduleText.text += $"\n마지막 회차 {last:N0}원";
+    }
+
+    /// <summary>
+    /// 즉시 피로도를 회복하는 기분 전환 상품에만 현재 피로도와 최대 피로도를 표시.
+    /// </summary>
+    private void RefreshStress()
+    {
+        bool showStress =
+            item != null &&
+            item.Category == ShopCategory.Consumable &&
+            item.ImmediateFatigueChange < 0f;
+
+        stressRow.SetActive(showStress);
+
+        if (!showStress)
+            return;
+
+        GameManager game = GameManager.Instance;
+
+        // 피로도 수치를 표시.
+        // Ex: 현재 80, 최대 120이면 "80% / 120%"로 표시.
+        stressText.text = $"{game.stressLevel:0.#}% / {game.MaxStress:0.#}%";
     }
 
     /* -- 구현이 전부 완료되었기에, 더 이상 사용하지 않음 -- 추후 미구현 파트가 생기면, 이 함수를 풀어서 재사용할 것.

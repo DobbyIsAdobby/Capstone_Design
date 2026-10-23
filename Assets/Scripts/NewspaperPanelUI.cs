@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class NewspaperPanelUI : MonoBehaviour
 {
     [Header("Article")]
+    [SerializeField] private TMP_Text newspaperNameText;
     [SerializeField] private TMP_Text dateText;
     [SerializeField] private TMP_Text titleText;
     [SerializeField] private TMP_Text bodyText;
@@ -17,7 +18,14 @@ public class NewspaperPanelUI : MonoBehaviour
     private Action onContinue;
     private bool readyToContinue;
 
-    public bool IsConfigured => dateText != null && titleText != null && bodyText != null && continueButton != null && continueButtonText != null;
+    // 신문 이름을 포함해 화면 출력에 필요한 참조가 모두 연결되었는지 검사.
+    public bool IsConfigured =>
+        newspaperNameText != null &&
+        dateText != null &&
+        titleText != null &&
+        bodyText != null &&
+        continueButton != null &&
+        continueButtonText != null;
 
     private void Awake()
     {
@@ -34,7 +42,7 @@ public class NewspaperPanelUI : MonoBehaviour
     /// <param name="isFinalMonth"></param>
     /// <param name="completed"></param>
     /// <param name="buttonLabel"></param>
-    public void Show(NewsArticleData article, bool isFinalMonth, Action completed, string buttonLabel = null)
+    public void Show(NewsArticleData article, bool isFinalMonth, Action completed, string buttonLabel = null, string sectionTitle = "경제 소식")
     {
         gameObject.SetActive(true);
 
@@ -43,7 +51,19 @@ public class NewspaperPanelUI : MonoBehaviour
 
         DateTime date = GameManager.Instance.CurrentGameDate;
         dateText.text = $"{date.Year}년 {date.Month}월";
-        titleText.text = $"오늘의 경제 소식 : " + article.title;
+
+        // GameManager가 부동산 기사를 표시할 때 전달하는 구분값.
+        bool isRealEstateNews = sectionTitle == "부동산 소식";
+
+        // 같은 패널을 재사용하므로 매번 신문 이름을 지정.
+        // 부동산 신문 다음에 경제, 물가 기사가 나와도 이름이 남지 않게 함.
+        newspaperNameText.text = isRealEstateNews ? "달빛 부동산일보" : "달빛 경제일보";
+
+        // 부동산 기사에는 JSON의 제목만 표시.
+        // 경제, 물가 기사의 제목 표시는 기존 방식을 유지.
+        titleText.text = isRealEstateNews ? article.title : $"이달의 {sectionTitle} : {article.title}";
+
+        // 본문은 전달받은 기사 내용을 그대로 표시.
         bodyText.text = article.text;
 
         // 추가 기사가 있으면 "물가 상승 소식 확인" 같은 문구를 전달.

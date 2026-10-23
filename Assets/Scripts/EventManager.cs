@@ -317,6 +317,12 @@ public class EventManager : Singleton<EventManager>
             throw new InvalidOperationException("이벤트 안내 턴과 정산 기록이 일치하지 않습니다.");
         }
 
+        // 진행 상태를 바꾸기 전에 스토리 설정부터 검사.
+        if (TutorialManager.Instance == null || !TutorialManager.Instance.IsConfigured)
+        {
+            throw new InvalidOperationException("TutorialManager와 story.json 설정을 확인하세요.");
+        }
+
         // 코루틴 시작 전에 잠금.
         // 같은 프레임에 다른 행동이 실행되지 않도록 함.
         IsPresenting = true;
@@ -326,51 +332,56 @@ public class EventManager : Singleton<EventManager>
 
     private IEnumerator PresentTurnRoutine(int turn)
     {
-        // GameManager의 월초 초기화가 끝난 다음 화면을 표시.
+        // 월초 데이터 초기화가 끝난 다음 안내를 시작.
         yield return null;
 
-        // 1. 지난달에 정산한 고정 이벤트 결과.
+        // 1. 해당 턴의 초반 스토리를 표시.
+        yield return TutorialManager.Instance.ShowTurnStory(turn, eventUI);
+
+        // 2. 지난달에 정산한 고정 이벤트 결과를 표시.
         FixedEventData previous = GetFixedEvent(turn - 1);
 
         if (previous != null)
+        {
             yield return eventUI.ShowSettlementResult(previous);
+        }
 
-        // 인플레이션 적용 턴에는 기존 NoticeRoot로 대상 안내.
-        // 이 안내가 끝날 때까지 IsPresenting 상태가 유지됨.
+        // 3. 해당하는 턴에는 물가 상승 안내를 표시.
         if (InflationManager.Instance.TryGetNoticeForStartTurn(turn, out InflationNewsData inflationNews))
         {
             yield return eventUI.ShowInflationNotice(inflationNews);
         }
 
-        // 2. 이번 달 고정 이벤트 사전 대사.
+        // 4. 이번 달 고정 이벤트를 안내.
         FixedEventData current = GetFixedEvent(turn);
 
         if (current != null)
         {
             yield return eventUI.ShowDialogue(current.hint_text);
 
-            // 수입은 사전 금액 안내를 생략.
+            // 지출 이벤트는 납부 예정 금액도 안내.
             if (current.value < 0)
+            {
                 yield return eventUI.ShowExpenseNotice(current);
+            }
         }
 
-        // 3. 이번 달 시장 이벤트 긴급속보.
+        // 5. 시장 이벤트가 있다면 긴급속보를 표시.
+        // 긴급속보는 일반 신문의 9턴 해금과 관계없이 유지.
         RandomMarketEventData market = GetMarketEvent(turn);
 
         if (market != null)
         {
-            yield return eventUI.ShowBreaking(
-                market,
-                GameManager.Instance.CurrentGameDate);
+            yield return eventUI.ShowBreaking(market, GameManager.Instance.CurrentGameDate);
         }
 
         eventUI.CloseAll();
 
+        // 스토리와 이벤트 안내가 모두 끝난 뒤 완료 처리.
         state.lastPresentedTurn = turn;
         IsPresenting = false;
         presentationRoutine = null;
 
-        // 안내가 끝나 행동이 허용된 상태로 UI 갱신.
         UIManager.Instance?.RefreshUI();
     }
 
