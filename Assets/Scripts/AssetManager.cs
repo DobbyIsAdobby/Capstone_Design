@@ -152,6 +152,14 @@ public class AssetManager : Singleton<AssetManager>
             return false;
         }
 
+        // 자산 종류에 따라 해금 턴을 다르게 적용.
+        TutorialFeature feature = TutorialManager.GetAssetFeature(type);
+
+        if (!TutorialManager.Check(feature, out message))
+        {
+            return false;
+        }
+
         if(amount <= 0)
         {
             message = "거래 금액은 1원 이상이어야 합니다.";

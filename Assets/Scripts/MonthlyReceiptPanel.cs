@@ -85,7 +85,19 @@ public class MonthlyReceiptPanel : MonoBehaviour
         continueButton.interactable = false;
 
         // 파산 시(True) : 파산 확인 Text 아니면 신문으로 넘어감.
-        continueButtonText.text = data.IsBankrupt ? "파산 확인" : "오늘의 신문 확인";
+        // 이동할 화면에 맞춰 버튼 문구를 표시.
+        if (data.IsBankrupt)
+        {
+            continueButtonText.text = "파산 확인";
+        }
+        else if (TutorialManager.IsUnlocked(TutorialFeature.Newspaper))
+        {
+            continueButtonText.text = "오늘의 신문 확인";
+        }
+        else
+        {
+            continueButtonText.text = "새로운 달 시작";
+        }
 
         detailsScroll.StopMovement();
         SetScrollInput(false);

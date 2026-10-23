@@ -25,7 +25,7 @@ public class InflationRules : ScriptableObject
         }
     }
 
-    [Header("Shop / Life Assets expenses / Monthly Rent / Maintenance Root")]
+    [Header("Comsumable Prices / Life Assets expenses / Housing Maintenance")]
     [SerializeField]
     private List<InflationStep> generalSteps =
         new List<InflationStep>
@@ -34,6 +34,17 @@ public class InflationRules : ScriptableObject
             new InflationStep(24, 100),
             new InflationStep(36, 100),
             new InflationStep(48, 100)
+        };
+
+    [Header("Monthly Rent")]
+    [SerializeField]
+    private List<InflationStep> rentSteps =
+        new List<InflationStep>
+        {
+            new InflationStep(12, 25),
+            new InflationStep(24, 25),
+            new InflationStep(36, 25),
+            new InflationStep(48, 25)
         };
 
     [Header("Infomation Price")]
@@ -53,6 +64,9 @@ public class InflationRules : ScriptableObject
     public bool Validate(out string error)
     {
         if (!ValidateSteps(generalSteps, "일반 물가", out error))
+            return false;
+
+        if (!ValidateSteps(rentSteps, "월세", out error))
             return false;
 
         return ValidateSteps(informationSteps, "정보 가격", out error);
@@ -95,6 +109,9 @@ public class InflationRules : ScriptableObject
         foreach (InflationStep step in generalSteps)
             yield return step.StartTurn;
 
+        foreach (InflationStep step in rentSteps)
+            yield return step.StartTurn;
+
         foreach (InflationStep step in informationSteps)
             yield return step.StartTurn;
     }
@@ -102,6 +119,11 @@ public class InflationRules : ScriptableObject
     public long CalculateGeneralPrice(long basePrice, int turn)
     {
         return CalculatePrice(basePrice, turn, generalSteps);
+    }
+
+    public long CalculateRent(long baseRent, int turn)
+    {
+        return CalculatePrice(baseRent, turn, rentSteps);
     }
 
     public long CalculateInformationPrice(long basePrice, int turn)

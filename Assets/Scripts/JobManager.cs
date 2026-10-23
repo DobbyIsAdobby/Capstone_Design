@@ -57,6 +57,12 @@ public class JobManager : Singleton<JobManager>
     {
         reason = "";
 
+        // AP 차감 전에 기능 잠금을 검사.
+        if (!TutorialManager.Check(TutorialFeature.JobMinigame, out reason))
+        {
+            return false;
+        }
+
         if (!IsConfigured)
         {
             reason = "직급 시스템 설정을 확인하세요.";
@@ -105,6 +111,54 @@ public class JobManager : Singleton<JobManager>
 
         attemptTurn = game.currentMonth;
         IsPlaying = true;
+        return true;
+    }
+
+    /// <summary>
+    /// 현재 직급과 이번 달 완료한 야근 횟수로 다음 야근 1회의 지급액을 계산.
+    /// 조회만 수행하며 AP, 현금, 야근 횟수는 변경하지 않음.
+    /// </summary>
+    /// <param name="completedCount">
+    /// 이번 클릭 전에 이미 완료한 야근 횟수.
+    /// 0이면 첫 번째 야근, 9이면 열 번째 야근.
+    /// </param>
+    /// <param name="income"></param>
+    /// <param name="reason"></param>
+    /// <returns></returns>
+    public bool TryGetOvertimeIncome(int completedCount, out long income, out string reason)
+    {
+        income = 0;
+        reason = "";
+
+        if (!IsConfigured || rules == null)
+        {
+            reason = "직급 시스템 설정을 확인하세요.";
+            return false;
+        }
+
+        if (GradeIndex < 0 || GradeIndex >= rules.Count)
+        {
+            reason = "현재 직급 정보가 올바르지 않습니다.";
+            return false;
+        }
+
+        if (completedCount < 0)
+        {
+            reason = "이번 달 야근 횟수가 올바르지 않습니다.";
+            return false;
+        }
+
+        JobRules.Grade grade = rules.GetGrade(GradeIndex);
+
+        // 모든 야근에는 현재 직급의 기본수당을 지급.
+        income = grade.OvertimeBasePay;
+
+        // 이미 완료한 횟수가 0~9일 때, 이번 클릭은 1~10번째 야근이므로 추가수당을 포함.
+        if (completedCount < rules.OvertimeBonusCount)
+        {
+            income = checked(income + grade.OvertimeBonusPay);
+        }
+
         return true;
     }
 

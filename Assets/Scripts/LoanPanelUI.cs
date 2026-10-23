@@ -98,6 +98,12 @@ public class LoanPanelUI : MonoBehaviour
 
     public void Open()
     {
+        // 먼저 해당 기능의 해금 여부를 확인.
+        if (!TutorialManager.IsUnlocked(TutorialFeature.BankLoan))
+        {
+            return;
+        }
+
         if (GameManager.Instance == null || !GameManager.Instance.CanAct)
         {
             return;

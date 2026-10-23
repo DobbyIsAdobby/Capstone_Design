@@ -5,11 +5,14 @@ using System;
 /// </summary>
 public static class GameSaveCoordinator
 {
+    // v4 : 부동산이 추가됨에 따라 버전 상승
     public const int FormatVersion = 3;
 
     // 상품 효과나 직급 규칙 등 저장 호환성이 달라지면 올림.
     // v4 : 인플레이션 및 주거비 계산 규칙 추가.
-    public const int ContentVersion = 4;
+    // v5 : 부동산이 추가됨에 따라 버전 상승.
+    // v6 : 초반 스토리와 턴별 기능 해금 규칙 추가.
+    public const int ContentVersion = 6;
 
     public static GameSaveData Capture()
     {
@@ -42,12 +45,15 @@ public static class GameSaveCoordinator
             job = JobManager.Instance.CaptureSave(),
             information = RumorManager.Instance.CaptureSave(),
             pendingEvent = EventManager.Instance.CaptureSave(),
-            wealthTier = WealthTierManager.Instance.CaptureSave()
+            wealthTier = WealthTierManager.Instance.CaptureSave(),
+            realEstate = RealEstateManager.Instance.CaptureSave(),
         };
 
         // 잘못된 상태를 파일로 기록하지 않도록 검사
         // 이벤트 JSON, 시장 일치 검사를 함께 수행함.
         EventManager.Instance.ValidateSavedEvents(data);
+
+        RealEstateManager.Instance.ValidateSavedCatalog(data.realEstate, data.player.currentMonth);
 
         return data;
     }
@@ -55,6 +61,8 @@ public static class GameSaveCoordinator
     public static void Restore(GameSaveData data)
     {
         RequireManagers();
+
+        RealEstateManager.Instance.ValidateSavedCatalog(data.realEstate, data.player.currentMonth);
         
         // 게임 상태를 바꾸기 전에 모든 이벤트 검사를 완료해야함.
         EventManager.Instance.ValidateSavedEvents(data);
@@ -74,6 +82,10 @@ public static class GameSaveCoordinator
         EventManager.Instance.RestoreSave(data.pendingEvent);
 
         RumorManager.Instance.RestoreSave(data.information);
+
+        // 재산 등급과 HUD 갱신 전에 부동산 자산, 부채를 복원.
+        RealEstateManager.Instance.RestoreSave(data.realEstate, data.player.currentMonth);
+
         WealthTierManager.Instance.RestoreSave(data.wealthTier);
 
         // AP 지급, 청구서 초기화 없이 플레이만 다시 허용
@@ -82,6 +94,12 @@ public static class GameSaveCoordinator
 
     private static void RequireManagers()
     {
+        // 저장과 복원에서도 해금 규칙이 준비되어 있어야 함.
+        if (TutorialManager.Instance == null || !TutorialManager.Instance.IsConfigured)
+        {
+            throw new InvalidOperationException("초반 스토리와 기능 해금 설정이 준비되지 않았습니다.");
+        }
+
         if (GameManager.Instance == null ||
             DataManager.Instance == null ||
             AssetManager.Instance == null ||
@@ -92,7 +110,8 @@ public static class GameSaveCoordinator
             EventManager.Instance == null ||
             WealthTierManager.Instance == null ||
             InflationManager.Instance == null ||
-            HousingCostManager.Instance == null)
+            HousingCostManager.Instance == null ||
+            RealEstateManager.Instance == null)
         {
             throw new InvalidOperationException("필수 게임 매니저가 누락되었습니다.");
         }
@@ -104,7 +123,8 @@ public static class GameSaveCoordinator
             !WealthTierManager.Instance.IsConfigured ||
             !EventManager.Instance.IsConfigured ||
             !InflationManager.Instance.IsConfigured ||
-            !HousingCostManager.Instance.IsConfigured)
+            !HousingCostManager.Instance.IsConfigured ||
+            !RealEstateManager.Instance.IsConfigured)
         {
             throw new InvalidOperationException("게임 데이터 또는 규칙 설정이 준비되지 않았습니다.");
         }

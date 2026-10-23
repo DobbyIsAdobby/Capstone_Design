@@ -50,6 +50,12 @@ public class JobMinigamePanelUI : MonoBehaviour
 
     public void Open()
     {
+        // 먼저 해당 기능의 해금 여부를 확인.
+        if (!TutorialManager.IsUnlocked(TutorialFeature.JobMinigame))
+        {
+            return;
+        }
+
         GameManager game = GameManager.Instance;
 
         if (game == null || !game.CanAct || Job == null || !Job.IsConfigured)

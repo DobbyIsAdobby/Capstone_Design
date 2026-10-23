@@ -84,6 +84,12 @@ public class InflationManager : Singleton<InflationManager>
         return rules.CalculateGeneralPrice(basePrice, turn);
     }
 
+    public long CalculateRent(long baseRent, int turn)
+    {
+        RequireConfigured();
+        return rules.CalculateRent(baseRent, turn);
+    }
+
     public long CalculateInformationPrice(long basePrice, int turn)
     {
         RequireConfigured();
