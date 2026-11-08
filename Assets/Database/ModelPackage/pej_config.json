@@ -1,0 +1,28 @@
+{
+    "model": {
+        "file": "pej_model.onnx",
+        "input_name": "market_history",
+        "input_shape": [
+            1,
+            60,
+            1
+        ],
+        "output_names": [
+            "mu",
+            "sigma"
+        ]
+    },
+    "normalization": {
+        "return_mean": 0.00036523083690553904,
+        "return_std": 0.01607380248606205
+    },
+    "generation": {
+        "window_size": 60,
+        "warmup_days": 120,
+        "trading_days_per_turn": 21,
+        "total_turns": 60
+    },
+    "assets": {
+        "ENTERTAINMENT": "r"
+    }
+}
