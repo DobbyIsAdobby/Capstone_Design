@@ -53,6 +53,16 @@ public class EventFlowUI : MonoBehaviour
     [SerializeField]
     private Vector2 inflationBodySize = new Vector2(700f, 450f);
 
+    [Header("Happiness Choice")]
+    [SerializeField] private GameObject happinessChoiceRoot;
+    [SerializeField] private TMP_Text happinessTitleText;
+    [SerializeField] private TMP_Text happinessCostText;
+    [SerializeField] private TMP_Text happinessReasonText;
+    [SerializeField] private Button happinessAcceptButton;
+    [SerializeField] private Button happinessDeclineButton;
+    [SerializeField] private TMP_Text happinessAcceptText;
+    [SerializeField] private TMP_Text happinessDeclineText;
+
     // 일반 금액 안내창으로 돌아갈 때 복원할 원래 배치.
     private bool noticeLayoutCached;
     private Vector2 originalNoticeBodyPosition;
@@ -84,6 +94,16 @@ public class EventFlowUI : MonoBehaviour
         newspaperDateText != null &&
         newspaperConfirmButton != null &&
         noticeMainDivider != null;
+
+    public bool IsHappinessConfigured =>
+        happinessChoiceRoot != null &&
+        happinessTitleText != null &&
+        happinessCostText != null &&
+        happinessReasonText != null &&
+        happinessAcceptButton != null &&
+        happinessDeclineButton != null &&
+        happinessAcceptText != null &&
+        happinessDeclineText != null;
 
     private void Awake()
     {
@@ -302,6 +322,91 @@ public class EventFlowUI : MonoBehaviour
     }
 
     /// <summary>
+    /// 선택 결과만 전달.
+    /// 비용 적용은 HappinessManager가 담당.
+    /// </summary>
+    /// <param name="item"></param>
+    /// <param name="canAccept"></param>
+    /// <param name="reason"></param>
+    /// <param name="completed"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public IEnumerator ShowHappinessChoice(HappinessEventData item, bool canAccept, string reason, Action<bool> completed)
+    {
+        if (!IsHappinessConfigured)
+            throw new InvalidOperationException("행복도 선택창을 연결하세요.");
+
+        OpenPage(happinessChoiceRoot);
+
+        happinessTitleText.text = item.title;
+        happinessCostText.text = $"AP -{item.ap_cost}\n" + $"피로도 +{item.stress_increase}\n" + $"행복도 +{item.happiness_gain}";
+
+        // 이벤트 설명은 참여 가능 여부와 관계없이 표시
+        string description = item.description ?? "";
+
+        // 참여할 수 없다면 설명 아래에 불가능한 이유를 추가
+        if (!canAccept && !string.IsNullOrWhiteSpace(reason))
+        {
+            happinessReasonText.text =
+                string.IsNullOrWhiteSpace(description) ? reason : $"{description}\n\n{reason}";
+        }
+        else
+        {
+            happinessReasonText.text = description;
+        }
+        happinessAcceptText.text = item.accept_label;
+        happinessDeclineText.text = item.decline_label;
+
+        bool decided = false;
+        bool accepted = false;
+
+        // 새로운 이벤트 호출 방식 - deligate 사용
+        // 특정 제안을 수락했을 때 실행할 로직을 위한 이벤트를 UnityAction방식으로 받음
+        UnityEngine.Events.UnityAction acceptAction = () =>
+        {
+            if (decided || !canAccept)
+                return;
+
+            decided = true;
+            accepted = true;
+            happinessAcceptButton.interactable = false;
+            happinessDeclineButton.interactable = false;
+        };
+
+        UnityEngine.Events.UnityAction declineAction = () =>
+        {
+            if (decided)
+                return;
+
+            decided = true;
+            accepted = false;
+            happinessAcceptButton.interactable = false;
+            happinessDeclineButton.interactable = false;
+        };
+
+        happinessAcceptButton.onClick.AddListener(acceptAction);
+        happinessDeclineButton.onClick.AddListener(declineAction);
+
+        try
+        {
+            happinessAcceptButton.interactable = canAccept;
+            happinessDeclineButton.interactable = true;
+
+            while (!decided)
+                yield return null;
+
+            // 같은 입력으로 다음 대사까지 넘어가지 않도록 분리
+            yield return null;
+            completed(accepted);
+        }
+        finally
+        {
+            happinessAcceptButton.onClick.RemoveListener(acceptAction);
+            happinessDeclineButton.onClick.RemoveListener(declineAction);
+        }
+    }
+
+    /// <summary>
     /// 표시할 화면 하나만 활성화.
     /// 나머지 화면이 클릭을 가로채지 않도록 비활성화.
     /// </summary>
@@ -322,9 +427,12 @@ public class EventFlowUI : MonoBehaviour
         breakingRoot.SetActive(false);
         newspaperRoot.SetActive(false);
 
+        if (happinessChoiceRoot != null)
+            happinessChoiceRoot.SetActive(false);
+
         root.SetActive(true);
 
-        // 같은 PanelLayer의 다른 패널보다 앞에 표시.
+        // 같은 PanelLayer의 다른 패널보다 앞에 표시
         root.transform.SetAsLastSibling();
 
         page.SetActive(true);
@@ -365,6 +473,12 @@ public class EventFlowUI : MonoBehaviour
 
         if (newspaperConfirmButton != null)
             newspaperConfirmButton.interactable = false;
+
+        if (happinessAcceptButton != null)
+            happinessAcceptButton.interactable = false;
+
+        if (happinessDeclineButton != null)
+            happinessDeclineButton.interactable = false;
     }
 
     /// <summary>
@@ -391,6 +505,9 @@ public class EventFlowUI : MonoBehaviour
 
         if (newspaperRoot != null)
             newspaperRoot.SetActive(false);
+
+        if (happinessChoiceRoot != null)
+            happinessChoiceRoot.SetActive(false);
 
         if (root != null)
             root.SetActive(false);

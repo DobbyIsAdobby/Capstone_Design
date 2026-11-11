@@ -24,6 +24,7 @@ public sealed class GameSaveData
     public EventSaveData pendingEvent;
     public WealthTierSaveData wealthTier;
     public RealEstateSaveData realEstate;
+    public HappinessSaveData happiness;
 }
 
 /// <summary>

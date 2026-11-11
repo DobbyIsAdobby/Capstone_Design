@@ -1,0 +1,1014 @@
+fileFormatVersion: 2
+guid: 9ba13ce6c4c1a6448a60bbdd2d9c2829
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1590606671846917212
+    second: divider_dashed_0
+  - first:
+      213: 5496799350262988654
+    second: divider_dashed_1
+  - first:
+      213: 4187748749640749439
+    second: divider_dashed_2
+  - first:
+      213: -2734136680738945399
+    second: divider_dashed_3
+  - first:
+      213: 6008556841021734772
+    second: divider_dashed_4
+  - first:
+      213: 8894409543821669303
+    second: divider_dashed_5
+  - first:
+      213: 7135709109006684079
+    second: divider_dashed_6
+  - first:
+      213: -796243345765900850
+    second: divider_dashed_7
+  - first:
+      213: 4579205447269920772
+    second: divider_dashed_8
+  - first:
+      213: -2216123752246064511
+    second: divider_dashed_9
+  - first:
+      213: -3717044988709707359
+    second: divider_dashed_10
+  - first:
+      213: -7778923963215080277
+    second: divider_dashed_11
+  - first:
+      213: 6951866842479445014
+    second: divider_dashed_12
+  - first:
+      213: 2201078386452696079
+    second: divider_dashed_13
+  - first:
+      213: 3666484855764204327
+    second: divider_dashed_14
+  - first:
+      213: 3819627019573266282
+    second: divider_dashed_15
+  - first:
+      213: 8692250640804388622
+    second: divider_dashed_16
+  - first:
+      213: -1352570745797634286
+    second: divider_dashed_17
+  - first:
+      213: 7494333550644285061
+    second: divider_dashed_18
+  - first:
+      213: 4016984342410838985
+    second: divider_dashed_19
+  - first:
+      213: -7407109880363042257
+    second: divider_dashed_20
+  - first:
+      213: -3564152070431292800
+    second: divider_dashed_21
+  - first:
+      213: 5173274948780343147
+    second: divider_dashed_22
+  - first:
+      213: 1016821115540846293
+    second: divider_dashed_23
+  - first:
+      213: 2291923856160383833
+    second: divider_dashed_24
+  - first:
+      213: 3631456846769051095
+    second: divider_dashed_25
+  - first:
+      213: -2009207029694115455
+    second: divider_dashed_26
+  - first:
+      213: -1161946324159932291
+    second: divider_dashed_27
+  - first:
+      213: 1318998781005376591
+    second: divider_dashed_28
+  - first:
+      213: -5344875033725283504
+    second: divider_dashed_29
+  - first:
+      213: 8046981253774737281
+    second: divider_dashed_30
+  - first:
+      213: 4523448552645097163
+    second: divider_dashed_31
+  - first:
+      213: -126854673566193597
+    second: divider_dashed_32
+  - first:
+      213: 3902791902329254253
+    second: divider_dashed_33
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: divider_dashed_0
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c544dc43758f21610800000000000000
+      internalID: 1590606671846917212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_1
+      rect:
+        serializedVersion: 2
+        x: 44
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6ff502c2ed884c40800000000000000
+      internalID: 5496799350262988654
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_2
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f715ce6dc4fdd1a30800000000000000
+      internalID: 4187748749640749439
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_3
+      rect:
+        serializedVersion: 2
+        x: 98
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9868039cc256e0ad0800000000000000
+      internalID: -2734136680738945399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_4
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47ff7d9bc9ea26350800000000000000
+      internalID: 6008556841021734772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_5
+      rect:
+        serializedVersion: 2
+        x: 152
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b3b5520b5a4f6b70800000000000000
+      internalID: 8894409543821669303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_6
+      rect:
+        serializedVersion: 2
+        x: 179
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fafccd6c0a1270360800000000000000
+      internalID: 7135709109006684079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_7
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ecddadc45ec23f4f0800000000000000
+      internalID: -796243345765900850
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_8
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 400be06b71b9c8f30800000000000000
+      internalID: 4579205447269920772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_9
+      rect:
+        serializedVersion: 2
+        x: 260
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18a4119503fbe31e0800000000000000
+      internalID: -2216123752246064511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_10
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a1efc9c6476a6cc0800000000000000
+      internalID: -3717044988709707359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_11
+      rect:
+        serializedVersion: 2
+        x: 314
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba49ac5bed5bb0490800000000000000
+      internalID: -7778923963215080277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_12
+      rect:
+        serializedVersion: 2
+        x: 341
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 614cdc78f0ef97060800000000000000
+      internalID: 6951866842479445014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_13
+      rect:
+        serializedVersion: 2
+        x: 368
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0c8d43712dcb8e10800000000000000
+      internalID: 2201078386452696079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_14
+      rect:
+        serializedVersion: 2
+        x: 395
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72bbc2aec88f1e230800000000000000
+      internalID: 3666484855764204327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_15
+      rect:
+        serializedVersion: 2
+        x: 422
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a67062c798a020530800000000000000
+      internalID: 3819627019573266282
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_16
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e0f9ecf77e311a870800000000000000
+      internalID: 8692250640804388622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_17
+      rect:
+        serializedVersion: 2
+        x: 476
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 217952ba214ba3de0800000000000000
+      internalID: -1352570745797634286
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_18
+      rect:
+        serializedVersion: 2
+        x: 503
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58ec17a58a8310860800000000000000
+      internalID: 7494333550644285061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_19
+      rect:
+        serializedVersion: 2
+        x: 530
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c344bdf9f13fb730800000000000000
+      internalID: 4016984342410838985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_20
+      rect:
+        serializedVersion: 2
+        x: 557
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2abca0fec8a43990800000000000000
+      internalID: -7407109880363042257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_21
+      rect:
+        serializedVersion: 2
+        x: 584
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 082487c5396998ec0800000000000000
+      internalID: -3564152070431292800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_22
+      rect:
+        serializedVersion: 2
+        x: 611
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6fba7f182a2bc740800000000000000
+      internalID: 5173274948780343147
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_23
+      rect:
+        serializedVersion: 2
+        x: 638
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d6bdefca697c1e00800000000000000
+      internalID: 1016821115540846293
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_24
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 953eea2aa9c8ecf10800000000000000
+      internalID: 2291923856160383833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_25
+      rect:
+        serializedVersion: 2
+        x: 692
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d554d803c6856230800000000000000
+      internalID: 3631456846769051095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_26
+      rect:
+        serializedVersion: 2
+        x: 719
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1815dda0adcdd14e0800000000000000
+      internalID: -2009207029694115455
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_27
+      rect:
+        serializedVersion: 2
+        x: 746
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d78506479ffefdfe0800000000000000
+      internalID: -1161946324159932291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_28
+      rect:
+        serializedVersion: 2
+        x: 773
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4caff827660e4210800000000000000
+      internalID: 1318998781005376591
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_29
+      rect:
+        serializedVersion: 2
+        x: 800
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05353f5a97033d5b0800000000000000
+      internalID: -5344875033725283504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_30
+      rect:
+        serializedVersion: 2
+        x: 827
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18f7879c0de9caf60800000000000000
+      internalID: 8046981253774737281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_31
+      rect:
+        serializedVersion: 2
+        x: 854
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc67a2c0e7486ce30800000000000000
+      internalID: 4523448552645097163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_32
+      rect:
+        serializedVersion: 2
+        x: 881
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3482df3b8525d3ef0800000000000000
+      internalID: -126854673566193597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: divider_dashed_33
+      rect:
+        serializedVersion: 2
+        x: 908
+        y: 17
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d613b9aae80892630800000000000000
+      internalID: 3902791902329254253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      divider_dashed_0: 1590606671846917212
+      divider_dashed_1: 5496799350262988654
+      divider_dashed_10: -3717044988709707359
+      divider_dashed_11: -7778923963215080277
+      divider_dashed_12: 6951866842479445014
+      divider_dashed_13: 2201078386452696079
+      divider_dashed_14: 3666484855764204327
+      divider_dashed_15: 3819627019573266282
+      divider_dashed_16: 8692250640804388622
+      divider_dashed_17: -1352570745797634286
+      divider_dashed_18: 7494333550644285061
+      divider_dashed_19: 4016984342410838985
+      divider_dashed_2: 4187748749640749439
+      divider_dashed_20: -7407109880363042257
+      divider_dashed_21: -3564152070431292800
+      divider_dashed_22: 5173274948780343147
+      divider_dashed_23: 1016821115540846293
+      divider_dashed_24: 2291923856160383833
+      divider_dashed_25: 3631456846769051095
+      divider_dashed_26: -2009207029694115455
+      divider_dashed_27: -1161946324159932291
+      divider_dashed_28: 1318998781005376591
+      divider_dashed_29: -5344875033725283504
+      divider_dashed_3: -2734136680738945399
+      divider_dashed_30: 8046981253774737281
+      divider_dashed_31: 4523448552645097163
+      divider_dashed_32: -126854673566193597
+      divider_dashed_33: 3902791902329254253
+      divider_dashed_4: 6008556841021734772
+      divider_dashed_5: 8894409543821669303
+      divider_dashed_6: 7135709109006684079
+      divider_dashed_7: -796243345765900850
+      divider_dashed_8: 4579205447269920772
+      divider_dashed_9: -2216123752246064511
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

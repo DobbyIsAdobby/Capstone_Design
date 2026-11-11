@@ -41,7 +41,8 @@ public class SaveDataValidator
             data.information != null &&
             data.pendingEvent != null &&
             data.wealthTier != null &&
-            data.realEstate != null,
+            data.realEstate != null &&
+            data.happiness != null,
             "필수 저장 항목이 누락되었습니다.");
 
         PlayerSaveData player = data.player;

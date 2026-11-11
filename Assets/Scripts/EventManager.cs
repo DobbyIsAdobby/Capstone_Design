@@ -323,6 +323,11 @@ public class EventManager : Singleton<EventManager>
             throw new InvalidOperationException("TutorialManager와 story.json 설정을 확인하세요.");
         }
 
+        if (HappinessManager.Instance == null || !HappinessManager.Instance.IsInitialized || !eventUI.IsHappinessConfigured)
+        {
+            throw new InvalidOperationException("행복도 매니저 또는 선택창 연결을 확인하세요.");
+        }
+
         // 코루틴 시작 전에 잠금.
         // 같은 프레임에 다른 행동이 실행되지 않도록 함.
         IsPresenting = true;
@@ -375,6 +380,9 @@ public class EventManager : Singleton<EventManager>
             yield return eventUI.ShowBreaking(market, GameManager.Instance.CurrentGameDate);
         }
 
+        // 이전 안내를 모두 확인한 뒤 행복도 이벤트를 진행.
+        yield return PresentHappiness(turn);
+
         eventUI.CloseAll();
 
         // 스토리와 이벤트 안내가 모두 끝난 뒤 완료 처리.
@@ -383,6 +391,50 @@ public class EventManager : Singleton<EventManager>
         presentationRoutine = null;
 
         UIManager.Instance?.RefreshUI();
+    }
+
+    private IEnumerator PresentHappiness(int turn)
+    {
+        HappinessManager happiness = HappinessManager.Instance;
+
+        if (!happiness.NeedsPresentation(turn))
+            yield break;
+
+        HappinessEventData item = happiness.GetEvent(turn);
+
+        // 이벤트가 없는 턴도 완료 기록을 남김
+        if (item == null)
+        {
+            happiness.Resolve(turn, false);
+            yield break;
+        }
+
+        foreach (string line in item.dialogue)
+        {
+            yield return eventUI.ShowDialogue(line);
+        }
+
+        bool accepted = false;
+        bool canAccept = happiness.CanAccept(turn, out string reason);
+
+        yield return eventUI.ShowHappinessChoice(item, canAccept, reason, value => accepted = value);
+
+        // 중복 처리 여부와 참여 조건을 다시 검사한 뒤 반영
+        string goldenNotice = happiness.Resolve(turn, accepted);
+
+        UIManager.Instance?.RefreshUI();
+
+        string[] resultLines = accepted ? item.accept_result : item.decline_result;
+
+        foreach (string line in resultLines)
+        {
+            yield return eventUI.ShowDialogue(line);
+        }
+
+        if (!string.IsNullOrEmpty(goldenNotice))
+        {
+            yield return eventUI.ShowDialogue(goldenNotice);
+        }
     }
 
     /// <summary>

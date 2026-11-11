@@ -1,0 +1,1318 @@
+{
+  "version": 2,
+  "settings": {
+    "events_per_range": 2,
+    "ranges": [
+      {
+        "start_turn": 1,
+        "end_turn": 10
+      },
+      {
+        "start_turn": 11,
+        "end_turn": 20
+      },
+      {
+        "start_turn": 21,
+        "end_turn": 30
+      },
+      {
+        "start_turn": 31,
+        "end_turn": 40
+      },
+      {
+        "start_turn": 41,
+        "end_turn": 50
+      },
+      {
+        "start_turn": 51,
+        "end_turn": 59
+      }
+    ]
+  },
+  "events": [
+    {
+      "id": "HAPPINESS_001",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "잠깐의 산책",
+      "description": "동네를 천천히 걸으며 일상 속 작은 여유를 즐깁니다.",
+      "dialogue": [
+        "오늘은 날씨가 꽤 좋네.",
+        "잠깐 밖을 걸으며 머리를 식혀볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 10,
+      "happiness_gain": 5,
+      "accept_label": "산책하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "익숙한 동네도 천천히 걸으니 조금 다르게 보인다.",
+        "몸은 조금 피곤하지만 기분은 한결 좋아졌다."
+      ],
+      "decline_result": [
+        "오늘은 쉬고, 산책은 다음에 해야겠다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_013",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "도서관 나들이",
+      "description": "도서관에서 관심 있던 책을 찾아 읽으며 시간을 보냅니다.",
+      "dialogue": [
+        "읽어보고 싶었던 책이 도서관에 있네. 오늘은 책 속 이야기에 빠져볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 10,
+      "happiness_gain": 5,
+      "accept_label": "책 읽으러 가기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "책장을 넘기다 보니 어느새 시간이 훌쩍 지났다. 좋은 이야기를 만난 기분이다."
+      ],
+      "decline_result": [
+        "책 제목을 기억해 두고 다음에 읽기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_014",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "방 안의 작은 변화",
+      "description": "방을 정리하고 가구 위치를 바꿔 새로운 분위기를 만듭니다.",
+      "dialogue": [
+        "늘 같은 방이 조금 답답하게 느껴진다. 가구 배치를 바꿔보면 어떨까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 10,
+      "happiness_gain": 5,
+      "accept_label": "방 꾸미기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "가구를 옮기느라 힘은 들었지만, 같은 방이 새로운 공간처럼 느껴진다."
+      ],
+      "decline_result": [
+        "오늘은 그대로 두고 배치만 머릿속으로 그려봤다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_015",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "추억의 사진",
+      "description": "오래된 사진을 정리하며 잊고 있던 추억을 돌아봅니다.",
+      "dialogue": [
+        "서랍에서 예전에 찍은 사진들을 찾았다. 차근차근 정리하며 살펴볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 10,
+      "happiness_gain": 5,
+      "accept_label": "사진 정리하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "사진마다 잊고 있던 이야기가 떠올랐다. 혼자 웃다 보니 마음이 따뜻해졌다."
+      ],
+      "decline_result": [
+        "사진을 잘 모아두었다. 여유가 생기면 다시 꺼내봐야겠다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_016",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "저녁 노을",
+      "description": "가까운 산책로에서 노을을 바라보며 하루를 마무리합니다.",
+      "dialogue": [
+        "창밖의 하늘이 붉게 물들고 있다. 노을이 지기 전에 산책로에 다녀올까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 10,
+      "happiness_gain": 5,
+      "accept_label": "노을 보러 가기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "한참을 걸어 만난 노을이 생각보다 아름다웠다. 오늘 하루도 괜찮았다는 생각이 든다."
+      ],
+      "decline_result": [
+        "창가에서 잠시 하늘을 바라보는 것으로 만족했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_002",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "친구의 연락",
+      "description": "친구를 만나 서로의 근황을 나누며 즐거운 시간을 보냅니다.",
+      "dialogue": [
+        "친구에게 근처에서 잠깐 만나자는 연락이 왔다.",
+        "오랜만에 얼굴을 보며 이야기를 나눠볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 5,
+      "accept_label": "만나러 가기",
+      "decline_label": "다음에 만나기",
+      "accept_result": [
+        "별것 아닌 이야기에도 한참을 웃었다.",
+        "이런 시간이 가끔은 필요한 것 같다."
+      ],
+      "decline_result": [
+        "오늘은 어렵다고 답하고 다음을 기약했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_017",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "동네 구경",
+      "description": "평소 지나치던 골목을 둘러보며 새로운 풍경을 발견합니다.",
+      "dialogue": [
+        "늘 다니던 길 옆에 처음 보는 골목이 있다. 오늘은 조금 돌아가 볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 5,
+      "accept_label": "골목 둘러보기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "구석구석 걷다 보니 몰랐던 풍경이 눈에 들어왔다. 익숙한 동네에도 새로움이 있었다."
+      ],
+      "decline_result": [
+        "오늘은 익숙한 길로 돌아왔다. 골목 탐방은 다음에 해봐야겠다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_018",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "함께하는 게임",
+      "description": "친구들과 게임을 즐기며 웃고 이야기하는 시간을 갖습니다.",
+      "dialogue": [
+        "친구들이 함께 게임하자고 부른다. 오랜만에 같이 한 판 해볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 5,
+      "accept_label": "함께 게임하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "서로 실수하는 모습에도 웃음이 터졌다. 승패보다 함께한 시간이 더 즐거웠다."
+      ],
+      "decline_result": [
+        "오늘은 쉬겠다고 전하고 다음 게임을 기약했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_019",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "서랍 속 취미",
+      "description": "한동안 손대지 않았던 취미 도구를 꺼내 다시 시작합니다.",
+      "dialogue": [
+        "서랍 속에 예전에 즐기던 취미 도구가 보인다. 오랜만에 다시 해볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 5,
+      "accept_label": "다시 시작하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "처음에는 손이 굳었지만 곧 익숙한 즐거움이 돌아왔다. 잊고 있던 나를 만난 느낌이다."
+      ],
+      "decline_result": [
+        "도구를 정리해 두었다. 다시 시작할 마음은 간직해 두기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_020",
+      "start_turn": 1,
+      "end_turn": 10,
+      "title": "가족과의 통화",
+      "description": "가족과 긴 통화를 나누며 서로의 일상을 듣습니다.",
+      "dialogue": [
+        "요즘 가족에게 짧은 안부만 전했네. 오늘은 시간을 내서 길게 이야기해볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 5,
+      "accept_label": "전화하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "별것 아닌 일상을 주고받다 보니 시간이 늦었다. 익숙한 목소리를 들으니 든든하다."
+      ],
+      "decline_result": [
+        "오늘은 짧게 안부만 전하고 긴 이야기는 다음으로 미뤘다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_003",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "함께하는 운동",
+      "description": "공원에서 친구들과 운동하며 함께하는 즐거움을 느낍니다.",
+      "dialogue": [
+        "친구들이 공원에서 가볍게 운동하자고 한다.",
+        "잠깐 함께 몸을 움직여볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 10,
+      "accept_label": "함께하기",
+      "decline_label": "이번에는 쉬기",
+      "accept_result": [
+        "땀을 흘리며 뛰다 보니 잡생각이 사라졌다.",
+        "친구들과 함께해서 더 즐거운 시간이었다."
+      ],
+      "decline_result": [
+        "오늘은 무리하지 않고 쉬기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_021",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "작은 독서 모임",
+      "description": "읽은 책에 대한 생각을 나누며 새로운 관점을 만납니다.",
+      "dialogue": [
+        "동네 독서 모임에서 읽어본 책을 이야기한다고 한다. 내 생각도 나눠볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 10,
+      "accept_label": "모임 참여하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "같은 책을 다르게 읽은 사람들의 이야기가 흥미로웠다. 책이 더 풍성하게 느껴진다."
+      ],
+      "decline_result": [
+        "이번 모임은 넘기고 다음에 다룰 책을 확인했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_022",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "종이 위의 풍경",
+      "description": "주변 풍경을 천천히 그리며 그림에 집중합니다.",
+      "dialogue": [
+        "종이와 연필이 눈에 들어온다. 창밖 풍경을 한번 그려볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 10,
+      "accept_label": "그림 그리기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "선이 삐뚤어도 직접 그린 풍경이라 마음에 든다. 그림에 집중한 시간이 즐거웠다."
+      ],
+      "decline_result": [
+        "오늘의 풍경은 눈에 담아두고 그림은 다음에 그리기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_023",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "새로운 요리",
+      "description": "집에 있는 재료로 처음 해보는 요리에 도전합니다.",
+      "dialogue": [
+        "냉장고에 있는 재료로 새로운 요리를 만들 수 있겠네. 한번 도전해볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 10,
+      "accept_label": "요리하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "손질과 설거지까지 쉽지는 않았지만 직접 만든 한 끼가 뿌듯했다."
+      ],
+      "decline_result": [
+        "오늘은 익숙한 요리로 식사를 준비했다. 새로운 요리는 다음에 해봐야겠다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_024",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "음악을 나누는 시간",
+      "description": "친구와 좋아하는 음악을 들으며 서로의 취향을 나눕니다.",
+      "dialogue": [
+        "친구가 좋아하는 곡을 들려주고 싶다고 한다. 서로의 음악을 함께 들어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 15,
+      "happiness_gain": 10,
+      "accept_label": "함께 듣기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "노래에 얽힌 이야기까지 나누다 보니 친구를 조금 더 알게 됐다. 새로운 곡도 마음에 든다."
+      ],
+      "decline_result": [
+        "추천할 곡만 보내고 함께 듣는 시간은 다음에 갖기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_004",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "동네 사진 산책",
+      "description": "골목을 돌아다니며 마음에 드는 풍경을 사진으로 담습니다.",
+      "dialogue": [
+        "평소 지나치던 골목에 예쁜 풍경이 숨어 있었다.",
+        "휴대폰으로 사진을 찍으며 동네를 둘러볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 10,
+      "accept_label": "둘러보기",
+      "decline_label": "다음에 보기",
+      "accept_result": [
+        "마음에 드는 풍경을 찾아 여기저기 걸었다.",
+        "평범한 하루에도 즐길 거리가 꽤 많았다."
+      ],
+      "decline_result": [
+        "풍경은 다음에 여유가 생기면 살펴보기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_025",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "강변 걷기",
+      "description": "강변 산책로를 따라 걸으며 탁 트인 풍경을 즐깁니다.",
+      "dialogue": [
+        "오늘은 강변까지 걸어보고 싶다. 길게 이어진 산책로를 따라가 볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 10,
+      "accept_label": "강변 걷기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "다리는 뻐근하지만 물결과 바람을 오래 즐겼다. 밖으로 나오길 잘했다."
+      ],
+      "decline_result": [
+        "강변 산책은 미루고 오늘은 가까운 곳에서 시간을 보냈다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_026",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "공원의 배드민턴",
+      "description": "친구와 배드민턴을 치며 활기찬 시간을 보냅니다.",
+      "dialogue": [
+        "친구가 라켓을 가져왔다며 공원으로 나오라고 한다. 함께 몸을 움직여볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 10,
+      "accept_label": "배드민턴 치기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "셔틀콕을 쫓으며 한참을 뛰었다. 숨은 차지만 시원하게 웃을 수 있었다."
+      ],
+      "decline_result": [
+        "오늘은 어렵다고 답했다. 다음에는 꼭 같이 쳐야겠다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_027",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "무료 전시 관람",
+      "description": "무료 전시를 둘러보며 평소 접하지 못한 작품을 감상합니다.",
+      "dialogue": [
+        "근처 전시관에서 무료 전시가 열린다고 한다. 어떤 작품이 있는지 보러 갈까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 10,
+      "accept_label": "전시 보러 가기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "작품 앞에 오래 서서 저마다의 이야기를 상상했다. 돌아오는 길에도 장면들이 떠오른다."
+      ],
+      "decline_result": [
+        "전시 기간을 적어두고 방문은 다음으로 미뤘다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_028",
+      "start_turn": 11,
+      "end_turn": 20,
+      "title": "함께하는 방 정리",
+      "description": "친구와 함께 방을 정리하며 이야기도 나눕니다.",
+      "dialogue": [
+        "친구가 방 정리를 도와줄 수 있냐고 묻는다. 함께 치우면서 이야기도 나눠볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 10,
+      "accept_label": "정리 도와주기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "짐을 옮기느라 힘들었지만 둘이 하니 금세 끝났다. 고맙다는 말에 기분이 좋아졌다."
+      ],
+      "decline_result": [
+        "오늘은 어렵다고 말하고 정리 방법에 대한 생각만 전했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_005",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "새로운 취미",
+      "description": "무료 취미 체험 모임에 참여해 새로운 즐거움을 찾아봅니다.",
+      "dialogue": [
+        "동네에서 무료 취미 체험 모임이 열린다고 한다.",
+        "서툴더라도 새로운 일을 해보면 재미있지 않을까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 15,
+      "accept_label": "참여하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "처음이라 쉽지는 않았지만 시간 가는 줄 몰랐다.",
+        "새로운 것을 해냈다는 작은 만족감이 남았다."
+      ],
+      "decline_result": [
+        "이번에는 넘기고 다음 기회를 기다리기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_029",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "글 한 편의 시작",
+      "description": "마음속에 있던 이야기를 짧은 글로 써봅니다.",
+      "dialogue": [
+        "계속 머릿속을 맴도는 이야기가 있다. 오늘은 글로 옮겨볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 15,
+      "accept_label": "글 써보기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "쓰고 고치기를 반복한 끝에 짧은 글 한 편이 남았다. 생각을 표현했다는 만족감이 든다."
+      ],
+      "decline_result": [
+        "떠오른 생각만 간단히 적어두었다. 본격적으로 쓰는 일은 다음에 하기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_030",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "친구에게 배우는 악기",
+      "description": "친구의 악기를 빌려 간단한 연주를 배워봅니다.",
+      "dialogue": [
+        "친구가 쉬운 곡 하나를 알려주겠다고 한다. 서툴더라도 배워볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 15,
+      "accept_label": "연주 배우기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "같은 부분을 여러 번 연습한 끝에 짧은 멜로디가 이어졌다. 내가 낸 소리라 더 반갑다."
+      ],
+      "decline_result": [
+        "연주는 다음에 배우기로 하고 친구의 연주를 잠깐 들었다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_031",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "오래된 물건 고치기",
+      "description": "고장 난 물건을 손보며 직접 해결하는 보람을 느낍니다.",
+      "dialogue": [
+        "버리기 아까운 물건이 눈에 띈다. 집에 있는 도구로 고쳐볼 수 있지 않을까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 15,
+      "accept_label": "고쳐보기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "한참 살펴보고 손본 끝에 다시 쓸 수 있게 됐다. 내 손으로 해결했다는 사실이 뿌듯하다."
+      ],
+      "decline_result": [
+        "무리해서 손대지 않고 물건을 따로 보관했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_032",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "작은 작품 만들기",
+      "description": "집에 있는 재료로 나만의 작은 작품을 만들어봅니다.",
+      "dialogue": [
+        "남은 재료로 작은 장식을 만들 수 있겠다. 내 방식대로 만들어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 20,
+      "happiness_gain": 15,
+      "accept_label": "작품 만들기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "자르고 붙이기를 반복해 작은 작품을 완성했다. 서툰 흔적까지 정겹게 느껴진다."
+      ],
+      "decline_result": [
+        "쓸 만한 재료를 모아두고 만들기는 다음으로 미뤘다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_006",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "가까운 곳으로",
+      "description": "친구와 가까운 곳으로 떠나 낯선 풍경을 즐기고 돌아옵니다.",
+      "dialogue": [
+        "친구가 차로 가까운 곳에 바람을 쐬러 가자고 한다.",
+        "잠시 일상에서 벗어나볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 15,
+      "accept_label": "함께 떠나기",
+      "decline_label": "이번에는 쉬기",
+      "accept_result": [
+        "낯선 길과 풍경을 보니 기분이 새로워졌다.",
+        "멀리 가지 않아도 좋은 하루를 보낼 수 있었다."
+      ],
+      "decline_result": [
+        "오늘은 일상에 머물며 시간을 보내기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_033",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "도시 탐방",
+      "description": "평소 가보지 않은 동네를 걸으며 새로운 장소를 발견합니다.",
+      "dialogue": [
+        "가까운데도 한 번도 가보지 않은 동네가 있다. 오늘은 길을 따라 둘러볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 15,
+      "accept_label": "탐방하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "골목마다 다른 풍경을 보며 오래 걸었다. 평범한 도시에도 모르는 이야기가 많았다."
+      ],
+      "decline_result": [
+        "지도에서 가볼 곳만 찾아두었다. 직접 걷는 건 다음에 하기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_034",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "지역 축제",
+      "description": "무료로 열린 지역 축제를 둘러보며 활기찬 분위기를 즐깁니다.",
+      "dialogue": [
+        "동네에서 누구나 참여할 수 있는 축제가 열린다. 잠깐 들러 즐겨볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 15,
+      "accept_label": "축제 둘러보기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "공연과 전시를 따라다니며 하루가 훌쩍 지났다. 사람들의 활기가 좋은 기억으로 남았다."
+      ],
+      "decline_result": [
+        "이번 축제는 넘기고 오늘의 일정을 챙기기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_035",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "사진 속 하루",
+      "description": "하루의 풍경을 주제로 사진을 찍으며 동네를 돌아봅니다.",
+      "dialogue": [
+        "하루를 사진으로 남겨보면 재미있겠다. 주제를 정해서 풍경을 찾아볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 15,
+      "accept_label": "사진 찍으러 가기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "마음에 드는 장면을 찾느라 많이 걸었다. 사진을 모아보니 오늘만의 이야기가 보인다."
+      ],
+      "decline_result": [
+        "주제만 정해두고 사진을 찍는 일은 다음으로 미뤘다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_036",
+      "start_turn": 21,
+      "end_turn": 30,
+      "title": "함께하는 요리",
+      "description": "친구들과 재료를 나누어 준비하고 함께 음식을 만듭니다.",
+      "dialogue": [
+        "친구들이 각자 집에 있는 재료를 가져오기로 했다. 함께 한 상 차려볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 15,
+      "accept_label": "함께 요리하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "서로 손을 보태고 맛을 보며 즐겁게 음식을 만들었다. 치울 것은 많지만 함께한 식사가 좋았다."
+      ],
+      "decline_result": [
+        "오늘은 참여하기 어렵다고 전했다. 다음에는 같이 준비해야겠다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_007",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "작은 공연",
+      "description": "광장의 무료 야외 공연에서 음악과 현장의 분위기를 즐깁니다.",
+      "dialogue": [
+        "광장에서 무료 야외 공연이 열린다고 한다.",
+        "오늘 저녁은 음악을 들으며 보내볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 20,
+      "accept_label": "공연 보러 가기",
+      "decline_label": "다음에 보기",
+      "accept_result": [
+        "사람들과 함께 음악을 듣다 보니 마음이 들떴다.",
+        "돌아오는 길에도 공연의 여운이 남아 있었다."
+      ],
+      "decline_result": [
+        "공연은 다음 기회에 보기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_037",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "친구의 고민",
+      "description": "친구의 이야기를 듣고 함께 고민하며 시간을 보냅니다.",
+      "dialogue": [
+        "친구가 털어놓고 싶은 이야기가 있다고 한다. 시간을 내서 들어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 20,
+      "accept_label": "이야기 듣기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "정답을 찾지는 못했지만 친구의 표정이 조금 밝아졌다. 곁에 있어줄 수 있어서 다행이다."
+      ],
+      "decline_result": [
+        "지금은 긴 이야기가 어렵다고 전하고 편한 시간을 다시 잡았다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_038",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "함께 읽는 이야기",
+      "description": "모임에서 짧은 글을 읽고 각자의 생각을 나눕니다.",
+      "dialogue": [
+        "모임에서 짧은 이야기를 함께 읽는다고 한다. 다른 사람들의 생각도 들어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 20,
+      "accept_label": "함께 읽기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "한 문장에도 여러 생각이 모였다. 이야기를 나누다 보니 나의 생각도 또렷해졌다."
+      ],
+      "decline_result": [
+        "이번에는 참여하지 않고 읽을 글만 받아두었다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_039",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "재능 나누기",
+      "description": "자신이 잘하는 일을 다른 사람에게 알려줍니다.",
+      "dialogue": [
+        "내가 아는 방법을 배우고 싶다는 사람이 있다. 차근차근 알려줘 볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 20,
+      "accept_label": "알려주기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "설명하느라 힘은 들었지만 상대가 해내는 모습을 보니 기뻤다. 아는 것을 나누는 보람이 있다."
+      ],
+      "decline_result": [
+        "오늘은 시간이 어렵다고 말하고 다음에 알려주기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_040",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "추억 모임 준비",
+      "description": "친구들과 함께 볼 사진과 이야기를 모아 만남을 준비합니다.",
+      "dialogue": [
+        "다음 모임에서 옛날 사진을 함께 보면 재미있겠다. 미리 정리해볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 25,
+      "happiness_gain": 20,
+      "accept_label": "모임 준비하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "사진을 고르며 혼자 여러 번 웃었다. 친구들과 나눌 이야기가 생겨 벌써 기대된다."
+      ],
+      "decline_result": [
+        "준비는 잠시 미루고 모임 날짜부터 확인했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_008",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "주말 봉사",
+      "description": "봉사 모임에 참여해 일손을 보태고 나눔의 보람을 느낍니다.",
+      "dialogue": [
+        "주말 봉사 모임에서 일손을 구하고 있다.",
+        "시간을 내서 누군가를 도와보는 건 어떨까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 20,
+      "accept_label": "도우러 가기",
+      "decline_label": "이번에는 넘기기",
+      "accept_result": [
+        "생각보다 고된 시간이었지만 고맙다는 말을 들었다.",
+        "누군가에게 도움이 됐다는 사실이 뿌듯했다."
+      ],
+      "decline_result": [
+        "이번에는 참여하지 않고 내 일정을 챙기기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_041",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "동네 환경 정리",
+      "description": "이웃들과 주변을 청소하며 함께 쓰는 공간을 가꿉니다.",
+      "dialogue": [
+        "동네 청소에 함께할 사람을 찾는다고 한다. 자주 다니는 길을 같이 가꿔볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 20,
+      "accept_label": "청소 참여하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "구석구석 청소하느라 몸은 고됐지만 깨끗해진 길이 보기 좋다. 이웃들과 인사도 나눴다."
+      ],
+      "decline_result": [
+        "이번에는 참여하지 못한다고 전했다. 평소에도 주변을 잘 챙겨야겠다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_042",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "친구의 이사",
+      "description": "친구의 이삿짐 정리를 도우며 새로운 시작을 응원합니다.",
+      "dialogue": [
+        "친구가 이삿짐 정리에 도움이 필요하다고 한다. 시간을 내서 도와줄까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 20,
+      "accept_label": "이사 도와주기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "상자를 옮기고 정리하니 어느새 집다운 모습이 됐다. 친구의 새 출발에 함께해서 기쁘다."
+      ],
+      "decline_result": [
+        "오늘은 도와주기 어렵다고 전하고 새집에서 잘 지내길 응원했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_043",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "함께 만드는 행사",
+      "description": "지역 행사 준비를 도우며 사람들과 힘을 모읍니다.",
+      "dialogue": [
+        "지역 행사 준비에 손이 부족하다고 한다. 함께 힘을 보태볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 20,
+      "accept_label": "준비 돕기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "분주하게 준비한 공간에 사람들이 모였다. 함께 만든 자리라 더 뜻깊게 느껴진다."
+      ],
+      "decline_result": [
+        "이번 준비에는 참여하지 않고 행사가 잘 되길 응원했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_044",
+      "start_turn": 31,
+      "end_turn": 40,
+      "title": "걷고 나누는 하루",
+      "description": "친구들과 긴 산책을 하며 평소 못 했던 이야기를 나눕니다.",
+      "dialogue": [
+        "친구들이 천천히 오래 걸으며 이야기하자고 한다. 오늘은 함께 길을 나서볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 20,
+      "accept_label": "함께 걷기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "발은 무겁지만 마음속 이야기를 나누니 한결 편해졌다. 걸었던 길보다 대화가 더 기억에 남는다."
+      ],
+      "decline_result": [
+        "긴 산책은 다음으로 미루고 친구들에게 안부를 전했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_009",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "친구들과의 하루",
+      "description": "친구들과 하루를 보내며 함께 놀고 밀린 이야기를 나눕니다.",
+      "dialogue": [
+        "친구들이 오랜만에 다 같이 시간을 맞췄다.",
+        "하루쯤은 함께 놀며 보내도 괜찮지 않을까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 25,
+      "accept_label": "함께 보내기",
+      "decline_label": "다음을 기약하기",
+      "accept_result": [
+        "함께 게임도 하고 밀린 이야기도 나눴다.",
+        "많이 웃고 나니 오래 기억에 남을 하루가 됐다."
+      ],
+      "decline_result": [
+        "친구들에게 다음에는 함께하겠다고 전했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_045",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "추억 정리",
+      "description": "오래된 사진과 기록을 모아 자신의 시간을 돌아봅니다.",
+      "dialogue": [
+        "사진과 기록이 여기저기 흩어져 있다. 지나온 시간을 한데 모아볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 25,
+      "accept_label": "기록 정리하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "시간순으로 정리하니 잊고 있던 노력과 즐거움이 보였다. 생각보다 많은 날을 살아냈다."
+      ],
+      "decline_result": [
+        "오늘은 정리를 시작하지 않고 기록을 한곳에 모아두었다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_046",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "취미 작품 완성",
+      "description": "미완성으로 남겨두었던 작품을 마무리합니다.",
+      "dialogue": [
+        "조금만 더 손보면 완성할 수 있는 작품이 있다. 오늘 끝을 내볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 25,
+      "accept_label": "마무리하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "작은 부분까지 손본 끝에 작품이 완성됐다. 오래 붙잡았던 만큼 만족감도 크다."
+      ],
+      "decline_result": [
+        "서두르지 않고 남은 작업을 정리해 두었다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_047",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "오랜 약속",
+      "description": "바쁜 일정 때문에 미뤘던 친구와의 약속을 지킵니다.",
+      "dialogue": [
+        "계속 다음으로 미뤘던 약속이 생각난다. 오늘은 시간을 맞춰 만나볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 25,
+      "accept_label": "약속 지키기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "만나기까지 오래 걸렸지만 대화는 금세 이어졌다. 시간을 내길 잘했다는 생각이 든다."
+      ],
+      "decline_result": [
+        "사정을 설명하고 서로 가능한 날을 다시 찾아보기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_048",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "작은 도전 발표",
+      "description": "모임에서 준비한 글이나 작품을 소개해봅니다.",
+      "dialogue": [
+        "모임에서 내가 준비한 것을 소개할 기회가 생겼다. 조금 떨리지만 해볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 30,
+      "happiness_gain": 25,
+      "accept_label": "소개하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "긴장해서 목이 말랐지만 끝까지 내 이야기를 전했다. 사람들의 반응에 용기가 생겼다."
+      ],
+      "decline_result": [
+        "이번에는 듣는 사람으로 남고 발표는 다음 기회로 미뤘다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_010",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "정상을 향해서",
+      "description": "친구와 산 정상에 올라 탁 트인 풍경과 성취감을 만끽합니다.",
+      "dialogue": [
+        "친구가 가까운 산에 함께 올라가자고 한다.",
+        "조금 힘들겠지만 정상에서 보는 풍경은 멋질 것 같다."
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 25,
+      "accept_label": "산에 오르기",
+      "decline_label": "이번에는 쉬기",
+      "accept_result": [
+        "숨을 고르며 끝까지 올라 정상에 도착했다.",
+        "탁 트인 풍경을 보니 힘들었던 만큼 보람이 있었다."
+      ],
+      "decline_result": [
+        "등산은 다음에 여유가 있을 때 가기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_049",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "긴 산책 코스",
+      "description": "평소보다 긴 산책 코스를 걸으며 자신의 속도에 집중합니다.",
+      "dialogue": [
+        "늘 돌아서던 지점 너머가 궁금하다. 오늘은 조금 더 멀리 걸어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 25,
+      "accept_label": "길게 걷기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "천천히 쉬어가며 긴 길을 걸었다. 끝까지 다녀왔다는 작은 자신감이 남는다."
+      ],
+      "decline_result": [
+        "오늘은 평소 코스로 만족하고 긴 길은 다음을 위해 남겨두었다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_050",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "하루 봉사",
+      "description": "하루 동안 봉사 활동에 참여해 필요한 곳에 힘을 보탭니다.",
+      "dialogue": [
+        "하루 동안 함께할 봉사자를 찾고 있다. 내 시간을 필요한 곳에 써볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 25,
+      "accept_label": "봉사 참여하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "낯선 일을 배우며 부지런히 움직였다. 누군가의 하루에 보탬이 됐다는 사실이 뿌듯하다."
+      ],
+      "decline_result": [
+        "이번에는 참여하지 않고 다음 활동 일정을 확인했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_051",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "함께하는 운동회",
+      "description": "친구들과 여러 운동을 즐기며 활기찬 하루를 보냅니다.",
+      "dialogue": [
+        "친구들이 공원에서 작은 운동회를 열자고 한다. 하루를 함께 뛰어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 25,
+      "accept_label": "운동회 참여하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "여러 경기를 하느라 온몸이 뻐근하다. 그래도 서로 응원하며 웃었던 순간들이 좋았다."
+      ],
+      "decline_result": [
+        "이번 운동회는 쉬고 친구들에게 재미있게 보내라고 전했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_052",
+      "start_turn": 41,
+      "end_turn": 50,
+      "title": "오래된 공간 정리",
+      "description": "묵혀둔 공간을 정리하며 새로운 일상을 준비합니다.",
+      "dialogue": [
+        "물건이 쌓인 공간을 이제는 정리하고 싶다. 하루를 들여 제대로 치워볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 25,
+      "accept_label": "공간 정리하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "오래된 짐을 분류하고 먼지를 털어냈다. 비워진 공간을 보니 새로운 일을 시작하고 싶어진다."
+      ],
+      "decline_result": [
+        "큰 정리는 다음으로 미루고 필요한 물건부터 챙겼다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_011",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "미뤄둔 도전",
+      "description": "미뤄왔던 긴 산책길을 끝까지 걸으며 스스로와의 약속을 지킵니다.",
+      "dialogue": [
+        "언젠가 해보고 싶었던 긴 산책길이 떠올랐다.",
+        "오늘은 시간을 내서 끝까지 걸어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 30,
+      "accept_label": "도전하기",
+      "decline_label": "다음에 도전하기",
+      "accept_result": [
+        "오래 걸렸지만 마음먹었던 길을 끝까지 걸었다.",
+        "미뤄두었던 일을 해냈다는 만족감이 밀려왔다."
+      ],
+      "decline_result": [
+        "도전은 잠시 미뤄두고 오늘은 쉬기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_053",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "나에게 쓰는 편지",
+      "description": "지나온 시간을 돌아보며 미래의 자신에게 편지를 씁니다.",
+      "dialogue": [
+        "몇 년 뒤의 나는 지금을 어떻게 기억할까? 오늘의 마음을 편지로 남겨볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 30,
+      "accept_label": "편지 쓰기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "쓰다 지우기를 반복하며 솔직한 마음을 담았다. 잘 버텨온 나에게도 고맙다는 말을 남겼다."
+      ],
+      "decline_result": [
+        "편지는 다음에 쓰기로 했다. 지금의 마음은 잠시 생각 속에 담아두었다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_054",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "마지막 한 조각",
+      "description": "오랫동안 이어온 취미 작업을 끝까지 완성합니다.",
+      "dialogue": [
+        "오래 붙잡아온 작업의 끝이 보인다. 오늘 마지막 부분까지 완성해볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 30,
+      "accept_label": "완성하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "마지막 손질을 마치니 긴 시간이 하나의 결과로 남았다. 서툴게 시작했던 순간까지 소중하게 느껴진다."
+      ],
+      "decline_result": [
+        "마무리는 다음으로 미루고 지금까지의 작업을 잘 정리했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_055",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "고마움을 전하는 날",
+      "description": "도움을 주었던 사람들에게 직접 고마운 마음을 전합니다.",
+      "dialogue": [
+        "바쁘다는 이유로 고맙다는 말을 미룬 사람들이 있다. 오늘은 제대로 전해볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 30,
+      "accept_label": "마음 전하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "한 사람씩 연락해 마음을 전했다. 반가운 목소리들을 들으니 나도 따뜻한 힘을 얻었다."
+      ],
+      "decline_result": [
+        "누구에게 연락할지 적어두고 긴 이야기는 다음에 나누기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_056",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "추억의 장소",
+      "description": "기억에 남은 장소를 다시 찾아 달라진 자신을 돌아봅니다.",
+      "dialogue": [
+        "예전에 자주 가던 곳이 문득 떠오른다. 오랜만에 찾아가 걸어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 35,
+      "happiness_gain": 30,
+      "accept_label": "다시 찾아가기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "익숙하면서도 달라진 풍경 속을 오래 걸었다. 그때와 달라진 나를 조용히 돌아볼 수 있었다."
+      ],
+      "decline_result": [
+        "오늘은 기억 속 풍경을 떠올리는 것으로 만족했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_012",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "오랜 인연과의 재회",
+      "description": "오랜 친구들과 다시 만나 추억과 근황을 나누며 시간을 보냅니다.",
+      "dialogue": [
+        "오래 연락하지 못했던 친구들이 함께 모인다고 한다.",
+        "이번에는 시간을 내서 반가운 얼굴들을 만나볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 40,
+      "happiness_gain": 30,
+      "accept_label": "만나러 가기",
+      "decline_label": "다음을 기약하기",
+      "accept_result": [
+        "오랜만인데도 금세 예전처럼 이야기가 이어졌다.",
+        "늦은 시간까지 함께했지만 마음은 따뜻해졌다."
+      ],
+      "decline_result": [
+        "반가운 마음을 전하고 다음 만남을 기약했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_057",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "함께 걷는 먼 길",
+      "description": "가까운 사람과 긴 길을 걸으며 앞으로의 이야기를 나눕니다.",
+      "dialogue": [
+        "가까운 친구가 긴 산책을 제안했다. 앞으로 하고 싶은 일들을 이야기하며 걸어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 40,
+      "happiness_gain": 30,
+      "accept_label": "함께 길 나서기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "한참을 걸으며 서로의 바람을 들었다. 돌아오는 발걸음은 무거워도 앞으로의 날들이 기대된다."
+      ],
+      "decline_result": [
+        "오늘은 길을 나서지 않고 다음에 걸을 시간을 정했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_058",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "작은 모임의 진행자",
+      "description": "직접 모임을 준비하고 진행하며 함께하는 시간을 만듭니다.",
+      "dialogue": [
+        "이번 모임은 내가 준비해보면 어떨까? 사람들을 모아 즐거운 시간을 만들어보고 싶다."
+      ],
+      "ap_cost": 10,
+      "stress_increase": 40,
+      "happiness_gain": 30,
+      "accept_label": "모임 진행하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "준비부터 정리까지 정신없이 움직였다. 모두 즐겁게 돌아가는 모습을 보니 힘든 보람이 있었다."
+      ],
+      "decline_result": [
+        "이번에는 진행을 맡지 않고 다음 기회를 기다리기로 했다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_059",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "끝까지 해내기",
+      "description": "오래 미뤄왔던 개인적인 과제를 하루 동안 집중해 마무리합니다.",
+      "dialogue": [
+        "계속 마음에 걸리던 일이 하나 있다. 오늘은 시간을 들여 끝내볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 40,
+      "happiness_gain": 30,
+      "accept_label": "끝까지 해보기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "몇 번이나 쉬어가며 결국 마지막까지 해냈다. 미뤄둔 일을 마쳤다는 후련함이 크다."
+      ],
+      "decline_result": [
+        "무리해서 끝내지 않고 해야 할 일을 다시 정리해 두었다."
+      ]
+    },
+    {
+      "id": "HAPPINESS_060",
+      "start_turn": 51,
+      "end_turn": 59,
+      "title": "기억에 남을 하루",
+      "description": "친구들과 하루를 온전히 함께 보내며 새로운 추억을 만듭니다.",
+      "dialogue": [
+        "친구들과 하루 종일 함께할 수 있는 날이 생겼다. 오늘은 좋은 기억을 만들어볼까?"
+      ],
+      "ap_cost": 10,
+      "stress_increase": 40,
+      "happiness_gain": 30,
+      "accept_label": "하루 함께하기",
+      "decline_label": "다음에 하기",
+      "accept_result": [
+        "많이 걷고 웃고 이야기하며 하루를 보냈다. 피곤하지만 오래 꺼내볼 추억이 하나 늘었다."
+      ],
+      "decline_result": [
+        "오늘은 함께하지 못하지만 다음에는 시간을 맞추기로 했다."
+      ]
+    }
+  ]
+}
