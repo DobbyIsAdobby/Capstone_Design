@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 // enum으로 자산 분류
@@ -19,10 +21,34 @@ public class AssetManager : Singleton<AssetManager>
 
     [Header("Asset Balances")]
     public long bankBalance = 0; //은행 예치금
-    public long stockBalance = 0; //주식 평가 금액
-    public long leverageBalance = 0; //레버리지 평가 금액
-    public long stockInverseBalance = 0; //주식 인버스 평가 금액
-    public long leverageInverseBalance = 0; //레버리지 인버스 평가 금액
+    // 첫 번째 인덱스: 종목 0~3
+    // 두 번째 인덱스: 상품 0~3
+    // 상품 인덱스는 AssetType에서 은행을 제외한 번호.
+    private long[,] holdings = new long[4, 4];
+
+    // 기존 HUD와 GameManager가 읽는 이름을 유지.
+    // 각 값은 네 종목의 합계.
+    public long stockBalance => GetBalance(AssetType.Stock); // 주식 평가액 합산
+    public long leverageBalance => GetBalance(AssetType.Leverage); // 레버리지 평가액 합산
+    public long stockInverseBalance => GetBalance(AssetType.StockInverse); // 주식 인버스 평가액 합산
+    public long leverageInverseBalance => GetBalance(AssetType.LeverageInverse); // 레버리지 인버스 평가액 합산
+
+    private static int GetProductIndex(AssetType type)
+    {
+        switch (type)
+        {
+            case AssetType.Stock:
+                return 0;
+            case AssetType.Leverage:
+                return 1;
+            case AssetType.StockInverse:
+                return 2;
+            case AssetType.LeverageInverse:
+                return 3;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(type));
+        }
+    }
 
     /* -- ONNX 모델 추가로 인해 더이상 사용하지 않는 인스펙터 값
     [Header("Temporary Return Rates (RNG)")]
@@ -60,20 +86,33 @@ public class AssetManager : Singleton<AssetManager>
     public void CalculateMonthlyReturns()
     {
         int turn = GameManager.Instance.currentMonth;
+        DataManager data = DataManager.Instance;
 
-        // 보유 여부와 관계없이 해당 턴의 확정된 시장 수익률을 DataManager에서 가져와 조회
-        MonthlyMarketRates rates = GetMonthlyMarketRates(turn);
+        // 일부 종목만 정산된 상태로 실패하지 않도록 새 배열에서 모든 계산을 완료한 뒤 반영.
+        long[,] nextHoldings = (long[,])holdings.Clone();
 
-        // 은행은 모델과 관계없이 기존 월 이율 유지함. - 추후 밸런싱 작업 이후 변경할 수 있음.
-        bankBalance = ApplyReturn(bankBalance, 0.003m);
+        long nextBankBalance = ApplyReturn(bankBalance, 0.003m);
 
-        // 각 상품의 보유 평가액에 해당 턴 수익률을 적용함
-        stockBalance = ApplyReturn(stockBalance, rates.Stock);
-        leverageBalance = ApplyReturn(leverageBalance, rates.Leverage);
+        for (int sectorIndex = 0; sectorIndex < MarketSectorUtility.SectorCount; sectorIndex++)
+        {
+            MarketSector sector = (MarketSector)sectorIndex;
 
-        stockInverseBalance = ApplyReturn(stockInverseBalance, rates.StockInverse);
+            if (data == null || !data.TryGetGeneratedMarketRates(sector, turn, out MonthlyMarketRates rates))
+            {
+                throw new InvalidOperationException($"{sector} {turn}턴 수익률이 없습니다.");
+            }
 
-        leverageInverseBalance = ApplyReturn(leverageInverseBalance, rates.LeverageInverse);
+            nextHoldings[sectorIndex, 0] = ApplyReturn(holdings[sectorIndex, 0], rates.Stock);
+
+            nextHoldings[sectorIndex, 1] = ApplyReturn(holdings[sectorIndex, 1], rates.Leverage);
+
+            nextHoldings[sectorIndex, 2] = ApplyReturn(holdings[sectorIndex, 2], rates.StockInverse);
+
+            nextHoldings[sectorIndex, 3] = ApplyReturn(holdings[sectorIndex, 3], rates.LeverageInverse);
+        }
+
+        holdings = nextHoldings;
+        bankBalance = nextBankBalance;
     }
 
     /// <summary>
@@ -104,45 +143,73 @@ public class AssetManager : Singleton<AssetManager>
     }
 
     /// <summary>
-    /// 자산에 따른 금액 반환을 위한 함수
+    /// HUD용 조회. 상품 유형에 해당하는 네 종목을 합산.
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
     public long GetBalance(AssetType type)
     {
-        switch (type)
-        {
-            case AssetType.Bank:
-                return bankBalance;
-            case AssetType.Stock:
-                return stockBalance;
-            case AssetType.Leverage:
-                return leverageBalance;
-            case AssetType.StockInverse:
-                return stockInverseBalance;
-            case AssetType.LeverageInverse:
-                return leverageInverseBalance;
+        if (type == AssetType.Bank)
+            return bankBalance;
 
-            default:
-                return 0;
+        int productIndex = GetProductIndex(type);
+        long total = 0;
+
+        for (int sectorIndex = 0; sectorIndex < MarketSectorUtility.SectorCount; sectorIndex++)
+        {
+            total = checked(total + holdings[sectorIndex, productIndex]);
         }
+
+        return total;
+    }
+
+    /// <summary>
+    /// 거래 패널용 조회. 선택한 종목의 보유액만 반환.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="sector"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    public long GetBalance(AssetType type, MarketSector sector)
+    {
+        if (type == AssetType.Bank)
+            return bankBalance;
+
+        if (!MarketSectorUtility.IsValid(sector))
+            throw new ArgumentOutOfRangeException(nameof(sector));
+
+        return holdings[(int)sector, GetProductIndex(type)];
     }
 
     /// <summary>
     /// 거래를 진행할때 호출할 함수
     /// </summary>
     /// <param name="type"></param>
+    /// <param name="sector"></param>
     /// <param name="isBuying"></param>
     /// <param name="amount"></param>
     /// <param name="message"></param>
     /// <returns></returns>
-    public bool TryTrade(AssetType type, bool isBuying, long amount, out string message) //bool 을 반환하는 이유 : 패널에서 거래 성공/실패를 구분하기 위함.
+    public bool TryTrade(AssetType type, MarketSector sector, bool isBuying, long amount, out string message) //bool 을 반환하는 이유 : 패널에서 거래 성공/실패를 구분하기 위함.
     {
         GameManager game = GameManager.Instance;
+
+        // Spotlight 튜토리얼 시스템은 거래 방법 설명까지만 진행.
+        if (SpotlightTutorialManager.Instance != null && SpotlightTutorialManager.Instance.IsBusy)
+        {
+            message = "안내를 마친 뒤 이용해주세요.";
+            return false;
+        }
 
         if (!game.CanAct)
         {
             message = "지금은 거래가 불가능합니다.";
+            return false;
+        }
+
+        if (type != AssetType.Bank && !MarketSectorUtility.IsValid(sector))
+        {
+            message = "지원하지 않는 종목입니다.";
             return false;
         }
 
@@ -167,7 +234,8 @@ public class AssetManager : Singleton<AssetManager>
         }
 
         // 참일 경우 availableCash 변수 반환, 거짓일 경우 GetBalance 내 각 타입에 맞는 변수 반환.
-        long limit = isBuying ? game.availableCash : GetBalance(type);
+        // 매도 한도는 상품군 전체가 아니라 선택 종목의 보유액.
+        long limit = isBuying ? game.availableCash : GetBalance(type, sector);
 
         if(amount > limit)
         {
@@ -178,23 +246,16 @@ public class AssetManager : Singleton<AssetManager>
         // 매수(참) / 매도(거짓) 으로 자산 변경
         long assetChange = isBuying ? amount : -amount;
 
-        switch (type)
+        if (type == AssetType.Bank)
         {
-            case AssetType.Bank:
-                bankBalance += assetChange;
-                break;
-            case AssetType.Stock:
-                stockBalance += assetChange;
-                break;
-            case AssetType.Leverage:
-                leverageBalance += assetChange;
-                break;
-            case AssetType.StockInverse:
-                stockInverseBalance += assetChange;
-                break;
-            case AssetType.LeverageInverse:
-                leverageInverseBalance += assetChange;
-                break;
+            bankBalance = checked(bankBalance + assetChange);
+        }
+        else
+        {
+            int sectorIndex = (int)sector;
+            int productIndex = GetProductIndex(type);
+
+            holdings[sectorIndex, productIndex] = checked(holdings[sectorIndex, productIndex] + assetChange);
         }
 
         game.availableCash -= assetChange;
@@ -206,7 +267,27 @@ public class AssetManager : Singleton<AssetManager>
             UIManager.Instance.RefreshUI();
         }
 
+        // 은행 예금과 매도는 투자 매수 안내 대상에서 제외.
+        if (isBuying && type != AssetType.Bank)
+        {
+            SpotlightTutorialManager.Instance?.Notify("InvestmentPurchased");
+        }
+
         return true;
+    }
+
+    /// <summary>
+    /// 종목을 전달하지 않는 기존 호출은 기술주로 처리.
+    /// 신규 거래 패널에서는 반드시 종목을 전달하는 메서드를 사용.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="isBuying"></param>
+    /// <param name="amount"></param>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    public bool TryTrade(AssetType type, bool isBuying, long amount, out string message)
+    {
+        return TryTrade(type, MarketSector.Technology, isBuying, amount, out message);
     }
 
     /// <summary>
@@ -276,6 +357,75 @@ public class AssetManager : Singleton<AssetManager>
     // 아래 메서드에 대한 설명은 여기에다가만 달거임.. 궁금하면 이것을 보세요..
 
     /// <summary>
+    /// 투자 종목 추가에 따른 CaptureSave 보완용 메서드
+    /// </summary>
+    /// <returns></returns>
+    private List<SectorHoldingSaveData> CaptureHoldings()
+    {
+        var rows = new List<SectorHoldingSaveData>();
+
+        for (int sectorIndex = 0; sectorIndex < MarketSectorUtility.SectorCount; sectorIndex++)
+        {
+            for (int productIndex = 0; productIndex < 4; productIndex++)
+            {
+                // 잔액이 0인 항목도 저장해 항상 16개를 유지.
+                rows.Add(new SectorHoldingSaveData
+                {
+                    sector = (MarketSector)sectorIndex,
+                    assetType = (AssetType)(productIndex + 1),
+                    balance = holdings[sectorIndex, productIndex]
+                });
+            }
+        }
+
+        return rows;
+    }
+
+    /// <summary>
+    /// 16개 보유 내역과 상품별 합계가 일치하는지 검사.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    /// <exception cref="FormatException"></exception>
+    public static long[,] DecodeHoldings(AssetSaveData data)
+    {
+        if (data == null || data.bankBalance < 0 || data.holdings == null || data.holdings.Count != 16)
+        {
+            throw new FormatException("종목별 보유 내역이 올바르지 않습니다.");
+        }
+
+        var restored = new long[4, 4];
+        var occupied = new bool[4, 4];
+        var totals = new long[4];
+
+        foreach (SectorHoldingSaveData row in data.holdings)
+        {
+            if (row == null || !MarketSectorUtility.IsValid(row.sector) || row.balance < 0 || (int)row.assetType < (int)AssetType.Stock || (int)row.assetType > (int)AssetType.LeverageInverse)
+            {
+                throw new FormatException("잘못된 종목별 보유 기록입니다.");
+            }
+
+            int sectorIndex = (int)row.sector;
+            int productIndex = GetProductIndex(row.assetType);
+
+            if (occupied[sectorIndex, productIndex])
+                throw new FormatException("종목별 보유 기록이 중복되었습니다.");
+
+            occupied[sectorIndex, productIndex] = true;
+            restored[sectorIndex, productIndex] = row.balance;
+
+            totals[productIndex] = checked(totals[productIndex] + row.balance);
+        }
+
+        if (totals[0] != data.stockBalance || totals[1] != data.leverageBalance || totals[2] != data.stockInverseBalance || totals[3] != data.leverageInverseBalance)
+        {
+            throw new FormatException("종목별 보유액과 상품 합계가 다릅니다.");
+        }
+
+        return restored;
+    }
+
+    /// <summary>
     /// 현재 상태를 파일용 데이터로 복사함.
     /// </summary>
     /// <returns></returns>
@@ -292,7 +442,9 @@ public class AssetManager : Singleton<AssetManager>
             // 현재 잔액과 직전 정산 손익을 함께 저장.
             lastBankProfit = LastBankProfit,
             lastStockGroupProfit = LastStockGroupProfit,
-            lastLeverageGroupProfit = LastLeverageGroupProfit
+            lastLeverageGroupProfit = LastLeverageGroupProfit,
+
+            holdings = CaptureHoldings(),  
         };
     }
 
@@ -302,12 +454,11 @@ public class AssetManager : Singleton<AssetManager>
     /// <param name="data"></param>
     public void RestoreSave(AssetSaveData data)
     {
-        // 매수, 매도 함수를 호출하지 않고 잔액만 복원
+        // 전체를 검증한 뒤 상태를 변경
+        long[,] restored = DecodeHoldings(data);
+
+        holdings = restored;
         bankBalance = data.bankBalance;
-        stockBalance = data.stockBalance;
-        leverageBalance = data.leverageBalance;
-        stockInverseBalance = data.stockInverseBalance;
-        leverageInverseBalance = data.leverageInverseBalance;
 
         LastBankProfit = data.lastBankProfit;
         LastStockGroupProfit = data.lastStockGroupProfit;

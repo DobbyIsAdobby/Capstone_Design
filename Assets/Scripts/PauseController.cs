@@ -10,6 +10,11 @@ public class PauseController : Singleton<PauseController>
 
     public bool TryPause()
     {
+        if (SpotlightTutorialManager.Instance != null && !SpotlightTutorialManager.Instance.CanSaveNow)
+        {
+            return false;
+        }
+
         // 중복 컴포넌트나 비활성 Manager는 작동하지 않음.
         if (Instance != this || !isActiveAndEnabled)
             return false;

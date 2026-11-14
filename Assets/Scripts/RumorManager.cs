@@ -31,6 +31,7 @@ public class RumorManager : Singleton<RumorManager>
     function Zone
     */
 
+    /* -- 더 이상 각 상품을 직접 추첨하지 않기에 사용하지 않음.
     private static readonly AssetType[] TargetAssets =
     {
         AssetType.Stock,
@@ -38,6 +39,52 @@ public class RumorManager : Singleton<RumorManager>
         AssetType.StockInverse,
         AssetType.LeverageInverse
     };
+    */
+
+    /// <summary>
+    /// 해당 턴 이벤트의 영향을 받지 않는 종목만 반환.
+    /// 유료 정보와 무료 정보가 같은 후보를 사용.
+    /// </summary>
+    /// <param name="turn"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    private List<MarketSector> GetAvailableSectors(int turn)
+    {
+        EventManager events = EventManager.Instance;
+
+        if (events == null)
+            throw new InvalidOperationException("EventManager가 없습니다.");
+
+        var result = new List<MarketSector>();
+
+        for (int i = 0; i < MarketSectorUtility.SectorCount; i++)
+        {
+            MarketSector sector = (MarketSector)i;
+
+            if (!events.IsSectorAffected(turn, sector))
+                result.Add(sector);
+        }
+
+        return result;
+    }
+
+    private bool HasRates(List<MarketSector> sectors, int targetTurn)
+    {
+        DataManager data = DataManager.Instance;
+
+        if (data == null)
+            return false;
+
+        foreach (MarketSector sector in sectors)
+        {
+            if (!data.TryGetGeneratedMarketRates(sector, targetTurn, out _))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     // 공개된 등급만 저장
     // 이 Dictionary에 있으면 해당 턴 재구매는 불가능함
@@ -70,38 +117,40 @@ public class RumorManager : Singleton<RumorManager>
         reveals.Clear();
         usedTexts.Clear();
 
-        // 시장 생성 RNG와 분리
-        // 정보를 구매해도 이미 생성된 시장에는 영향이 없음
         int seed = unchecked(data.MarketSeed ^ (informationTurn * 397) ^ 0x5317);
 
         random = new SaveRandom(seed);
 
-        // 정보 기록 초기화와 난수 준비는 먼저 수행.
-        // 이후 6턴 전이라면 무료 정보 공개를 생략.
         if (!TutorialManager.IsUnlocked(TutorialFeature.Information))
-        {
             return;
-        }
 
-        // 이전 턴 정보 초기화와 난수 준비까지는 정상적으로 수행.
-        // 시장 이벤트 턴에는 긴급속보로 방향을 알려주므로, 휴대폰 보유 혜택을 포함해 정보를 생성하지 않음.
-        if (EventManager.Instance != null && EventManager.Instance.IsInformationBlocked(informationTurn))
-        {
-            return;
-        }
-
-        // 마지막 턴에도 정보 제공
         if (game.IsGameOver || informationTurn < 1 || informationTurn > game.maxMonth)
+        {
+            return;
+        }
+
+        List<MarketSector> candidates = GetAvailableSectors(informationTurn);
+
+        // 전체 시장 이벤트라면 무료 정보도 생성하지 않아야함
+        if (candidates.Count == 0)
             return;
 
-        if (data.TryGetInformation(InformationGrade.Low, out InformationItemData low) &&
-            ShopManager.Instance != null &&
-            ShopManager.Instance.HasFreeLowInformation(low.FreeWithItem, informationTurn) &&
-            data.TryGetGeneratedMarketRates(informationTurn + low.LookaheadTurns, out _))
+        if (!data.TryGetInformation(InformationGrade.Low, out InformationItemData low))
         {
-            InformationReveal reveal = CreateReveal(low, true);
-            StoreReveal(InformationGrade.Low, reveal);
+            return;
         }
+
+        if (ShopManager.Instance == null || !ShopManager.Instance.HasFreeLowInformation(low.FreeWithItem, informationTurn))
+        {
+            return;
+        }
+
+        if (!HasRates(candidates, informationTurn + low.LookaheadTurns))
+            return;
+
+        // 현금과 AP를 사용하지 않는 무료 공개 경로
+        InformationReveal reveal = CreateReveal(low, true);
+        StoreReveal(InformationGrade.Low, reveal);
     }
 
     public bool TryGetReveal(InformationGrade grade, out InformationReveal reveal)
@@ -161,7 +210,7 @@ public class RumorManager : Singleton<RumorManager>
         // 등급과 무관하게 동일하게 적용.
         if (EventManager.Instance != null && EventManager.Instance.IsInformationBlocked(game.currentMonth))
         {
-            reason = "이번 달은 구매할 수 없습니다.";
+            reason = "이번 달에는 제공 가능한 정보가 없습니다.";
             return false;
         }
 
@@ -189,7 +238,15 @@ public class RumorManager : Singleton<RumorManager>
             return false;
         }
 
-        if (!data.TryGetGeneratedMarketRates(game.currentMonth + item.LookaheadTurns, out _))
+        List<MarketSector> candidates = GetAvailableSectors(game.currentMonth);
+
+        if (candidates.Count == 0)
+        {
+            reason = "이번 달에는 제공 가능한 정보가 없습니다.";
+            return false;
+        }
+
+        if (!HasRates(candidates, game.currentMonth + item.LookaheadTurns))
         {
             reason = "현재 턴 시장 데이터가 없습니다.";
             return false;
@@ -223,6 +280,13 @@ public class RumorManager : Singleton<RumorManager>
     {
         GameManager game = GameManager.Instance;
 
+        // Spotlight 튜토리얼 시스템은 거래 방법 설명까지만 진행.
+        if (SpotlightTutorialManager.Instance != null && SpotlightTutorialManager.Instance.IsBusy)
+        {
+            message = "안내를 마친 뒤 이용해주세요.";
+            return false;
+        }
+
         if (game == null || requestedTurn != game.currentMonth)
         {
             message = "턴이 변경되었습니다. 정보를 다시 선택하세요.";
@@ -237,6 +301,9 @@ public class RumorManager : Singleton<RumorManager>
         // 결제 직전에 현재 턴 가격을 다시 계산.
         long price = GetPurchasePrice(item);
 
+        // 결과 생성 또는 AP 결제가 실패하면 추첨 상태를 되돌림
+        long randomStateBefore = random.State;
+
         InformationReveal reveal;
 
         // 결과 생성에 실패하면 돈을 차감하지 않음
@@ -246,13 +313,18 @@ public class RumorManager : Singleton<RumorManager>
         }
         catch (Exception exception)
         {
+            random.Restore(randomStateBefore);
+
             Debug.LogError(exception, this);
             message = "정보 생성에 실패했습니다. 현금은 차감되지 않았습니다.";
             return false;
         }
 
         if (!game.TrySpendAP(GetAPCost(grade), out message))
+        {
+            random.Restore(randomStateBefore);
             return false;
+        }
 
         // 먼저 공개 상태를 기록하여 중복 호출 시 재구매를 차단
         StoreReveal(grade, reveal);
@@ -264,6 +336,9 @@ public class RumorManager : Singleton<RumorManager>
             UIManager.Instance.RefreshUI();
 
         message = $"{item.Name}가 공개되었습니다.";
+
+        SpotlightTutorialManager.Instance?.Notify("InformationPurchased");
+        
         return true;
     }
 
@@ -271,55 +346,53 @@ public class RumorManager : Singleton<RumorManager>
     {
         int targetTurn = informationTurn + item.LookaheadTurns;
 
-        if (!DataManager.Instance.TryGetGeneratedMarketRates(targetTurn, out MonthlyMarketRates rates))
+        List<MarketSector> candidates = GetAvailableSectors(targetTurn);
+
+        if (candidates.Count == 0)
         {
-            throw new InvalidOperationException("대상 턴 시장 데이터가 없습니다.");
+            throw new InvalidOperationException("이번 달에는 제공 가능한 정보가 없습니다.");
         }
 
-        // Next(4)는 0~3 중 하나를 선택하므로 각 상품 확률은 25%
-        AssetType asset = TargetAssets[random.Next(TargetAssets.Length)];
+        // 남은 종목 중 균등하게 선택
+        MarketSector sector = candidates[random.Next(candidates.Count)];
 
-        decimal actualRate;
+        // 일반형과 인버스형을 각각 50%로 선택
+        InformationExposure exposure = (InformationExposure)random.Next(2);
 
-        switch (asset)
+        if (!DataManager.Instance.TryGetGeneratedMarketRates(sector, targetTurn, out MonthlyMarketRates rates))
         {
-            case AssetType.Stock:
-                actualRate = rates.Stock;
-                break;
-            case AssetType.Leverage:
-                actualRate = rates.Leverage;
-                break;
-            case AssetType.StockInverse:
-                actualRate = rates.StockInverse;
-                break;
-            default:
-                actualRate = rates.LeverageInverse;
-                break;
+            throw new InvalidOperationException("정보 대상 시장 데이터가 없습니다.");
         }
 
-        int actualDirection = actualRate > 0 ? 1 : actualRate < 0 ? -1 : 0;
+        // 같은 유형 안에서는 배율만 다르고 방향이 같으므로 일반형은 Stock, 인버스형은 StockInverse를 대표값으로 사용.
+        decimal actualRate = exposure == InformationExposure.Normal ? rates.Stock : rates.StockInverse;
+
+        int actualDirection = actualRate > 0m ? 1 : actualRate < 0m ? -1 : 0;
 
         int presentedDirection = actualDirection;
 
-        // 0이면 정확도와 관계없이 변동 없음으로 안내
-        // 그 외에는 정확도 확률로 실제 방향 또는 반대 방향을 선택
+        // JSON 등급별 정확도
         if (actualDirection != 0 && random.NextDouble() >= item.Accuracy)
         {
             presentedDirection = -actualDirection;
         }
 
-        var direction = (InformationDirection)presentedDirection;
+        InformationDirection direction = (InformationDirection)presentedDirection;
 
-        string body = InformationTextProvider.Create(asset, direction, targetTurn, random, usedTexts);
+        string title = InformationTextProvider.GetTitle(sector, exposure);
 
-        return new InformationReveal(targetTurn, asset, direction, body, isFree);
+        string body = InformationTextProvider.Create(sector, exposure, direction, random, usedTexts);
+
+        return new InformationReveal(targetTurn, sector, exposure, direction, title, body, isFree);
     }
 
     private void StoreReveal(InformationGrade grade, InformationReveal reveal)
     {
         // 이제 이곳에는 이번 턴에 공개한 결과만 보관함.
         reveals.Add(grade, reveal);
-        //usedTexts.Add(reveal.Body);
+        
+        // 결제 또는 무료 공개가 성공한 뒤에만 사용 처리.
+        usedTexts.Add(reveal.Body);
     }
 
     /// <summary>
@@ -366,8 +439,10 @@ public class RumorManager : Singleton<RumorManager>
             {
                 grade = pair.Key,
                 targetTurn = reveal.TargetTurn,
-                asset = reveal.Asset,
+                sector = reveal.Sector,
+                exposure = reveal.Exposure,
                 direction = reveal.Direction,
+                title = reveal.Title,
                 body = reveal.Body,
                 isFree = reveal.IsFree
             });
@@ -388,8 +463,10 @@ public class RumorManager : Singleton<RumorManager>
                 saved.grade,
                 new InformationReveal(
                     saved.targetTurn,
-                    saved.asset,
+                    saved.sector,
+                    saved.exposure,
                     saved.direction,
+                    saved.title,
                     saved.body,
                     saved.isFree));
         }

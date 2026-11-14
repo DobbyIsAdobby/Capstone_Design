@@ -42,7 +42,8 @@ public class SaveDataValidator
             data.pendingEvent != null &&
             data.wealthTier != null &&
             data.realEstate != null &&
-            data.happiness != null,
+            data.happiness != null &&
+            data.spotlightTutorial != null,
             "필수 저장 항목이 누락되었습니다.");
 
         PlayerSaveData player = data.player;
@@ -78,6 +79,9 @@ public class SaveDataValidator
         }
 
         AssetSaveData assets = data.assets;
+
+        // 종목별 실제 보유액과 저장된 합계가 일치하는지 검사.
+        AssetManager.DecodeHoldings(assets);
 
         Require(
             assets.bankBalance >= 0 &&
@@ -144,27 +148,8 @@ public class SaveDataValidator
 
     private static void ValidateMarket(MarketSaveData market)
     {
-        Require(market.turns != null && market.turns.Count == 60, "60턴 시장 데이터가 필요합니다.");
-
-        var turns = new HashSet<int>();
-
-        foreach (MarketTurnSaveData row in market.turns)
-        {
-            Require(
-                row != null &&
-                row.turn >= 1 &&
-                row.turn <= 60 &&
-                turns.Add(row.turn),
-                "시장 턴이 중복되거나 범위를 벗어났습니다.");
-
-            var rates = new MonthlyMarketRates(
-                SaveNumber.Read(row.stock),
-                SaveNumber.Read(row.leverage),
-                SaveNumber.Read(row.stockInverse),
-                SaveNumber.Read(row.leverageInverse));
-
-            Require(MarketReturnRules.IsValid(rates), "저장된 시장 수익률이 규칙과 일치하지 않습니다.");
-        }
+        // 시장 복원과 동일한 규칙으로 240개 기록을 검증.
+        DataManager.DecodeMarketSave(market);
     }
 
     private static void ValidateShop(ShopSaveData shop, int turn)
@@ -348,10 +333,10 @@ public class SaveDataValidator
         return debt;
     }
 
-    private static void ValidateInformation(
-        InformationSaveData information, int turn)
+    private static void ValidateInformation(InformationSaveData information, int turn)
     {
         Require(
+            information != null &&
             information.informationTurn == turn &&
             ValidRandom(information.randomState) &&
             information.reveals != null &&
@@ -359,6 +344,7 @@ public class SaveDataValidator
             "정보 시스템 기록이 올바르지 않습니다.");
 
         var grades = new HashSet<InformationGrade>();
+        var revealedTexts = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (InformationRevealSaveData reveal in information.reveals)
         {
@@ -367,26 +353,33 @@ public class SaveDataValidator
                 Enum.IsDefined(typeof(InformationGrade), reveal.grade) &&
                 grades.Add(reveal.grade) &&
                 reveal.targetTurn == turn &&
+                reveal.targetTurn >= 1 &&
                 reveal.targetTurn <= 60 &&
+                MarketSectorUtility.IsValid(reveal.sector) &&
+                Enum.IsDefined(typeof(InformationExposure), reveal.exposure) &&
                 Enum.IsDefined(typeof(InformationDirection), reveal.direction) &&
-                !string.IsNullOrWhiteSpace(reveal.body),
+                !string.IsNullOrWhiteSpace(reveal.title) &&
+                !string.IsNullOrWhiteSpace(reveal.body) &&
+                revealedTexts.Add(reveal.body),
                 "공개 정보 기록이 올바르지 않습니다.");
 
             Require(
-                reveal.asset == AssetType.Stock ||
-                reveal.asset == AssetType.Leverage ||
-                reveal.asset == AssetType.StockInverse ||
-                reveal.asset == AssetType.LeverageInverse,
-                "정보 대상 자산이 올바르지 않습니다.");
-
-            Require(!reveal.isFree || reveal.grade == InformationGrade.Low, "무료 정보 등급이 올바르지 않습니다.");
+                !reveal.isFree || reveal.grade == InformationGrade.Low,
+                "무료 공개는 하급 정보만 가능합니다.");
         }
 
-        var texts = new HashSet<string>(StringComparer.Ordinal);
+        var used = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (string text in information.usedTexts)
         {
-            Require(!string.IsNullOrWhiteSpace(text) && texts.Add(text), "사용한 대사 기록이 올바르지 않습니다.");
+            Require(
+                !string.IsNullOrWhiteSpace(text) && used.Add(text),
+                "사용한 정보 문장이 비어 있거나 중복되었습니다.");
         }
+
+        // 공개한 원문만 사용 기록에 존재해야 함
+        Require(
+            used.SetEquals(revealedTexts),
+            "공개 정보와 사용한 문장 기록이 일치하지 않습니다.");
     }
 }

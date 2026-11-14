@@ -10,9 +10,25 @@ using Unity.InferenceEngine;
 /// </summary>
 public class MarketGenerator : MonoBehaviour
 {
-    [Header("Model Package")]
-    [SerializeField] private ModelAsset modelAsset;
-    [SerializeField] private TextAsset configJson;
+    [Serializable]
+    public sealed class SectorModelBinding
+    {
+        public MarketSector sector;
+        public ModelAsset modelAsset;
+        public TextAsset configJson;
+    }
+
+    [Header("Model Packages")]
+    [SerializeField] private SectorModelBinding[] modelPackages;
+
+    // 종목 번호 순으로 생성.
+    private SectorModelBinding[] orderedPackages;
+    private MarketModelConfig[] orderedConfigs;
+
+    private int currentSectorIndex;
+    private int sectorTurnCount;
+
+    private MarketSector CurrentSector => (MarketSector)currentSectorIndex;
 
     [Header("Generation")]
     [Tooltip("한 프레임에서 생성할 거래일 수")]
@@ -85,71 +101,109 @@ public class MarketGenerator : MonoBehaviour
 
         SetProgress("시장을 준비하고 있습니다…");
 
-        try
+       try
         {
             dataManager = DataManager.Instance;
 
-            if (dataManager == null)
+            if (dataManager == null || dataManager.IsMarketReady)
+                throw new InvalidOperationException("시장 초기화 상태를 확인하세요.");
+
+            if (modelPackages == null || modelPackages.Length != MarketSectorUtility.SectorCount)
             {
-                throw new InvalidOperationException("DataManager가 없습니다.");
+                throw new InvalidOperationException("네 종목의 모델을 연결하세요.");
             }
 
-            if (dataManager.IsMarketReady)
+            orderedPackages = new SectorModelBinding[MarketSectorUtility.SectorCount];
+
+            orderedConfigs = new MarketModelConfig[MarketSectorUtility.SectorCount];
+
+            // 생성 전에 모든 설정 검사
+            foreach (SectorModelBinding binding in modelPackages)
             {
-                throw new InvalidOperationException("이번 플레이의 시장이 이미 등록되어 있습니다.");
+                if (binding == null || !MarketSectorUtility.IsValid(binding.sector) || binding.modelAsset == null || binding.configJson == null)
+                {
+                    throw new InvalidOperationException("모델 연결이 누락되었습니다.");
+                }
+
+                int index = (int)binding.sector;
+
+                if (orderedPackages[index] != null)
+                    throw new InvalidOperationException("종목 연결이 중복되었습니다.");
+
+                orderedPackages[index] = binding;
+                orderedConfigs[index] = MarketModelConfig.Parse(binding.configJson, binding.sector);
             }
 
-            config = MarketModelConfig.Parse(configJson);
-
-            // 테스트 중에는 고정 시드, 일반 플레이에서는 새 시드를 사용.
             Seed = useFixedSeed ? fixedSeed : Guid.NewGuid().GetHashCode();
 
-            // 시장을 생성하기 전에 이벤트가 발생할 턴부터 확정.
-            // 이후 월 수익률을 만들 때 이 일정을 참고함. - 미리 랜덤이벤트 턴을 확정지어야함.
-            // 그렇다고 해당 턴의 수익률을 모델이 생성하지 않는 것은 절대로 아님 - 교체하는 것임.
             EventManager events = EventManager.Instance;
 
             if (events == null || !events.IsConfigured)
-            {
-                throw new InvalidOperationException("EventManager의 이벤트 데이터와 UI 연결을 확인하세요.");
-            }
+                throw new InvalidOperationException("이벤트 설정을 확인하세요.");
 
+            // 이벤트 일정은 게임 전체에서 한 번만 생성.
             events.InitializeNewGame(Seed);
 
-            // 시장 생성 전용 난수 생성기(RNG).
-            // UnityEngine.Random을 사용하는 다른 시스템과 분리됨.
-            random = new System.Random(Seed);
+            results.Clear();
+            currentSectorIndex = 0;
 
-            // 같은 시장 시드에서 배율도 재현할 수 있도록 파생 시드를 사용함.
-            // 기존 모델용 random과는 별개임.
-            // 0x51A7B39D는 해시 알고리즘에서 주로 사용하는 고정 상수.
-            int multiplierSeed = unchecked(Seed ^ 0x51A7B39D);
-            multiplierRandom = new System.Random(multiplierSeed);
-
-            int window = config.generation.window_size;
-
-            history = new double[window];
-            normalizedHistory = new float[window];
-
-            double mean = config.normalization.return_mean;
-            double std = config.normalization.return_std;
-
-            // Python 모델 학습 코드 기반 로직
-            // rng.normal(RETURN_MEAN, RETURN_STD, 60).astype(np.float32)
-            for (int i = 0; i < window; i++)
-            {
-                history[i] = (float)(mean + std * NextStandardNormal());
-            }
-
-            runner = new MarketModelRunner(modelAsset, config);
+            StartCurrentSector();
             generating = true;
-
-            Debug.Log($"수익률 자동 생성 ONNX 모델 시장 생성 시작 / Seed={Seed}");
         }
         catch (Exception exception)
         {
             Fail(exception);
         }
+    }
+
+    /// <summary>
+    /// 현재 종목의 모델과 입력 이력을 준비.
+    /// 종목마다 입력 이력과 난수 흐름을 분리.
+    /// </summary>
+    private void StartCurrentSector()
+    {
+        // 이전 종목 모델의 실행 자원을 해제.
+        ReleaseModel();
+
+        SectorModelBinding binding = orderedPackages[currentSectorIndex];
+        config = orderedConfigs[currentSectorIndex];
+
+        // 기술주는 기존 시드 그대로. 다른 종목은 서로 다른 파생 시드를 사용.
+        int sectorSeed = unchecked(Seed + currentSectorIndex * 1000003);
+
+        // 시장 생성 전용 난수 생성기(RNG)
+        // UnityEngine.Random을 사용하는 다른 시스템과 분리됨.
+        random = new System.Random(sectorSeed);
+
+        // 같은 시장 시드에서 배율도 재현할 수 있도록 파생 시드를 사용함.
+        // 기존 모델용 random과는 별개임.
+        // 0x51A7B39D는 해시 알고리즘에서 주로 사용하는 고정 함수.
+        multiplierRandom = new System.Random(unchecked(sectorSeed ^ 0x51A7B39D));
+
+        generatedDays = 0;
+        daysInMonth = 0;
+        sectorTurnCount = 0;
+        monthlyGrowth = 1.0;
+
+        int window = config.generation.window_size;
+
+        history = new double[window];
+        normalizedHistory = new float[window];
+
+        double mean = config.normalization.return_mean;
+        double std = config.normalization.return_std;
+
+        // Python 모델 학습 코드 기반 로직
+        // rng.normal(RETURN_MEAN, RETURN_STD, 60).astype(np.float32)
+        for (int i = 0; i < window; i++)
+        {
+            history[i] = (float)(mean + std * NextStandardNormal());
+        }
+
+        runner = new MarketModelRunner(binding.modelAsset, config);
+
+        // 종목이 바뀌면 그 다음 종목의 진행도를 표시.
+        RefreshGenerationProgress();
     }
 
     private void Update()
@@ -159,35 +213,50 @@ public class MarketGenerator : MonoBehaviour
 
         try
         {
-            // Inspector 값이 잘못 변경되어도 최소 1일은 처리
+            // 한 프레임에 처리할 거래일 수.
             int count = Math.Max(1, daysPerFrame);
 
-            // 모든 추론을 프레임 별로 나눠서 하도록 함.
             for (int i = 0; i < count && generating; i++)
+            {
                 GenerateOneDay();
+            }
 
+            // 전체 생성이 끝났다면 CompleteGeneration() 호출.
             if (generating)
             {
-                int warmup = config.generation.warmup_days;
-
-                if (generatedDays < warmup)
-                {
-                    SetProgress(
-                        $"시장 준비 중… {generatedDays}/{warmup}일");
-                }
-                else
-                {
-                    SetProgress(
-                        $"시장 생성 중… " +
-                        $"{results.Count}/{MarketModelConfig.TurnCount}개월");
-                }
+                RefreshGenerationProgress();
             }
         }
         catch (Exception exception)
         {
-            // 모델 오류나 비정상 수치 발생 시 부분 생성 데이터는 공개하지 않음
             Fail(exception);
         }
+    }
+
+    /// <summary>
+    /// 현재 생성 중인 종목의 진행도만 표시.
+    /// results.Count는 네 종목 누적값이니 여기선 사용 X.
+    /// </summary>
+    private void RefreshGenerationProgress()
+    {
+        string sectorName =
+            MarketSectorUtility.GetName(CurrentSector);
+
+        int warmup = config.generation.warmup_days;
+
+        if (generatedDays < warmup)
+        {
+            SetProgress(
+                $"{sectorName} 준비 중… {generatedDays}/{warmup}일");
+
+            return;
+        }
+
+        // sectorTurnCount는 완성된 개수.
+        // 현재 생성 중인 턴은 완성된 개수 + 1.
+        int generatingTurn = Math.Min(sectorTurnCount + 1, MarketModelConfig.TurnCount);
+
+        SetProgress($"{sectorName} 생성 중… " + $"{generatingTurn}/{MarketModelConfig.TurnCount}개월");
     }
 
     /// <summary>
@@ -257,30 +326,34 @@ public class MarketGenerator : MonoBehaviour
             throw new InvalidOperationException("월별 주식 수익률이 -100% 이하입니다.");
         }
 
-        int turn = results.Count + 1;
+        // 현재 종목에서 생성한 턴 수 사용.
+        int turn = sectorTurnCount + 1;
 
         // 9. 하나의 월 수익률에서 네 상품의 수익률로 변경. - 너무 단순하여 상품별 랜덤 배율을 적용하도록 재구성함.
         // 주식 r / 레버리지 2r / 주식 인버스 -r / 레버리지 인버스 -2r
         //results.Add(turn, new MonthlyMarketRates(r, 2m * r, -r, -2m * r));
 
         // 일반 턴: 모델의 월 수익률 r 사용.
-        // 이벤트 턴: JSON의 tech_return으로 교체.
-        decimal finalTechReturn = EventManager.Instance.GetTechReturn(turn, r);
+        // 개별 이벤트는 해당 종목만, 전체 이벤트는 각 종목에 지정된 값으로 교체.
+        decimal finalReturn = EventManager.Instance.GetMarketReturn(CurrentSector, turn, r);
 
         // 확정한 TECH 수익률에 상품별 배율을 적용.
         // 배율은 이 시점에 한 번만 추출하고 저장함.
-        MonthlyMarketRates rates = MarketReturnRules.Create(finalTechReturn, multiplierRandom);
+        MonthlyMarketRates rates = MarketReturnRules.Create(finalReturn, multiplierRandom);
+
+        int key = MarketSectorUtility.GetMarketKey(CurrentSector, turn);
 
         // 확정한 수익률 보관
         // 정보 열람이나 결산 시점에는 배율을 다시 추출하지 않음.
-        results.Add(turn, rates);
+        results.Add(key, rates);
 
         // 다음 달 복리 계산을 위해 월 단위 누적값만 초기화
         // 최근 60일 history는 그대로 이어서 사용
+        sectorTurnCount++;
         daysInMonth = 0;
         monthlyGrowth = 1.0;
 
-        if (results.Count == MarketModelConfig.TurnCount)
+        if (sectorTurnCount == MarketModelConfig.TurnCount)
             CompleteGeneration();
     }
 
@@ -304,6 +377,14 @@ public class MarketGenerator : MonoBehaviour
     /// </summary>
     private void CompleteGeneration()
     {
+        // 현재 종목을 마쳤으면 다음 종목을 생성.
+        if (currentSectorIndex + 1 < MarketSectorUtility.SectorCount)
+        {
+            currentSectorIndex++;
+            StartCurrentSector();
+            return;
+        }
+
         dataManager.RegisterGeneratedMarket(results, Seed);
 
         generating = false;
@@ -313,7 +394,7 @@ public class MarketGenerator : MonoBehaviour
         // 이후에는 저장된 시장만 조회하므로 모델 실행 자원이 필요 없음
         ReleaseModel();
 
-        SetProgress("시장 생성 완료");
+        SetProgress("전체 시장 생성 완료");
 
         // 스토리가 끝나기 전에 패널이 닫히면 안됨.
         /*

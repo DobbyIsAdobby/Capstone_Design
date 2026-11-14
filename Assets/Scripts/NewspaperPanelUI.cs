@@ -73,10 +73,24 @@ public class NewspaperPanelUI : MonoBehaviour
         onContinue = completed;
         readyToContinue = true;
         continueButton.interactable = true;
+
+        // 동일 패널을 부동산, 물가 신문도 사용하니 경제 소식일 때만 최초 경제 신문 안내를 요청.
+        if (sectionTitle == "경제 소식")
+        {
+            SpotlightTutorialManager.Instance?.Notify("EconomicNewspaperOpened");
+        }
     }
 
     private void OnClickContinue()
     {
+        // 최초 신문 안내가 대기 중이거나 진행 중이면 기사 화면이 먼저 넘어가지 않도록 함
+        SpotlightTutorialManager spotlight = SpotlightTutorialManager.Instance;
+
+        if (spotlight != null && !spotlight.CanAdvanceNewspaper)
+        {
+            return;
+        }
+
         if (!readyToContinue)
             return;
 

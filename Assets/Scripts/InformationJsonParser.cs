@@ -12,6 +12,8 @@ public static class InformationJsonParser
     private sealed class Root
     {
         public Row[] information_items;
+        public int version;
+        public SelectionRules selection_rules;
     }
 
     /// <summary>
@@ -48,6 +50,26 @@ public static class InformationJsonParser
 
         if (root?.information_items == null)
             throw new FormatException("information_items가 없습니다.");
+
+        SelectionRules rules = root.selection_rules;
+
+        if (root.version != 2 ||
+            rules == null ||
+            rules.sector_selection != "UNIFORM_AVAILABLE" ||
+            rules.exposure_selection != "UNIFORM" ||
+            rules.exposure_types == null ||
+            rules.exposure_types.Length != 2 ||
+            Array.IndexOf(rules.exposure_types, "NORMAL") < 0 ||
+            Array.IndexOf(rules.exposure_types, "INVERSE") < 0 ||
+            rules.event_policy != "EXCLUDE_AFFECTED_SECTORS" ||
+            rules.no_available_sector_policy != "UNAVAILABLE" ||
+            !rules.free_information_uses_same_selection_rules ||
+            rules.allow_repurchase_same_grade_per_turn ||
+            !rules.avoid_duplicate_dialogue_per_turn ||
+            rules.display_return_value)
+        {
+            throw new FormatException("정보 선택 규칙이 현재 구현과 다릅니다.");
+        }
 
         var result = new Dictionary<InformationGrade, InformationItemData>();
 
@@ -102,5 +124,19 @@ public static class InformationJsonParser
             throw new FormatException("상/중/하급 정보가 모두 필요합니다.");
 
         return result;
+    }
+
+    [Serializable]
+    private sealed class SelectionRules
+    {
+        public string sector_selection;
+        public string exposure_selection;
+        public string[] exposure_types;
+        public string event_policy;
+        public string no_available_sector_policy;
+        public bool free_information_uses_same_selection_rules;
+        public bool allow_repurchase_same_grade_per_turn;
+        public bool avoid_duplicate_dialogue_per_turn;
+        public bool display_return_value;
     }
 }

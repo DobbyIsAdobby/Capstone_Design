@@ -89,11 +89,25 @@ public sealed class RandomEventSettingsData
     public string adjustment_target;
     public string adjustment_type;
     public bool apply_asset_multipliers;
-    public bool block_information;
+
+    // 이벤트 대상 종목만 정보 후보에서 제외하는 정책
+    public string information_policy;
 }
 
 /// <summary>
-/// 랜덤 시장 이벤트 데이터
+/// 이벤트가 교체할 종목별 기본 수익률.
+/// </summary>
+[Serializable]
+public sealed class EventReturnData
+{
+    public string sector;
+    public double value;
+
+    public MarketSector Sector => MarketSectorUtility.Parse(sector);
+}
+
+/// <summary>
+/// 시장 이벤트 한 건.
 /// </summary>
 [Serializable]
 public sealed class RandomMarketEventData
@@ -102,7 +116,49 @@ public sealed class RandomMarketEventData
     public string title;
     public string event_text;
     public string effect_type;
-    public double tech_return;
+    public EventReturnData[] returns;
+
+    // JSON의 긍정/부정 목록을 읽을 때 설정
+    [NonSerialized]
+    public bool IsPositive;
+
+    public bool Affects(MarketSector sector)
+    {
+        return returns != null && Array.Exists(returns, row => row.Sector == sector);
+    }
+
+    public bool TryGetReturn(MarketSector sector, out decimal rate)
+    {
+        rate = 0m;
+
+        if (returns == null)
+            return false;
+
+        foreach (EventReturnData row in returns)
+        {
+            if (row.Sector != sector)
+                continue;
+
+            rate = checked((decimal)row.value);
+            return true;
+        }
+
+        return false;
+    }
+}
+
+/// <summary>
+/// 기술주, 바이오주, 철강주, 엔터주, 전체 시장 그룹.
+/// </summary>
+[Serializable]
+public sealed class RandomMarketEventGroup
+{
+    public string group_id;
+    public string scope;
+    public string sector;
+
+    public RandomMarketEventData[] positive_events;
+    public RandomMarketEventData[] negative_events;
 }
 
 /// <summary>
@@ -117,7 +173,10 @@ public sealed class GameEventCatalog
     public FixedEventData[] fixed_event_pool;
     public RandomEventRangeData[] random_event_ranges;
     public RandomEventSettingsData random_event_settings;
-    public RandomMarketEventData[] random_events;
+    public RandomMarketEventGroup[] random_event_groups;
+
+    // 검증 후 그룹을 합쳐 만든 실행용 목록.
+    public RandomMarketEventData[] random_events { get; private set; }
 
     /// <summary>
     /// 처리할 수 있는 데이터인지 검사.
@@ -187,10 +246,10 @@ public sealed class GameEventCatalog
             !randomRules.allow_same_turn_in_range &&
             !randomRules.use_hint &&
             randomRules.announcement_timing == "TURN_START" &&
-            randomRules.adjustment_target == "TECH" &&
+            randomRules.adjustment_target == "EVENT_RETURN_LIST" &&
             randomRules.adjustment_type == "REPLACE" &&
             randomRules.apply_asset_multipliers &&
-            randomRules.block_information,
+            randomRules.information_policy == "EXCLUDE_AFFECTED_SECTORS",
             "시장 이벤트 실행 규칙을 확인하세요.");
 
         Require(IsProbability(randomRules.two_events_probability) &&
@@ -224,33 +283,75 @@ public sealed class GameEventCatalog
             }
         }
 
-        Require(data.random_events != null, "시장 이벤트 목록이 없습니다.");
+        // 그룹을 검증하고 실행용 목록으로 합침
+        Require(
+            data.random_event_groups != null &&
+            data.random_event_groups.Length == 5,
+            "시장 이벤트 그룹은 개별 종목 4개와 전체 시장 1개가 필요합니다.");
 
-        foreach (RandomMarketEventData item in data.random_events)
+        var flattened = new List<RandomMarketEventData>();
+        var groupIds = new HashSet<string>(StringComparer.Ordinal);
+        var sectorGroups = new HashSet<MarketSector>();
+        int globalCount = 0;
+
+        foreach (RandomMarketEventGroup group in data.random_event_groups)
         {
             Require(
-                item != null &&
-                !string.IsNullOrWhiteSpace(item.id) &&
-                ids.Add(item.id) &&
-                !string.IsNullOrWhiteSpace(item.title) &&
-                !string.IsNullOrWhiteSpace(item.event_text) &&
-                item.effect_type == "MARKET_RETURN" &&
-                !double.IsNaN(item.tech_return) &&
-                !double.IsInfinity(item.tech_return) &&
-                item.tech_return != 0 &&
-                item.tech_return > -1,
-                "시장 이벤트 데이터가 잘못되었습니다.");
+                group != null &&
+                !string.IsNullOrWhiteSpace(group.group_id) &&
+                groupIds.Add(group.group_id),
+                "이벤트 그룹 ID가 누락되었거나 중복되었습니다.");
 
-            // decimal로 표현할 수 있는지도 검사.
-            decimal rate = checked((decimal)item.tech_return);
+            bool isGlobal = group.scope == "ALL";
+            MarketSector groupSector = default;
+
+            if (isGlobal)
+            {
+                globalCount++;
+
+                Require(
+                    string.IsNullOrEmpty(group.sector),
+                    "전체 시장 그룹의 sector는 비워두세요.");
+            }
+            else
+            {
+                Require(
+                    group.scope == "SECTOR" &&
+                    MarketSectorUtility.TryParse(group.sector, out groupSector) &&
+                    sectorGroups.Add(groupSector),
+                    "개별 이벤트 그룹의 종목이 잘못되었거나 중복되었습니다.");
+            }
+
+            ValidateEventPool(
+                group.positive_events,
+                true,
+                isGlobal,
+                groupSector,
+                ids,
+                flattened);
+
+            ValidateEventPool(
+                group.negative_events,
+                false,
+                isGlobal,
+                groupSector,
+                ids,
+                flattened);
         }
+
+        Require(
+            globalCount == 1 &&
+            sectorGroups.Count == MarketSectorUtility.SectorCount,
+            "네 종목 그룹과 전체 시장 그룹이 각각 한 번씩 필요합니다.");
+
+        data.random_events = flattened.ToArray();
 
         int rangeCount = data.random_event_ranges.Length;
 
         Require(
-            data.random_events.Count(x => x.tech_return > 0) >= rangeCount &&
-            data.random_events.Count(x => x.tech_return < 0) >= rangeCount,
-            "각 구간에 배정할 호재·악재 후보가 부족합니다.");
+            data.random_events.Count(x => x.IsPositive) >= rangeCount &&
+            data.random_events.Count(x => !x.IsPositive) >= rangeCount,
+            "발생 구간에 배정할 긍정·부정 이벤트가 부족합니다.");
 
         // 시장 생성, 저장 검증에서 사용하는 배율과 반드시 정확하게 일치해야 함.
         // JSON만 바꿔서 생성 규칙과 저장 검증 규칙이 달라지는 것을 막음.
@@ -263,6 +364,62 @@ public sealed class GameEventCatalog
         CheckMultiplier(multipliers.INVERSE_LEVERAGE, MarketReturnRules.LeverageInverseMin, MarketReturnRules.LeverageInverseMax);
 
         return data;
+    }
+
+    /// <summary>
+    /// 그룹별 긍정 또는 부정 이벤트 목록 검사.
+    /// </summary>
+    /// <param name="pool"></param>
+    /// <param name="positive"></param>
+    /// <param name="global"></param>
+    /// <param name="groupSector"></param>
+    /// <param name="ids"></param>
+    /// <param name="output"></param>
+    private static void ValidateEventPool(RandomMarketEventData[] pool, bool positive, bool global, MarketSector groupSector, HashSet<string> ids, List<RandomMarketEventData> output)
+    {
+        Require(pool != null && pool.Length == 2, "각 이벤트 그룹에는 긍정 2개, 부정 2개가 필요합니다.");
+
+        foreach (RandomMarketEventData item in pool)
+        {
+            Require(
+                item != null &&
+                !string.IsNullOrWhiteSpace(item.id) &&
+                ids.Add(item.id) &&
+                !string.IsNullOrWhiteSpace(item.title) &&
+                !string.IsNullOrWhiteSpace(item.event_text) &&
+                item.effect_type == "REPLACE_BASE_RETURN" &&
+                item.returns != null &&
+                item.returns.Length ==
+                    (global ? MarketSectorUtility.SectorCount : 1),
+                "이벤트 ID, 문구 또는 수익률 목록을 확인하세요.");
+
+            var targets = new HashSet<MarketSector>();
+
+            foreach (EventReturnData row in item.returns)
+            {
+                Require(row != null, "이벤트 수익률 항목이 없습니다.");
+
+                MarketSector sector = MarketSectorUtility.Parse(row.sector);
+
+                Require(
+                    targets.Add(sector) &&
+                    (global || sector == groupSector),
+                    "이벤트 대상 종목이 중복되었거나 그룹과 다릅니다.");
+
+                Require(
+                    !double.IsNaN(row.value) &&
+                    !double.IsInfinity(row.value) &&
+                    row.value > -1.0 &&
+                    (positive ? row.value > 0.0 : row.value < 0.0),
+                    "이벤트 수익률의 범위 또는 긍정·부정 방향이 잘못되었습니다.");
+
+                // decimal로 변환 가능한지 검사
+                decimal checkedValue = checked((decimal)row.value);
+            }
+
+            item.IsPositive = positive;
+            output.Add(item);
+        }
     }
 
     private static bool IsProbability(double value)

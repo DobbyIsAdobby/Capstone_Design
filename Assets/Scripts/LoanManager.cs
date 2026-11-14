@@ -173,6 +173,13 @@ public class LoanManager : Singleton<LoanManager>
     /// <returns></returns>
     public bool TryBorrow(long amount, int duration, int requestedTurn, out string message)
     {
+        // Spotlight 튜토리얼 시스템은 거래 방법 설명까지만 진행.
+        if (SpotlightTutorialManager.Instance != null && SpotlightTutorialManager.Instance.IsBusy)
+        {
+            message = "안내를 마친 뒤 이용해주세요.";
+            return false;
+        }
+
         // 확인창을 연 뒤 조건이 변경됐을 수 있음 - 검사 시행
         if (!CanBorrow(amount, duration, requestedTurn, out message))
         {
@@ -189,6 +196,8 @@ public class LoanManager : Singleton<LoanManager>
         game.ApplyCashChange(amount, "대출금 입금", ReceiptLineType.Financing);
 
         message = $"대출 #{contract.Id} 실행 완료\n" + $"{amount:N0}원 지급\n" + $"만기: {contract.MaturityTurn}턴 마감";
+
+        SpotlightTutorialManager.Instance?.Notify("LoanCreated");
 
         return true;
     }

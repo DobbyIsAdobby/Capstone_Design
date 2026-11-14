@@ -204,6 +204,13 @@ public class ShopManager : Singleton<ShopManager>
         GameManager game = GameManager.Instance;
         DataManager data = DataManager.Instance;
 
+        // Spotlight 튜토리얼 시스템은 거래 방법 설명까지만 진행.
+        if (SpotlightTutorialManager.Instance != null && SpotlightTutorialManager.Instance.IsBusy)
+        {
+            message = "안내를 마친 뒤 이용해주세요.";
+            return false;
+        }
+
         if (game == null || !game.CanAct)
         {
             message = "지금은 구매할 수 없습니다.";
@@ -303,7 +310,15 @@ public class ShopManager : Singleton<ShopManager>
         }
 
         // JSON의 FATIGUE는 음수이므로 그대로 더함.
+        // 실제로 피로도가 줄었는지 비교하기 위해 이전 값을 보관.
+        float previousStress = game.stressLevel;
+
         game.stressLevel = Mathf.Max(0, game.stressLevel + item.ImmediateFatigueChange);
+
+        if (game.stressLevel < previousStress)
+        {
+            SpotlightTutorialManager.Instance?.Notify("FatigueRecoveredByShop");
+        }
 
         // 해외여행처럼 AP 효과가 양수인 상품은 구매 성공 후 회복
         // 최대치를 초과한 경우 최대치에 고정

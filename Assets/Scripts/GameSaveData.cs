@@ -25,6 +25,7 @@ public sealed class GameSaveData
     public WealthTierSaveData wealthTier;
     public RealEstateSaveData realEstate;
     public HappinessSaveData happiness;
+    public SpotlightSaveData spotlightTutorial;
 }
 
 /// <summary>
@@ -86,6 +87,21 @@ public sealed class AssetSaveData
     public long lastBankProfit;
     public long lastStockGroupProfit;
     public long lastLeverageGroupProfit;
+
+    // 4종목 × 4상품의 보유 금액.
+    // 기존 stockBalance 등의 필드는 합계 검증용으로 유지.
+    public List<SectorHoldingSaveData> holdings = new List<SectorHoldingSaveData>();
+}
+
+/// <summary>
+/// 각 자산군 섹터
+/// </summary>
+[Serializable]
+public sealed class SectorHoldingSaveData
+{
+    public MarketSector sector;
+    public AssetType assetType;
+    public long balance;
 }
 
 /// <summary>
@@ -106,6 +122,9 @@ public sealed class MarketSaveData
 [Serializable]
 public sealed class MarketTurnSaveData
 {
+    // 어느 종목의 턴별 수익률인지 구분
+    public MarketSector sector;
+
     public int turn;
 
     // decimal 수익률을 손실 없이 보존하기 위해 문자열을 사용
@@ -226,8 +245,14 @@ public sealed class InformationRevealSaveData
 {
     public InformationGrade grade;
     public int targetTurn;
-    public AssetType asset;
+
+    public MarketSector sector;
+    public InformationExposure exposure;
+
+    // 판정 결과는 내부 복원용이며 화면에 수치로 출력하지 않음
     public InformationDirection direction;
+
+    public string title;
     public string body;
     public bool isFree;
 }

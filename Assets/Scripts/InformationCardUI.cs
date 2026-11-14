@@ -47,7 +47,7 @@ public class InformationCardUI : MonoBehaviour
 
         if (revealed)
         {
-            bodyText.text = reveal.Body;
+            bodyText.text = $"{reveal.Title}\n\n{reveal.Body}";
 
             priceText.text = reveal.IsFree ? "휴대폰 보유 혜택 : 무료 열람" : $"{price:N0}원 · 구매 완료";
 

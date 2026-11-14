@@ -121,13 +121,9 @@ public class EventManager : Singleton<EventManager>
         }
 
         // 호재|악재 후보를 각각 섞음.
-        var positivePool = catalog.random_events
-            .Where(x => x.tech_return > 0)
-            .ToList();
+        var positivePool = catalog.random_events.Where(x => x.IsPositive).ToList();
 
-        var negativePool = catalog.random_events
-            .Where(x => x.tech_return < 0)
-            .ToList();
+        var negativePool = catalog.random_events.Where(x => !x.IsPositive).ToList();
 
         Shuffle(positivePool, random);
         Shuffle(negativePool, random);
@@ -222,30 +218,63 @@ public class EventManager : Singleton<EventManager>
     }
 
     /// <summary>
-    /// 이벤트 턴이면 JSON 수익률을 사용.
-    /// 일반 턴이면 ONNX 모델의 월 수익률을 사용.
+    /// 현재 종목이 이벤트의 대상이면 기본 수익률을 교체.
+    /// 대상이 아니면 ONNX가 생성한 값을 그대로 사용.
     /// </summary>
+    /// <param name="sector"></param>
     /// <param name="turn"></param>
     /// <param name="generatedReturn"></param>
     /// <returns></returns>
-    public decimal GetTechReturn(int turn, decimal generatedReturn)
+    public decimal GetMarketReturn(MarketSector sector, int turn, decimal generatedReturn)
     {
         RequireState();
 
         RandomMarketEventData item = GetMarketEvent(turn);
 
-        return item == null ? generatedReturn : (decimal)item.tech_return;
+        if (item != null && item.TryGetReturn(sector, out decimal replacement))
+        {
+            return replacement;
+        }
+
+        return generatedReturn;
     }
 
     /// <summary>
-    /// 속보 화면을 닫아도 해당 턴에는 정보 구매를 차단.
-    /// 화면 활성 상태가 아니라 확정된 일정으로 판단.
+    /// 정보 후보에서 제외할 종목인지 확인.
+    /// 확정된 이벤트 일정으로 판단.
+    /// </summary>
+    /// <param name="turn"></param>
+    /// <param name="sector"></param>
+    /// <returns></returns>
+    public bool IsSectorAffected(int turn, MarketSector sector)
+    {
+        RequireState();
+
+        RandomMarketEventData item = GetMarketEvent(turn);
+        return item != null && item.Affects(sector);
+    }
+
+    /// <summary>
+    /// 모든 종목이 이벤트 대상일 때만 정보 전체를 차단.
     /// </summary>
     /// <param name="turn"></param>
     /// <returns></returns>
     public bool IsInformationBlocked(int turn)
     {
-        return state != null && GetMarketEvent(turn) != null;
+        RequireState();
+
+        RandomMarketEventData item = GetMarketEvent(turn);
+
+        if (item == null)
+            return false;
+
+        for (int i = 0; i < MarketSectorUtility.SectorCount; i++)
+        {
+            if (!item.Affects((MarketSector)i))
+                return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -511,18 +540,19 @@ public class EventManager : Singleton<EventManager>
 
         foreach (EventScheduleEntry entry in saved.marketEvents)
         {
-            RequireValid(marketById.ContainsKey(entry.id), "저장된 시장 이벤트 ID가 현재 JSON에 없습니다.");
+            RandomMarketEventData item = marketById[entry.id];
 
-            bool inRange = catalog.random_event_ranges.Any(x => entry.turn >= x.start_turn && entry.turn <= x.end_turn);
+            // 개별 이벤트는 한 종목, 전체 이벤트는 네 종목의 저장 결과를 모두 검사.
+            foreach (EventReturnData effect in item.returns)
+            {
+                MarketSector sector = effect.Sector;
 
-            RequireValid(inRange, "시장 이벤트가 허용 구간 밖에 있습니다.");
+                MarketTurnSaveData marketRow = save.market.turns.Find(x => x.sector == sector && x.turn == entry.turn);
 
-            // 저장된 실제 시장도 이벤트 TECH 값과 일치해야 함.
-            MarketTurnSaveData marketRow = save.market.turns.Find(x => x.turn == entry.turn);
+                decimal expected = checked((decimal)effect.value);
 
-            decimal expected = (decimal)marketById[entry.id].tech_return;
-
-            RequireValid(marketRow != null && SaveNumber.Read(marketRow.stock) == expected, "이벤트 일정과 저장된 시장 수익률이 다릅니다.");
+                RequireValid(marketRow != null && SaveNumber.Read(marketRow.stock) == expected, "이벤트 효과와 저장된 시장 수익률이 일치하지 않습니다.");
+            }
         }
 
         // 구간마다 1~2회, 두 번이면 호재|악재 각각 한 번.
@@ -537,7 +567,7 @@ public class EventManager : Singleton<EventManager>
 
             if (entries.Count == 2)
             {
-                int positives = entries.Count(x => marketById[x.id].tech_return > 0);
+                int positives = entries.Count(x => marketById[x.id].IsPositive);
 
                 RequireValid(positives == 1, "두 번 발생하는 구간은 호재·악재가 각각 하나여야 합니다.");
             }
@@ -546,9 +576,23 @@ public class EventManager : Singleton<EventManager>
         // 시장 이벤트 턴에는 유료,무료 정보가 모두 없어야 함.
         bool informationBlocked = saved.marketEvents.Any(x => x.turn == save.player.currentMonth);
 
-        if (informationBlocked)
+        // 복원 전 검증이므로 현재 실행 중 state가 아니라 저장 파일에 기록된 이벤트 일정을 기준으로 검사해야함
+        EventScheduleEntry currentEntry = saved.marketEvents.Find(x => x.turn == save.player.currentMonth);
+
+        if (currentEntry != null)
         {
-            RequireValid(save.information.reveals.Count == 0 && save.information.usedTexts.Count == 0, "시장 이벤트 턴에 정보 공개 기록이 있습니다.");
+            RandomMarketEventData currentEvent = marketById[currentEntry.id];
+
+            foreach (InformationRevealSaveData reveal in save.information.reveals)
+            {
+                RequireValid(!currentEvent.Affects(reveal.sector), "이벤트 대상 종목의 정보가 공개 기록에 포함되어 있습니다.");
+            }
+
+            // 전체 시장 이벤트라면 공개 정보가 없어야 함.
+            if (currentEvent.returns.Length == MarketSectorUtility.SectorCount)
+            {
+                RequireValid(save.information.reveals.Count == 0 && save.information.usedTexts.Count == 0, "전체 시장 이벤트 턴에 정보 공개 기록이 있습니다.");
+            }
         }
     }
 

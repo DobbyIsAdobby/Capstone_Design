@@ -21,6 +21,15 @@ public enum InformationDirection
 }
 
 /// <summary>
+/// 일반형은 주식, 레버리지. 인버스형은 주식 인버스, 레버리지 인버스.
+/// </summary>
+public enum InformationExposure
+{
+    Normal = 0,
+    Inverse = 1
+}
+
+/// <summary>
 /// JSON에서 읽은 정보 상품의 고정 설정
 /// </summary>
 public sealed class InformationItemData
@@ -64,24 +73,30 @@ public sealed class InformationReveal
 {
     // 자동 생성 프로퍼티 - { get; } 사용
     public int TargetTurn { get; }
-    public AssetType Asset { get; }
+    public MarketSector Sector { get; }
+    public InformationExposure Exposure { get; }
     public InformationDirection Direction { get; }
-    public string Body { get; }     // 각 정보에 들어갈 대화 스크립트
-    public bool IsFree { get; }     // 휴대폰 보유 여부 - 보유 시 무료
+    public string Title { get; }
+    public string Body { get; } // 각 정보에 들어갈 내용
+    public bool IsFree { get; } // 핸드폰 보유 여부
 
     /// <summary>
     /// 생성자
     /// </summary>
     /// <param name="targetTurn"></param>
-    /// <param name="asset"></param>
+    /// <param name="sector"></param>
+    /// <param name="exposure"></param>
     /// <param name="direction"></param>
+    /// <param name="title"></param>
     /// <param name="body"></param>
     /// <param name="isFree"></param>
-    public InformationReveal(int targetTurn, AssetType asset, InformationDirection direction, string body, bool isFree)
+    public InformationReveal(int targetTurn, MarketSector sector, InformationExposure exposure, InformationDirection direction, string title, string body, bool isFree)
     {
         TargetTurn = targetTurn;
-        Asset = asset;
+        Sector = sector;
+        Exposure = exposure;
         Direction = direction;
+        Title = title;
         Body = body;
         IsFree = isFree;
     }

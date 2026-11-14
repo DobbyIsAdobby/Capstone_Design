@@ -172,7 +172,9 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public bool CanSaveCurrentState =>
         CanOpenPause &&
-        !JobManager.Instance.IsPlaying;
+        !JobManager.Instance.IsPlaying &&
+        SpotlightTutorialManager.Instance != null &&
+        SpotlightTutorialManager.Instance.CanSaveNow;
 
     /// <summary>
     /// 총 자산 확인
@@ -219,6 +221,14 @@ public class GameManager : Singleton<GameManager>
         if (HappinessManager.Instance == null || !HappinessManager.Instance.IsConfigured)
         {
             Debug.LogError("행복도 JSON과 Rules 연결을 확인하세요.");
+
+            yield break;
+        }
+
+        // 튜토리얼 JSON과 Inspector 연결이 준비되었는지 확인.
+        if (SpotlightTutorialManager.Instance == null || !SpotlightTutorialManager.Instance.IsConfigured)
+        {
+            Debug.LogError("Spotlight 튜토리얼 JSON과 Inspector 연결을 확인하세요.");
 
             yield break;
         }
@@ -341,6 +351,10 @@ public class GameManager : Singleton<GameManager>
             yield return null;
 
         HappinessManager.Instance.InitializeNewGame(DataManager.Instance.MarketSeed);
+
+        // 새 게임에서만 안내 기록을 초기화
+        // 저장 데이터를 불러올 때는 RestoreSave 사용
+        SpotlightTutorialManager.Instance.InitializeNewGame();
 
         // 클릭 이후에 첫 달의 AP, 정보, 재산 등급 등을 초기화
         BeginMonthRecord();
@@ -548,6 +562,12 @@ public class GameManager : Singleton<GameManager>
         UpdateUI();*/
 
         if(!CanAct) return;
+
+        if (SpotlightTutorialManager.Instance != null && !SpotlightTutorialManager.Instance.CanLeaveTurn)
+        {
+            Debug.LogError("튜토리얼 매니저가 제대로 연결됐는지 확인하세요.");
+            return;
+        }
 
         if(receiptPanel == null || !receiptPanel.IsConfigured)
         {
@@ -972,6 +992,14 @@ public class GameManager : Singleton<GameManager>
         if (!CanAct)
             return;
 
+        // 튜토리얼 중에는 야근을 요구하는 단계에서만 실행
+        SpotlightTutorialManager spotlight = SpotlightTutorialManager.Instance;
+
+        if (spotlight != null && !spotlight.AllowsAction("OVERTIME_BUTTON"))
+        {
+            return;
+        }
+
         // 해금 전에는 돈, AP, 피로도를 변경하지 않음.
         if (!TutorialManager.Check(TutorialFeature.Overtime, out _))
         {
@@ -1021,6 +1049,9 @@ public class GameManager : Singleton<GameManager>
         {
             UIManager.Instance.ShowOvertimeIncome(income);
         }
+
+        // AP와 보상 처리가 성공한 야근만 횟수에 포함.
+        SpotlightTutorialManager.Instance?.Notify("OvertimeUsed");
 
         // 피로도 초과 처리와 화면 갱신.
         CheckStressPenalty();

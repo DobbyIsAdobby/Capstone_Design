@@ -22,12 +22,27 @@ public class AssetTradePanel : MonoBehaviour
     [SerializeField] private Slider amountSlider;   // 금액 지정 슬라이더
     [SerializeField] private Button confirmButton;  // 확인 버튼
 
+    [Header("Sector Selection")]
+    [SerializeField] private GameObject sectorButtonsRoot;
+
+    // 기술주, 바이오주, 철강주, 엔터주
+    [SerializeField] private Button[] sectorButtons;
+
+    [SerializeField] private Color selectedSectorColor = new Color32(237, 187, 80, 255);
+
+    private MarketSector selectedSector = MarketSector.Technology;
+
+    private Color[] normalSectorColors;
+
     [Header("Keypad")]
     [SerializeField] private GameObject keypadRoot; // 키패드
     [SerializeField] private TMP_InputField amountInput; // 입력된 금액
     [SerializeField] private TMP_Text keypadErrorText;  // 투자 가능 금액 표시
 
-    private const int SliderSteps = 1000; //슬라이드 진행 정도
+    [Header("Market Chart")]
+    [SerializeField] private MarketChartPanelUI marketChartPanel;
+
+    private const int SliderSteps = 100000; //슬라이드 진행 정도
 
     private bool isBuying = true;
     private long selectedAmount;
@@ -64,7 +79,7 @@ public class AssetTradePanel : MonoBehaviour
         get
         {
             // isBuying이 True일 경우 가용 현금을, False일 경우 자산 타입에 따라 해당 자산의 보유 액수를 limit으로 지정
-            long limit = isBuying ? GameManager.Instance.availableCash : AssetManager.Instance.GetBalance(assetType);
+            long limit = isBuying ? GameManager.Instance.availableCash : AssetManager.Instance.GetBalance(assetType, selectedSector);
 
             return Math.Max(0L, limit);
         }
@@ -76,10 +91,37 @@ public class AssetTradePanel : MonoBehaviour
         amountSlider.maxValue = SliderSteps;
         // 슬라이더에서 선택할 수 있는 값을 정수로만 제한.
         amountSlider.wholeNumbers = true;
+
+        // 은행에는 종목 선택 UI를 사용하지 않음.
+        if (assetType == AssetType.Bank)
+        {
+            if (sectorButtonsRoot != null)
+                sectorButtonsRoot.SetActive(false);
+
+            return;
+        }
+
+        if (sectorButtonsRoot == null || sectorButtons == null || sectorButtons.Length != MarketSectorUtility.SectorCount)
+        {
+            throw new InvalidOperationException("종목 버튼 Root와 네 개의 버튼을 연결하세요.");
+        }
+
+        normalSectorColors = new Color[sectorButtons.Length];
+
+        for (int i = 0; i < sectorButtons.Length; i++)
+        {
+            if (sectorButtons[i] == null || sectorButtons[i].image == null)
+                throw new InvalidOperationException("종목 버튼의 Image를 확인하세요.");
+
+            normalSectorColors[i] = sectorButtons[i].image.color;
+        }
     }
 
     private void OnEnable()
     {
+        // 패널을 열면 기술주부터 보여주기
+        selectedSector = MarketSector.Technology;
+
         isBuying = true;
         selectedAmount = 0;
 
@@ -118,13 +160,20 @@ public class AssetTradePanel : MonoBehaviour
         // 자산군에 따른 액션 단어 분류
         string action = assetType == AssetType.Bank ? (isBuying ? "예금" : "출금") : (isBuying ? "매수" : "매도");
 
-        titleText.text = $"{assetName} - {action}";
+        string displayName = assetType == AssetType.Bank ? assetName : $"{assetName}";
 
-        balanceText.text = $"보유 현금: {GameManager.Instance.availableCash:N0}원\n" + $"보유 자산: {AssetManager.Instance.GetBalance(assetType):N0}원";
+        titleText.text = $"{displayName} - {action}";
+
+        long balance = AssetManager.Instance.GetBalance(assetType, selectedSector);
+
+        string balanceLabel = assetType == AssetType.Bank ? "보유 예금" : "선택 종목 보유액";
+
+        balanceText.text = $"보유 현금: {GameManager.Instance.availableCash:N0}원\n" + $"{balanceLabel}: {balance:N0}원";
 
         limitText.text = $"{action} 가능 금액: {TradeLimit:N0}원";
         confirmText.text = action;
 
+        RefreshSectorButtons();
         SetSelectedAmount(selectedAmount);
     }
 
@@ -158,7 +207,7 @@ public class AssetTradePanel : MonoBehaviour
 
     public void ConfirmTrade()
     {
-        bool success = AssetManager.Instance.TryTrade(assetType, isBuying, selectedAmount, out string message);
+        bool success = AssetManager.Instance.TryTrade(assetType, selectedSector, isBuying, selectedAmount, out string message);
 
         if (success)
         {
@@ -167,6 +216,83 @@ public class AssetTradePanel : MonoBehaviour
 
         Refresh();
         feedbackText.text = message;
+    }
+
+    /// <summary>
+    /// 종목 버튼에서 0~3을 전달.
+    /// </summary>
+    /// <param name="sectorIndex"></param>
+    public void SelectSector(int sectorIndex)
+    {
+        if (assetType == AssetType.Bank)
+            return;
+
+        if (sectorIndex < 0 || sectorIndex >= MarketSectorUtility.SectorCount)
+        {
+            return;
+        }
+
+        if (!GameManager.Instance.CanAct)
+            return;
+
+        // 안내 중에는 설명 대상과 무관한 종목 변경을 막음.
+        if (SpotlightTutorialManager.Instance != null && SpotlightTutorialManager.Instance.IsBusy)
+        {
+            return;
+        }
+
+        selectedSector = (MarketSector)sectorIndex;
+
+        // 이전 종목에서 입력한 금액을 새 종목 거래에 재사용하지 않음.
+        selectedAmount = 0;
+        keypadRoot.SetActive(false);
+        feedbackText.text = "";
+
+        Refresh();
+    }
+
+    private void RefreshSectorButtons()
+    {
+        if (assetType == AssetType.Bank)
+            return;
+
+        for (int i = 0; i < sectorButtons.Length; i++)
+        {
+            sectorButtons[i].image.color = i == (int)selectedSector ? selectedSectorColor : normalSectorColors[i];
+        }
+    }
+
+    /// <summary>
+    /// 현재 거래 패널의 상품 유형과 선택 종목으로 차트 오픈.
+    /// </summary>
+    public void OpenMarketChart()
+    {
+        // 은행 예금은 고정 이자이므로, 투자상품 차트 대상이 아님.
+        if (assetType == AssetType.Bank)
+            return;
+
+        if (GameManager.Instance == null ||
+            !GameManager.Instance.CanAct)
+        {
+            return;
+        }
+
+        if (SpotlightTutorialManager.Instance != null &&
+            SpotlightTutorialManager.Instance.IsBusy)
+        {
+            return;
+        }
+
+        if (marketChartPanel == null)
+        {
+            Debug.LogError("수익률 차트 패널을 연결하세요.", this);
+            return;
+        }
+
+        // 키패드가 차트 뒤에 남지 않게 닫음.
+        keypadRoot.SetActive(false);
+
+        marketChartPanel.Open(assetType, selectedSector);
     }
 
     public void OpenKeypad()
