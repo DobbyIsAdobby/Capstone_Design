@@ -19,6 +19,18 @@ public class UIManager : Singleton<UIManager>
     public TextMeshProUGUI apText;              // 현재 AP
     public TextMeshProUGUI overtimeCountText;   // 현재 야근 횟수
 
+    [Header("Happiness HUD")]
+    [SerializeField] private TMP_Text happinessText;
+
+    // HappinessImage 오브젝트의 Image 컴포넌트
+    [SerializeField] private Image happinessIcon;
+
+    // 평상시에 표시할 아이콘
+    [SerializeField] private Sprite happinessNeutralSprite;
+
+    // 실제로 보너스 효과가 적용되는 동안 표시할 아이콘
+    [SerializeField] private Sprite happinessPrimeSprite;
+
     [Header("Monthly Expense")]
     [SerializeField] private MonthlyExpenseHelpUI monthlyExpenseHelpUI;
 
@@ -89,8 +101,11 @@ public class UIManager : Singleton<UIManager>
         UpdateStatusIcon(apIcon, apStageSprites, apGauge);
         UpdateStatusIcon(stressIcon, stressStageSprites, stressGauge);
 
+        // 행복도와 상태 아이콘 갱신
+        RefreshHappinessHUD();
+
         // 1. 메인 상태바 갱신
-        monthText.text = $"{GameManager.Instance.currentMonth}/{GameManager.Instance.maxMonth}턴";
+        monthText.text = $"{GameManager.Instance.currentMonth}/{GameManager.Instance.maxMonth}개월";
         // 현재 턴에서 날짜를 계산함. UI 갱신만으로 날짜가 증가하지 않음
         if(dateText != null)
         {
@@ -271,5 +286,47 @@ public class UIManager : Singleton<UIManager>
 
         // 손익이 0이면 텍스트 색상을 유지.
         return $"({amount})";
+    }
+
+    /// <summary>
+    /// 행복도 숫자와 현재 상태에 맞는 아이콘을 갱신.
+    /// </summary>
+    private void RefreshHappinessHUD()
+    {
+        HappinessManager happiness = HappinessManager.Instance;
+        GameManager game = GameManager.Instance;
+
+        // 새 게임 초기화가 끝나기 전에는 기본 상태를 표시
+        bool isReady = happiness != null && happiness.IsInitialized && game != null;
+
+        if (happinessText != null)
+        {
+            if (!isReady)
+            {
+                happinessText.text = "0";
+            }
+            else
+            {
+                int? nextTarget = happiness.NextTarget;
+
+                // 목표가 남아 있으면 현재 수치/다음 목표를 표시
+                // 모든 목표를 달성했다면 현재 수치만 표시
+                happinessText.text = nextTarget.HasValue ? $"{happiness.Points}/{nextTarget.Value}" : $"{happiness.Points}";
+            }
+        }
+
+        if (happinessIcon != null)
+        {
+            // 목표 달성 여부가 아니라, 현재 턴에 효과가 적용 중인지 확인
+            bool isPrime = isReady && happiness.IsGoldenAge(game.currentMonth);
+
+            Sprite nextSprite = isPrime ? happinessPrimeSprite : happinessNeutralSprite;
+
+            // Inspector에 연결된 이미지를 사용
+            if (nextSprite != null)
+            {
+                happinessIcon.sprite = nextSprite;
+            }
+        }
     }
 }

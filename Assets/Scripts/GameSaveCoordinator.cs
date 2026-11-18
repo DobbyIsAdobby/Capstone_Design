@@ -5,14 +5,23 @@ using System;
 /// </summary>
 public static class GameSaveCoordinator
 {
-    // v4 : 부동산이 추가됨에 따라 버전 상승
-    public const int FormatVersion = 3;
+    // v3 : 부동산이 추가됨에 따라 버전 상승
+    // v4 : 행복도 저장 데이터 추가에 따라 버전 상승
+    // v5 : 튜토리얼 시스템 데이터 추가에 따라 버전 상승
+    // v6 : 투자 종목 데이터 추가에 따라 버전 상승
+    // v7 : 투자 종목 정보, 신문, 랜덤 이벤트 데이터 추가에 따라 버전 상승
+    // v8 : 결산 리포트용 거래, 금액 변동 이력 저장 데이터 추가에 따라 버전 상승
+    public const int FormatVersion = 8;
 
     // 상품 효과나 직급 규칙 등 저장 호환성이 달라지면 올림.
     // v4 : 인플레이션 및 주거비 계산 규칙 추가.
     // v5 : 부동산이 추가됨에 따라 버전 상승.
     // v6 : 초반 스토리와 턴별 기능 해금 규칙 추가.
-    public const int ContentVersion = 6;
+    // v7 : 행복도 및 전성기 규칙 추가.
+    // v8 : spotlight 방식 튜토리얼 시스템 규칙 추가.
+    // v9 : 투자 종목 추가에 따른 시스템 규칙 추가.
+    // v10 : 투자 종목 정보, 신문, 랜덤 이벤트 데이터 추가에 따른 시스템 규칙 추가.
+    public const int ContentVersion = 10;
 
     public static GameSaveData Capture()
     {
@@ -47,6 +56,9 @@ public static class GameSaveCoordinator
             pendingEvent = EventManager.Instance.CaptureSave(),
             wealthTier = WealthTierManager.Instance.CaptureSave(),
             realEstate = RealEstateManager.Instance.CaptureSave(),
+            happiness = HappinessManager.Instance.CaptureSave(),
+            spotlightTutorial = SpotlightTutorialManager.Instance.CaptureSave(),
+            reportHistory = ReportHistoryManager.Instance.CaptureSave(),
         };
 
         // 잘못된 상태를 파일로 기록하지 않도록 검사
@@ -55,6 +67,10 @@ public static class GameSaveCoordinator
 
         RealEstateManager.Instance.ValidateSavedCatalog(data.realEstate, data.player.currentMonth);
 
+        HappinessManager.Instance.ValidateSave(data.happiness, data.player.currentMonth);
+
+        SpotlightTutorialManager.Instance.ValidateSave(data.spotlightTutorial, data.player.currentMonth);
+
         return data;
     }
 
@@ -62,8 +78,14 @@ public static class GameSaveCoordinator
     {
         RequireManagers();
 
+        SpotlightTutorialManager.Instance.ValidateSave(data.spotlightTutorial, data.player.currentMonth);
+
         RealEstateManager.Instance.ValidateSavedCatalog(data.realEstate, data.player.currentMonth);
         
+        HappinessManager.Instance.ValidateSave(data.happiness, data.player.currentMonth);
+
+        ReportHistoryManager.Validate(data.reportHistory, data.player.currentMonth);
+
         // 게임 상태를 바꾸기 전에 모든 이벤트 검사를 완료해야함.
         EventManager.Instance.ValidateSavedEvents(data);
 
@@ -88,6 +110,12 @@ public static class GameSaveCoordinator
 
         WealthTierManager.Instance.RestoreSave(data.wealthTier);
 
+        HappinessManager.Instance.RestoreSave(data.happiness, data.player.currentMonth);
+
+        SpotlightTutorialManager.Instance.RestoreSave(data.spotlightTutorial, data.player.currentMonth);
+
+        ReportHistoryManager.Instance.RestoreSave(data.reportHistory);
+
         // AP 지급, 청구서 초기화 없이 플레이만 다시 허용
         GameManager.Instance.CompleteSaveRestore();
     }
@@ -111,7 +139,10 @@ public static class GameSaveCoordinator
             WealthTierManager.Instance == null ||
             InflationManager.Instance == null ||
             HousingCostManager.Instance == null ||
-            RealEstateManager.Instance == null)
+            RealEstateManager.Instance == null ||
+            HappinessManager.Instance == null ||
+            SpotlightTutorialManager.Instance == null ||
+            ReportHistoryManager.Instance == null)
         {
             throw new InvalidOperationException("필수 게임 매니저가 누락되었습니다.");
         }
@@ -124,7 +155,9 @@ public static class GameSaveCoordinator
             !EventManager.Instance.IsConfigured ||
             !InflationManager.Instance.IsConfigured ||
             !HousingCostManager.Instance.IsConfigured ||
-            !RealEstateManager.Instance.IsConfigured)
+            !RealEstateManager.Instance.IsConfigured ||
+            !HappinessManager.Instance.IsConfigured ||
+            !SpotlightTutorialManager.Instance.IsConfigured)
         {
             throw new InvalidOperationException("게임 데이터 또는 규칙 설정이 준비되지 않았습니다.");
         }

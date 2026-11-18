@@ -8,34 +8,46 @@ using System.Collections.Generic;
 /// </summary>
 public static class InformationTextProvider
 {
-    public static string Create(AssetType asset, InformationDirection direction, int targetTurn, Random random, HashSet<string> usedTexts)
+    public static string GetTitle(MarketSector sector, InformationExposure exposure)
     {
-        string assetName = GetAssetName(asset);
+        string typeName = exposure == InformationExposure.Normal ? "일반형" : "인버스형";
 
+        return $"{MarketSectorUtility.GetName(sector)} · {typeName} 전망";
+    }
+
+    /// <summary>
+    /// 제목, 상품명, 수익률 수치 없이 CSV 문장만 반환.
+    /// 공개가 완료될 때 RumorManager가 사용 기록을 추가.
+    /// </summary>
+    /// <param name="sector"></param>
+    /// <param name="exposure"></param>
+    /// <param name="presentedDirection"></param>
+    /// <param name="random"></param>
+    /// <param name="usedTexts"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static string Create(MarketSector sector, InformationExposure exposure, InformationDirection presentedDirection, Random random, HashSet<string> usedTexts)
+    {
         IReadOnlyList<string> candidates;
 
-        // 인버스의 경우 csv 데이터를 반대로 적용해줘야함
-        bool isInverse = asset == AssetType.StockInverse || asset == AssetType.LeverageInverse;
-
-        if (direction == InformationDirection.Flat)
+        if (presentedDirection == InformationDirection.Flat)
         {
-            // CSV에는 수익률이 0인(Flat) 열이 없으므로 아래 텍스트 세개로만 구성. - 애당초 수익률이 0이될 가능성이 극도로 낮음
             candidates = new[]
             {
-                "해당 자산은 이번 달 변동하지 않을 것으로 전망합니다.",
-                "해당 자산은 이번 달 보합을 유지할 전망입니다.",
-                "해당 자산의 이번 달 수익률 변화는 없을 것으로 예상합니다."
+                "이번 달은 변동이 없을 것으로 전망합니다.",
+                "이번 달은 보합 흐름을 예상합니다.",
+                "이번 달은 현재 수준을 유지할 것으로 보입니다."
             };
         }
         else
         {
-            // CSV 문장은 주식시장에 관한 설명임
-            // 인버스 상승 전망이면 기초시장 하락 문장을 선택해야함
-            InformationDirection marketDirection = isInverse ? (InformationDirection)(-(int)direction) : direction;
+            // CSV의 POS/NEG는 기초 산업의 상황.
+            // 인버스 상승 전망에는 기초 산업의 부정적 근거를 사용.
+            InformationDirection marketDirection = exposure == InformationExposure.Inverse ? (InformationDirection)(-(int)presentedDirection) : presentedDirection;
 
-            if (DataManager.Instance == null || !DataManager.Instance.TryGetMarketDialogues(marketDirection, out candidates))
+            if (DataManager.Instance == null || !DataManager.Instance.TryGetMarketDialogues(sector, marketDirection, out candidates))
             {
-                throw new InvalidOperationException("시장 대사 데이터가 준비되지 않았습니다.");
+                throw new InvalidOperationException("해당 종목의 정보 대사를 읽지 못했습니다.");
             }
         }
 
@@ -43,45 +55,16 @@ public static class InformationTextProvider
 
         foreach (string text in candidates)
         {
-            // 상품명이나 턴을 붙이기 전의 원문으로 중복 검사 실행.
             if (!usedTexts.Contains(text))
                 available.Add(text);
         }
 
         if (available.Count == 0)
         {
-            throw new InvalidOperationException("중복 없이 제공할 정보 대사가 부족합니다.");
+            throw new InvalidOperationException("중복 없이 제공할 정보 문장이 부족합니다.");
         }
 
-        string selected = available[random.Next(available.Count)];
-
-        string outlook = direction == InformationDirection.Up ? "상승 전망" : direction == InformationDirection.Down ? "하락 전망" : "변동 없음 전망";
-
-        string header = $"[{assetName} · {targetTurn}달 마감 전망]";
-
-        string body = direction == InformationDirection.Flat ? $"{header}\n{selected}" : $"{header}\n{outlook}\n\n기초시장 전망: {selected}";
-
-        // 이제 이 컬렉션에는 표시문 전체가 아니라 원문만 저장함. - RumorManager 내 StoreReveal() 중 userTexts.Add(reveal.Body)를 제거해야함
-        usedTexts.Add(selected);
-
-        return body;
-    }
-
-    public static string GetAssetName(AssetType asset)
-    {
-        switch (asset)
-        {
-            case AssetType.Stock:
-                return "주식";
-            case AssetType.Leverage:
-                return "레버리지";
-            case AssetType.StockInverse:
-                return "주식 인버스";
-            case AssetType.LeverageInverse:
-                return "레버리지 인버스";
-            default:
-                throw new ArgumentOutOfRangeException(nameof(asset));
-        }
+        return available[random.Next(available.Count)];
     }
 }
 

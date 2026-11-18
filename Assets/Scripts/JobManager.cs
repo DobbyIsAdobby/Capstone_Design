@@ -57,6 +57,12 @@ public class JobManager : Singleton<JobManager>
     {
         reason = "";
 
+        if (SpotlightTutorialManager.Instance != null && SpotlightTutorialManager.Instance.IsBusy)
+        {
+            reason = "안내를 마친 뒤 미니게임을 시작해주세요.";
+            return false;
+        }
+
         // AP 차감 전에 기능 잠금을 검사.
         if (!TutorialManager.Check(TutorialFeature.JobMinigame, out reason))
         {
@@ -255,6 +261,8 @@ public class JobManager : Singleton<JobManager>
     /// <param name="amount"></param>
     private void AddExperience(int amount)
     {
+        int previousGrade = GradeIndex;
+
         if (amount <= 0 || IsMaxGrade)
             return;
 
@@ -270,6 +278,12 @@ public class JobManager : Singleton<JobManager>
         // 최고 직급에는 다음 승급이 없으므로 진행 경험치를 비움.
         if (IsMaxGrade)
             CurrentExperience = 0;
+
+        // 미니게임 또는 노트북 경험치 등 원인과 관계없이 직급이 상승했을 때 한 번 알림.
+        if (GradeIndex > previousGrade)
+        {
+            SpotlightTutorialManager.Instance?.Notify("JobPromoted");
+        }
     }
 
     public void AbortAttempt()

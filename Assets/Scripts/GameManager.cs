@@ -153,7 +153,9 @@ public class GameManager : Singleton<GameManager>
         RealEstateManager.Instance != null &&
         RealEstateManager.Instance.IsInitialized &&
         TutorialManager.Instance != null &&
-        TutorialManager.Instance.IsConfigured;
+        TutorialManager.Instance.IsConfigured &&
+        HappinessManager.Instance != null &&
+        HappinessManager.Instance.IsInitialized;
 
     /// <summary>
     /// 구매, 거래, 야근 등 일반 행동이 가능한 상태. 
@@ -170,7 +172,9 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public bool CanSaveCurrentState =>
         CanOpenPause &&
-        !JobManager.Instance.IsPlaying;
+        !JobManager.Instance.IsPlaying &&
+        SpotlightTutorialManager.Instance != null &&
+        SpotlightTutorialManager.Instance.CanSaveNow;
 
     /// <summary>
     /// 총 자산 확인
@@ -210,6 +214,21 @@ public class GameManager : Singleton<GameManager>
         if (TutorialManager.Instance == null || !TutorialManager.Instance.IsConfigured)
         {
             Debug.LogError("TutorialManager와 story.json 연결을 확인하세요.");
+
+            yield break;
+        }
+
+        if (HappinessManager.Instance == null || !HappinessManager.Instance.IsConfigured)
+        {
+            Debug.LogError("행복도 JSON과 Rules 연결을 확인하세요.");
+
+            yield break;
+        }
+
+        // 튜토리얼 JSON과 Inspector 연결이 준비되었는지 확인.
+        if (SpotlightTutorialManager.Instance == null || !SpotlightTutorialManager.Instance.IsConfigured)
+        {
+            Debug.LogError("Spotlight 튜토리얼 JSON과 Inspector 연결을 확인하세요.");
 
             yield break;
         }
@@ -331,6 +350,12 @@ public class GameManager : Singleton<GameManager>
         while (!marketIntroUI.StartRequested)
             yield return null;
 
+        HappinessManager.Instance.InitializeNewGame(DataManager.Instance.MarketSeed);
+
+        // 새 게임에서만 안내 기록을 초기화
+        // 저장 데이터를 불러올 때는 RestoreSave 사용
+        SpotlightTutorialManager.Instance.InitializeNewGame();
+
         // 클릭 이후에 첫 달의 AP, 정보, 재산 등급 등을 초기화
         BeginMonthRecord();
         UpdateUI();
@@ -363,6 +388,9 @@ public class GameManager : Singleton<GameManager>
     {
         reason = "";
 
+        // amount는 항상 할인 전 기본 비용.
+        int actualCost = GetEffectiveAPCost(amount);
+
         if (!CanAct)
         {
             reason = "지금은 행동할 수 없습니다.";
@@ -375,9 +403,9 @@ public class GameManager : Singleton<GameManager>
             return false;
         }
 
-        if (CurrentAP < amount)
+        if (CurrentAP < actualCost)
         {
-            reason = $"AP가 부족합니다. 필요 {amount}, 보유 {CurrentAP}";
+            reason = $"AP가 부족합니다. 필요 {actualCost}, 보유 {CurrentAP}";
             return false;
         }
 
@@ -396,7 +424,7 @@ public class GameManager : Singleton<GameManager>
         if (!CanSpendAP(amount, out reason))
             return false;
 
-        CurrentAP -= amount;
+        CurrentAP -= GetEffectiveAPCost(amount);
         return true;
     }
 
@@ -420,6 +448,13 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     private void BeginMonthRecord()
     {
+        // 첫 턴 및 다음 턴에 맞는 배경음을 선택.
+        // 같은 구간의 곡이 재생 중이면 처음부터 다시 틀지 않음.
+        if (BgmManager.Instance != null)
+        {
+            BgmManager.Instance.PlayGameTurn(currentMonth);
+        }
+
         monthlyLines.Clear();
         MonthStartTotalAsset = TotalAsset;
         hasMonthBaseLine = true;
@@ -502,6 +537,9 @@ public class GameManager : Singleton<GameManager>
             return;
         }
 
+        // 발생한 수입 기록.
+        ReportHistoryManager.Instance.RecordChange(currentMonth, label, amount, type);
+
         // 동일 내역은 월 합계로 묶기
         for(int i = 0; i < monthlyLines.Count; i++)
         {
@@ -534,6 +572,12 @@ public class GameManager : Singleton<GameManager>
         UpdateUI();*/
 
         if(!CanAct) return;
+
+        if (SpotlightTutorialManager.Instance != null && !SpotlightTutorialManager.Instance.CanLeaveTurn)
+        {
+            Debug.LogError("튜토리얼 매니저가 제대로 연결됐는지 확인하세요.");
+            return;
+        }
 
         if(receiptPanel == null || !receiptPanel.IsConfigured)
         {
@@ -583,6 +627,11 @@ public class GameManager : Singleton<GameManager>
 
         IsSetting = true;
         ProcessMonthlySettlement();
+
+        // 모든 자산, 지출, 파산 판정까지 마친 턴임을 기록.
+        // 월중 병원비 파산은 여기까지 오지 못함.
+        // 그렇기에 아직 끝나지 않은 턴의 시장 결과를 공개하지 않을거임.
+        ReportHistoryManager.Instance.MarkSettled(currentMonth);
 
         // 고정지출을 먼저 표시하고 나머지는 기록 순서에 따라 출력
         List<ReceiptLine> orderedLines = new List<ReceiptLine>();
@@ -763,6 +812,17 @@ public class GameManager : Singleton<GameManager>
             pendingNewsArticle = null;
             IsSetting = false;
             RequestEndingScene(EndingType.Bad);
+            return;
+        }
+
+        // 마지막 턴은 청구서를 확인한 직후 엔딩으로 이동.
+        // 경제, 부동산, 물가 신문을 추가로 열지 않음.
+        if (currentMonth >= maxMonth)
+        {
+            pendingNewsArticle = null;
+
+            // TriggerEnding이 최종 순자산과 펜트하우스 보유 여부로 엔딩을 판정.
+            TriggerEnding();
             return;
         }
 
@@ -958,6 +1018,14 @@ public class GameManager : Singleton<GameManager>
         if (!CanAct)
             return;
 
+        // 튜토리얼 중에는 야근을 요구하는 단계에서만 실행
+        SpotlightTutorialManager spotlight = SpotlightTutorialManager.Instance;
+
+        if (spotlight != null && !spotlight.AllowsAction("OVERTIME_BUTTON"))
+        {
+            return;
+        }
+
         // 해금 전에는 돈, AP, 피로도를 변경하지 않음.
         if (!TutorialManager.Check(TutorialFeature.Overtime, out _))
         {
@@ -998,8 +1066,8 @@ public class GameManager : Singleton<GameManager>
         // 청구서에도 기록
         ApplyCashChange(income, "야근 수입");
 
-        // 지급액 계산이 끝난 다음 횟수를 증가시킴.
-        stressLevel += 5f;
+        // 전성기에는 야근의 피로도 증가량을 절반으로 줄임.
+        stressLevel += HappinessManager.Instance.GetStressIncrease(5f);
         currentMonthOvertimeCount++;
 
         // 데미지 폰트에도 실제 지급한 금액을 전달.
@@ -1007,6 +1075,9 @@ public class GameManager : Singleton<GameManager>
         {
             UIManager.Instance.ShowOvertimeIncome(income);
         }
+
+        // AP와 보상 처리가 성공한 야근만 횟수에 포함.
+        SpotlightTutorialManager.Instance?.Notify("OvertimeUsed");
 
         // 피로도 초과 처리와 화면 갱신.
         CheckStressPenalty();
@@ -1034,6 +1105,53 @@ public class GameManager : Singleton<GameManager>
 
             Debug.Log($"병원비 납부 완료. 남은 현금: {availableCash:N0}원");
         }
+    }
+
+    /// <summary>
+    /// 일반 행동의 기본 비용을 실제 비용으로 변환.
+    /// </summary>
+    /// <param name="baseCost"></param>
+    /// <returns></returns>
+    /// <exception cref="System.ArgumentOutOfRangeException"></exception>
+    public int GetEffectiveAPCost(int baseCost)
+    {
+        if (baseCost < 0)
+            throw new System.ArgumentOutOfRangeException(nameof(baseCost));
+
+        return HappinessManager.Instance != null &&
+            HappinessManager.Instance.IsInitialized
+            ? HappinessManager.Instance.GetAPCost(baseCost)
+            : baseCost;
+    }
+
+    /// <summary>
+    /// 턴 시작 이벤트에서만 사용하는 비용 처리.
+    /// 일반 행동의 CanAct 검사와 전성기 할인을 적용하지 않음.
+    /// </summary>
+    /// <param name="turn"></param>
+    /// <param name="reason"></param>
+    /// <returns></returns>
+    public bool TryPayHappinessEventCost(int turn, out string reason)
+    {
+        HappinessManager happiness = HappinessManager.Instance;
+
+        if (happiness == null)
+        {
+            reason = "행복도 시스템이 없습니다.";
+            return false;
+        }
+
+        // 현재 이벤트, AP, 피로도를 다시 검사
+        if (!happiness.CanAccept(turn, out reason))
+            return false;
+
+        HappinessEventData item = happiness.GetEvent(turn);
+
+        // 모든 검사 이후 두 비용을 함께 적용
+        CurrentAP -= item.ap_cost;
+        stressLevel += item.stress_increase;
+
+        return true;
     }
 
     private void UpdateUI()
@@ -1109,6 +1227,20 @@ public class GameManager : Singleton<GameManager>
             yield break;
         }
 
+        // Scene이 사라지기 전에 최종 결과를 복사.
+        try
+        {
+            EndingReportSession.Prepare(ending);
+        }
+        catch (System.Exception exception)
+        {
+            endingTransitionRequested = false;
+
+            Debug.LogError($"결산 리포트 준비 실패: {exception.Message}");
+
+            yield break;
+        }
+
         if (!transition.TryMoveToEnding(ending, out string error))
         {
             endingTransitionRequested = false;
@@ -1181,6 +1313,14 @@ public class GameManager : Singleton<GameManager>
     {
         // 다른 Manager까지 전부 복원한 다음 한 번만 호출
         hasMonthBaseLine = true;
+
+        // 복원된 턴을 기준으로 음악을 선택.
+        // ex) 35턴 저장 파일 >> 중반 배경음
+        if (BgmManager.Instance != null)
+        {
+            BgmManager.Instance.PlayGameTurn(currentMonth);
+        }
+
         UpdateUI();
     }
 }

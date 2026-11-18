@@ -90,6 +90,11 @@ public class MonthlyReceiptPanel : MonoBehaviour
         {
             continueButtonText.text = "파산 확인";
         }
+        else if (GameManager.Instance != null && GameManager.Instance.currentMonth >= MarketModelConfig.TurnCount)
+        {
+            // 60턴은 신문 대신 엔딩으로 이동.
+            continueButtonText.text = "엔딩 확인";
+        }
         else if (TutorialManager.IsUnlocked(TutorialFeature.Newspaper))
         {
             continueButtonText.text = "오늘의 신문 확인";

@@ -227,8 +227,8 @@ public class JobMinigamePanelUI : MonoBehaviour
 
         GameManager game = GameManager.Instance;
 
-        gradeText.text = $"현재 직급: {Job.GradeName}";
-        salaryText.text = $"월급 {Job.MonthlySalary:N0}원";
+        gradeText.text = $"{Job.GradeName}";
+        salaryText.text = $"월급 : {Job.MonthlySalary:N0}원";
         apText.text = $"AP {game.CurrentAP} / {game.MaxAP}";
 
         experienceSlider.minValue = 0f;
