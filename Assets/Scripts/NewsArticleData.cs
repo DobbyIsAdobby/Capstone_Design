@@ -13,12 +13,24 @@ public sealed class NewsArticleData
 }
 
 /// <summary>
-/// new.json의 최상위 구조.
-/// field 이름은 json의 키 이름과 동일해야함.
+/// news.json 필드 내용
+/// </summary>
+[Serializable]
+public sealed class SectorNewsData
+{
+    public string sector;
+    public NewsArticleData[] positive_news;
+    public NewsArticleData[] negative_news;
+    public NewsArticleData[] neutral_news;
+}
+
+
+/// <summary>
+/// 각 섹터별(종목별) 뉴스 데이터
 /// </summary>
 [Serializable]
 public sealed class NewsCatalogData
 {
-    public NewsArticleData[] positive_news;
-    public NewsArticleData[] negative_news;
+    public int version;
+    public SectorNewsData[] sectors;
 }

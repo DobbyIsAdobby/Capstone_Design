@@ -62,34 +62,58 @@ public sealed class MarketModelConfig
     [Serializable]
     public sealed class AssetSettings
     {
-        // 현재 지원하는 규칙은 r, 2 * r, -r. - 주식,레버,주식 인버스, 레버 인버스
+        // 각 모델이 생성하는 기본 종목의 수익률 규칙
         public string TECH;
+        public string BIOTECH;
+        public string METALS_MINING;
+        public string ENTERTAINMENT;
+
+        // 기존 QQQ JSON과의 형식 호환을 위해 남겨둠.
+        // 상품 배율 계산에는 사용하지 않음.
         public string LEVERAGE;
         public string INVERSE;
+
+        public string GetBaseRule(MarketSector sector)
+        {
+            switch (sector)
+            {
+                case MarketSector.Technology:
+                    return TECH;
+
+                case MarketSector.Biotechnology:
+                    return BIOTECH;
+
+                case MarketSector.MetalsMining:
+                    return METALS_MINING;
+
+                case MarketSector.Entertainment:
+                    return ENTERTAINMENT;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(sector));
+            }
+        }
     }
 
     /// <summary>
-    /// Inspector에 연결한 JSON을 읽고, 사용할 수 있는 설정인지 검사.
+    /// 설정을 읽고, 연결하려는 종목과 JSON이 일치하는지 검사.
     /// </summary>
     /// <param name="json"></param>
+    /// <param name="sector"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
     /// <exception cref="FormatException"></exception>
-    public static MarketModelConfig Parse(TextAsset json)
+    public static MarketModelConfig Parse(TextAsset json, MarketSector sector)
     {
         if (json == null)
-        {
-            throw new InvalidOperationException("Market Config JSON을 연결하세요.");
-        }
+            throw new InvalidOperationException("시장 설정 JSON을 연결하세요.");
 
         MarketModelConfig config = JsonUtility.FromJson<MarketModelConfig>(json.text);
 
         if (config == null)
-        {
             throw new FormatException("시장 설정 JSON을 읽을 수 없습니다.");
-        }
 
-        config.Validate();
+        config.Validate(sector);
         return config;
     }
 
@@ -97,7 +121,7 @@ public sealed class MarketModelConfig
     /// 잘못된 설정으로 모델을 실행하지 않도록 시작 전에 검사.
     /// </summary>
     /// <exception cref="FormatException"></exception>
-    private void Validate()
+    private void Validate(MarketSector sector)
     {
         if (model == null || normalization == null || generation == null || assets == null)
         {
@@ -129,10 +153,11 @@ public sealed class MarketModelConfig
             throw new FormatException("정규화 평균 또는 표준편차가 잘못되었습니다.");
         }
 
-        // 현재 코드가 지원하는 상품 규칙과 일치하는지만 확인.
-        if (assets.TECH?.Replace(" ", "") != "r" || assets.LEVERAGE?.Replace(" ", "") != "2*r" || assets.INVERSE?.Replace(" ", "") != "-r")
+        // 선택한 종목의 기본 수익률 설정이 있는지 검사.
+        // 레버리지와 인버스는 MarketReturnRules에서 계산.
+        if (!MarketSectorUtility.IsValid(sector) || assets.GetBaseRule(sector)?.Trim() != "r")
         {
-            throw new FormatException("지원하지 않는 상품 수익률 규칙입니다.");
+            throw new FormatException($"연결한 JSON이 {sector} 종목 설정과 일치하지 않습니다.");
         }
     }
 

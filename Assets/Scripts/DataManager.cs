@@ -32,11 +32,18 @@ public class DataManager : Singleton<DataManager>
 
     private Dictionary<InformationGrade, InformationItemData> informationTable = new Dictionary<InformationGrade, InformationItemData>();
 
-    [Header("Information Dialogue")]
-    [SerializeField] private TextAsset marketDialogueCsv;
+    [Serializable]
+    public sealed class SectorDialogueCsv
+    {
+        public MarketSector sector;
+        public TextAsset csv;
+    }
 
-    // 상승/하락별 읽기 전용 스크립트 목록
-    private Dictionary<InformationDirection, IReadOnlyList<string>> marketDialogues = new Dictionary<InformationDirection, IReadOnlyList<string>>();
+    [Header("Information Dialogue CSV")]
+    [SerializeField] private SectorDialogueCsv[] sectorDialogueCsvs;
+
+    private Dictionary<MarketSector, Dictionary<InformationDirection, IReadOnlyList<string>>>
+        marketDialogues = new Dictionary<MarketSector, Dictionary<InformationDirection, IReadOnlyList<string>>>();
 
     [Header("Newspaper Data")]
     [SerializeField] private TextAsset newsJson;
@@ -45,6 +52,8 @@ public class DataManager : Singleton<DataManager>
 
     // 신문 선택용 난수
     private readonly System.Random newsRandom = new System.Random();
+
+    private Dictionary<MarketSector, SectorNewsData> sectorNews = new Dictionary<MarketSector, SectorNewsData>();
 
     // 수익률 자동 생성 ONNX 모델 적용으로 인해 더 이상 Market Data 인스펙터는 사용하지 않음
     /*
@@ -89,7 +98,7 @@ public class DataManager : Singleton<DataManager>
     // 문제 재현 및 Load&Save 기능에서 참고할 시장 생성 시드.
     public int MarketSeed { get; private set; }
 
-    public int MarketTurnCount => generatedMarket?.Count ?? 0;
+    public int MarketTurnCount => IsMarketReady ? MarketModelConfig.TurnCount : 0;
 
     public bool IsInformationLoaded { get; private set; }
 
@@ -117,47 +126,34 @@ public class DataManager : Singleton<DataManager>
     public void RegisterGeneratedMarket(Dictionary<int, MonthlyMarketRates> source, int seed)
     {
         if (IsMarketReady)
+            throw new InvalidOperationException("이미 시장이 등록되었습니다.");
+
+        int expectedCount = MarketSectorUtility.SectorCount * MarketModelConfig.TurnCount;
+
+        if (source == null || source.Count != expectedCount)
+            throw new InvalidOperationException("4종목의 60턴 데이터가 필요합니다.");
+
+        // 네 종목의 모든 턴 검사.
+        for (int sectorIndex = 0; sectorIndex < MarketSectorUtility.SectorCount; sectorIndex++)
         {
-            throw new InvalidOperationException("이번 플레이의 시장은 이미 등록되었습니다.");
+            MarketSector sector = (MarketSector)sectorIndex;
+
+            for (int turn = 1; turn <= MarketModelConfig.TurnCount; turn++)
+            {
+                int key = MarketSectorUtility.GetMarketKey(sector, turn);
+
+                if (!source.TryGetValue(key, out MonthlyMarketRates rates) || !MarketReturnRules.IsValid(rates))
+                {
+                    throw new InvalidOperationException($"{sector} {turn}턴 시장 데이터가 올바르지 않습니다.");
+                }
+            }
         }
 
-        if (source == null || source.Count != MarketModelConfig.TurnCount)
-        {
-            throw new InvalidOperationException("60턴의 시장 데이터가 필요합니다.");
-        }
-
-        for (int turn = 1; turn <= MarketModelConfig.TurnCount; turn++)
-        {
-            if (!source.TryGetValue(turn, out MonthlyMarketRates rates))
-            {
-                throw new InvalidOperationException($"{turn}턴 데이터가 없습니다.");
-            }
-
-            // 현재 게임에서 사용하는 각 상품의 수익률이 허용된 배율 범위 안에 존재하는지 검사.
-            if (!MarketReturnRules.IsValid(rates))
-            {
-                throw new InvalidOperationException($"{turn}턴 수익률이 상품별 배율 범위를 벗어났습니다.");
-            }
-            /*
-            if (rates.Stock <= -1m || rates.Leverage != rates.Stock * 2m || rates.StockInverse != -rates.Stock || rates.LeverageInverse != -rates.Stock * 2m)
-            {
-                throw new InvalidOperationException($"{turn}턴 수익률 규칙이 올바르지 않습니다.");
-            }
-            */
-        }
-
-        // 원본 Dictionary가 나중에 수정되어도 영향을 받지 않도록 복사
-        var copy = new Dictionary<int, MonthlyMarketRates>(source);
-
-        // 외부 Manager에는 수정할 수 없는 형태로 제공
-        generatedMarket = new ReadOnlyDictionary<int, MonthlyMarketRates>(copy);
+        // 외부 원본이 변경되어도 등록된 시장에는 영향이 없도록 복사
+        generatedMarket = new ReadOnlyDictionary<int, MonthlyMarketRates>(new Dictionary<int, MonthlyMarketRates>(source));
 
         MarketSeed = seed;
-
-        // 데이터 등록이 완전히 끝난 시점에 준비 완료로 변경.
         IsMarketReady = true;
-
-        Debug.Log($"수익률 자동 생성 ONNX 모델 적용 완료: {copy.Count}턴 / Seed={seed}");
     }
 
     /// <summary>
@@ -171,7 +167,25 @@ public class DataManager : Singleton<DataManager>
     {
         rates = default;
 
-        return IsMarketReady && generatedMarket.TryGetValue(turn, out rates);
+        // 우선은 기술주만 조회
+        return TryGetGeneratedMarketRates(MarketSector.Technology, turn, out rates);
+    }
+
+    /// <summary>
+    /// 지정한 종목의 확정된 월 수익률 조회.
+    /// </summary>
+    public bool TryGetGeneratedMarketRates(MarketSector sector, int turn, out MonthlyMarketRates rates)
+    {
+        rates = default;
+
+        if (!IsMarketReady || !MarketSectorUtility.IsValid(sector) || turn < 1 || turn > MarketModelConfig.TurnCount)
+        {
+            return false;
+        }
+
+        int key = MarketSectorUtility.GetMarketKey(sector, turn);
+
+        return generatedMarket.TryGetValue(key, out rates);
     }
 
     /// <summary>
@@ -182,8 +196,22 @@ public class DataManager : Singleton<DataManager>
     /// <returns></returns>
     public bool TryGetGeneratedMarketTable(out IReadOnlyDictionary<int, MonthlyMarketRates> table)
     {
-        table = generatedMarket;
-        return IsMarketReady;
+        table = null;
+
+        if (!IsMarketReady)
+            return false;
+
+        var copy = new Dictionary<int, MonthlyMarketRates>();
+
+        for (int turn = 1; turn <= MarketModelConfig.TurnCount; turn++)
+        {
+            int key = MarketSectorUtility.GetMarketKey(MarketSector.Technology, turn);
+
+            copy.Add(turn, generatedMarket[key]);
+        }
+
+        table = new ReadOnlyDictionary<int, MonthlyMarketRates>(copy);
+        return true;
     }
 
     /// <summary>
@@ -244,21 +272,35 @@ public class DataManager : Singleton<DataManager>
         try
         {
             if (informationItemsJson == null)
-                throw new FormatException("Information Items Json을 연결하세요.");
-            if (marketDialogueCsv == null)
-                throw new FormatException("Market Dialogue Csv를 연결하세요.");
+                throw new FormatException("정보 상품 JSON을 연결하세요.");
 
-            // 검증이 끝난 테이블만 등록함
-            informationTable = InformationJsonParser.Parse(informationItemsJson.text);
-            marketDialogues = MarketDialogueCsvParser.Parse(marketDialogueCsv.text);
+            if (sectorDialogueCsvs == null || sectorDialogueCsvs.Length != MarketSectorUtility.SectorCount)
+            {
+                throw new FormatException("네 종목의 정보 CSV를 연결하세요.");
+            }
 
+            var items = InformationJsonParser.Parse(informationItemsJson.text);
+
+            var dialogues = new Dictionary<MarketSector, Dictionary<InformationDirection, IReadOnlyList<string>>>();
+
+            foreach (SectorDialogueCsv binding in sectorDialogueCsvs)
+            {
+                if (binding == null || !MarketSectorUtility.IsValid(binding.sector) || binding.csv == null || dialogues.ContainsKey(binding.sector))
+                {
+                    throw new FormatException("정보 CSV의 종목, 파일 또는 중복 연결을 확인하세요.");
+                }
+
+                // CSV Parser
+                dialogues.Add(binding.sector, MarketDialogueCsvParser.Parse(binding.csv.text));
+            }
+
+            informationTable = items;
+            marketDialogues = dialogues;
             IsInformationLoaded = true;
-            Debug.Log($"정보 데이터 준비 완료: " + $"POS {marketDialogues[InformationDirection.Up].Count}개 / " + $"NEG {marketDialogues[InformationDirection.Down].Count}개",
-            this);
         }
-        catch (FormatException exception)
+        catch (Exception exception)
         {
-            Debug.LogError(exception.Message, this);
+            Debug.LogError($"정보 데이터 오류: {exception.Message}", this);
         }
     }
 
@@ -278,14 +320,15 @@ public class DataManager : Singleton<DataManager>
     /// <summary>
     /// 기초 주식시장의 상승/하락에 맞는 대사 후보 return
     /// </summary>
+    /// <param name="sector"></param>
     /// <param name="marketDirection"></param>
     /// <param name="dialogues"></param>
     /// <returns></returns>
-    public bool TryGetMarketDialogues(InformationDirection marketDirection, out IReadOnlyList<string> dialogues)
+    public bool TryGetMarketDialogues(MarketSector sector, InformationDirection marketDirection, out IReadOnlyList<string> dialogues)
     {
         dialogues = null;
 
-        return IsInformationLoaded && marketDialogues.TryGetValue(marketDirection, out dialogues);
+        return IsInformationLoaded && marketDialogues.TryGetValue(sector, out var byDirection) && byDirection.TryGetValue(marketDirection, out dialogues);
     }
 
     /// <summary>
@@ -295,25 +338,44 @@ public class DataManager : Singleton<DataManager>
     private void LoadNewsData()
     {
         IsNewsLoaded = false;
-        newsCatalog = null;
+        sectorNews.Clear();
 
         try
         {
             if (newsJson == null)
-                throw new InvalidOperationException("News Json을 연결하세요.");
+                throw new FormatException("News Json을 연결하세요.");
 
-            NewsCatalogData loaded = JsonUtility.FromJson<NewsCatalogData>(newsJson.text);
+            NewsCatalogData loaded =
+                JsonUtility.FromJson<NewsCatalogData>(newsJson.text);
 
-            if (loaded == null)
-                throw new InvalidOperationException("뉴스 JSON을 읽지 못했습니다.");
+            if (loaded == null || loaded.version != 2 || loaded.sectors == null || loaded.sectors.Length != MarketSectorUtility.SectorCount)
+            {
+                throw new FormatException("종목별 뉴스 JSON 구조를 확인하세요.");
+            }
 
-            ValidateNewsArticles(loaded.positive_news, "positive_news");
-            ValidateNewsArticles(loaded.negative_news, "negative_news");
+            var table = new Dictionary<MarketSector, SectorNewsData>();
+            var ids = new HashSet<string>(StringComparer.Ordinal);
 
+            foreach (SectorNewsData row in loaded.sectors)
+            {
+                if (row == null)
+                    throw new FormatException("뉴스 종목 항목이 없습니다.");
+
+                MarketSector sector = MarketSectorUtility.Parse(row.sector);
+
+                if (table.ContainsKey(sector))
+                    throw new FormatException("뉴스 종목이 중복되었습니다.");
+
+                ValidateNewsPool(row.positive_news, ids);
+                ValidateNewsPool(row.negative_news, ids);
+                ValidateNewsPool(row.neutral_news, ids);
+
+                table.Add(sector, row);
+            }
+
+            sectorNews = table;
             newsCatalog = loaded;
             IsNewsLoaded = true;
-
-            Debug.Log($"신문 데이터 로드 완료: " + $"상승 {loaded.positive_news.Length}개 / " + $"하락 {loaded.negative_news.Length}개");
         }
         catch (Exception exception)
         {
@@ -321,6 +383,27 @@ public class DataManager : Singleton<DataManager>
         }
     }
 
+    /// <summary>
+    /// 각 분류에 신문 데이터가 있고 필수 내용이 채워져 있는지 확인.
+    /// </summary>
+    /// <param name="pool"></param>
+    /// <param name="ids"></param>
+    /// <exception cref="FormatException"></exception>
+    private static void ValidateNewsPool(NewsArticleData[] pool, HashSet<string> ids)
+    {
+        if (pool == null || pool.Length == 0)
+            throw new FormatException("뉴스 후보 목록이 비어 있습니다.");
+
+        foreach (NewsArticleData item in pool)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(item.id) || !ids.Add(item.id) || string.IsNullOrWhiteSpace(item.title) || string.IsNullOrWhiteSpace(item.text))
+            {
+                throw new FormatException("뉴스 ID, 제목, 본문을 확인하세요.");
+            }
+        }
+    }
+
+    /* -- 더 이상 사용하지 않음
     /// <summary>
     /// 각 분류에 신문 데이터가 있고 필수 내용이 채워져 있는지 확인. 
     /// 필수 내용 - id, title, text.
@@ -346,6 +429,7 @@ public class DataManager : Singleton<DataManager>
             }
         }
     }
+    */
 
     /// <summary>
     /// 지정한 턴의 시장 수익률로 기사 한 건을 선택.
@@ -358,90 +442,117 @@ public class DataManager : Singleton<DataManager>
     {
         article = null;
 
-        if (!IsNewsLoaded || !TryGetGeneratedMarketRates(turn, out MonthlyMarketRates rates))
+        if (!IsNewsLoaded || !IsMarketReady || turn < 1 || turn > MarketModelConfig.TurnCount)
         {
             return false;
         }
 
-        // 각 자산의 선택 확률 : 25%
-        int selectedAsset = newsRandom.Next(4);
+        // 네 종목 중 하나를 같은 확률로 선택.
+        MarketSector sector = (MarketSector)newsRandom.Next(MarketSectorUtility.SectorCount);
 
-        decimal selectedReturn;
-        bool isInverse;
-
-        switch (selectedAsset)
+        if (!TryGetGeneratedMarketRates(sector, turn, out MonthlyMarketRates rates))
         {
-            case 0:
-                selectedReturn = rates.Stock;
-                isInverse = false;
-                break;
-
-            case 1:
-                selectedReturn = rates.Leverage;
-                isInverse = false;
-                break;
-
-            case 2:
-                selectedReturn = rates.StockInverse;
-                isInverse = true;
-                break;
-
-            default:
-                selectedReturn = rates.LeverageInverse;
-                isInverse = true;
-                break;
+            return false;
         }
 
-        // 수익률이 정확히 0이면 임시 보합 기사를 사용. - 이거 나오면 로또 사러감
-        if (selectedReturn == 0m)
+        if (!sectorNews.TryGetValue(sector, out SectorNewsData news))
+            return false;
+
+        // 이벤트까지 반영된 최종 기본 수익률을 사용해서 진실 여부를 판단.
+        NewsArticleData[] pool = rates.Stock > 0m ? news.positive_news : rates.Stock < 0m ? news.negative_news : news.neutral_news;
+
+        NewsArticleData selected = pool[newsRandom.Next(pool.Length)];
+
+        // 원본 기사 객체를 수정하지 않도록 복사.
+        article = new NewsArticleData
         {
-            article = new NewsArticleData
-            {
-                id = "NEWS_FLAT",
-                title = "시장, 이번 달 보합 마감",
-                text = "이번 달 시장은 가격 변동 없이 보합으로 마감했습니다."
-            };
+            id = selected.id,
+            title = selected.title,
+            text = selected.text
+        };
 
-            return true;
-        }
-
-        // JSON은 기본 시장의 상승/하락을 설명함. - 따라서 인버스는 반대가 되어야함.
-        // 인버스 하락 → 시장 상승 → positive_news.
-        // 인버스 상승 → 시장 하락 → negative_news.
-        bool marketRose = isInverse ? selectedReturn < 0m : selectedReturn > 0m;
-
-        NewsArticleData[] candidates = marketRose ? newsCatalog.positive_news : newsCatalog.negative_news;
-
-        // 한 객체를 선택하므로 제목과 본문이 서로 섞이지 않음.
-        article = candidates[newsRandom.Next(candidates.Length)];
         return true;
     }
 
     public MarketSaveData CaptureSave()
     {
         if (!IsMarketReady)
-            throw new System.InvalidOperationException("시장 데이터가 준비되지 않았습니다.");
+            throw new InvalidOperationException("시장이 준비되지 않았습니다.");
 
         var data = new MarketSaveData
         {
             seed = MarketSeed
         };
 
-        for (int turn = 1; turn <= MarketModelConfig.TurnCount; turn++)
+        for (int sectorIndex = 0; sectorIndex < MarketSectorUtility.SectorCount; sectorIndex++)
         {
-            MonthlyMarketRates rates = generatedMarket[turn];
+            MarketSector sector = (MarketSector)sectorIndex;
 
-            data.turns.Add(new MarketTurnSaveData
+            for (int turn = 1; turn <= MarketModelConfig.TurnCount; turn++)
             {
-                turn = turn,
-                stock = SaveNumber.Write(rates.Stock),
-                leverage = SaveNumber.Write(rates.Leverage),
-                stockInverse = SaveNumber.Write(rates.StockInverse),
-                leverageInverse = SaveNumber.Write(rates.LeverageInverse)
-            });
+                int key = MarketSectorUtility.GetMarketKey(sector, turn);
+                MonthlyMarketRates rates = generatedMarket[key];
+
+                data.turns.Add(new MarketTurnSaveData
+                {
+                    sector = sector,
+                    turn = turn,
+                    stock = SaveNumber.Write(rates.Stock),
+                    leverage = SaveNumber.Write(rates.Leverage),
+                    stockInverse = SaveNumber.Write(rates.StockInverse),
+                    leverageInverse = SaveNumber.Write(rates.LeverageInverse)
+                });
+            }
         }
 
         return data;
+    }
+
+    /// <summary>
+    /// 저장된 시장을 검증하고 새로운 Dictionary로 변환.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    /// <exception cref="FormatException"></exception>
+    public static Dictionary<int, MonthlyMarketRates> DecodeMarketSave(MarketSaveData data)
+    {
+        int expectedCount = MarketSectorUtility.SectorCount * MarketModelConfig.TurnCount;
+
+        if (data == null || data.turns == null || data.turns.Count != expectedCount)
+        {
+            throw new FormatException("4종목의 60턴 시장 기록이 필요합니다.");
+        }
+
+        var restored = new Dictionary<int, MonthlyMarketRates>();
+
+        foreach (MarketTurnSaveData row in data.turns)
+        {
+            if (row == null || !MarketSectorUtility.IsValid(row.sector) || row.turn < 1 ||
+                row.turn > MarketModelConfig.TurnCount)
+            {
+                throw new FormatException("시장 종목 또는 턴이 잘못되었습니다.");
+            }
+
+            var rates = new MonthlyMarketRates(
+                SaveNumber.Read(row.stock),
+                SaveNumber.Read(row.leverage),
+                SaveNumber.Read(row.stockInverse),
+                SaveNumber.Read(row.leverageInverse));
+
+            if (!MarketReturnRules.IsValid(rates))
+                throw new FormatException("저장된 상품 수익률이 잘못되었습니다.");
+
+            int key = MarketSectorUtility.GetMarketKey(row.sector, row.turn);
+
+            if (restored.ContainsKey(key))
+                throw new FormatException("같은 종목과 턴이 중복되었습니다.");
+
+            restored.Add(key, rates);
+        }
+
+        // 유효한 키는 240개. 위에서 개수, 범위, 중복을 검사했음.
+        // 따라서 여기까지 통과하면 모든 종목의 60턴이 존재하는거임
+        return restored;
     }
 
     /// <summary>
@@ -454,39 +565,10 @@ public class DataManager : Singleton<DataManager>
     /// <exception cref="FormatException"></exception>
     public void RestoreSave(MarketSaveData data)
     {
-        if (data == null || data.turns == null || data.turns.Count != MarketModelConfig.TurnCount)
-        {
-            throw new FormatException("60턴 시장 데이터가 필요합니다.");
-        }
+        // 복원 데이터를 먼저 검증.
+        // 실패했을 때 현재 시장을 지우지 않음.
+        Dictionary<int, MonthlyMarketRates> restored = DecodeMarketSave(data);
 
-        // 기존 generatedMarket을 바로 비우지 않음
-        // 별도 목록에서 변환과 검증을 먼저 완료해야함
-        var restored = new Dictionary<int, MonthlyMarketRates>();
-
-        foreach (MarketTurnSaveData row in data.turns)
-        {
-            if (row == null || row.turn < 1 || row.turn > MarketModelConfig.TurnCount)
-            {
-                throw new FormatException("시장 턴이 올바르지 않습니다.");
-            }
-
-            // 문자열로 저장했던 decimal 수익률을 복구.
-            var rates = new MonthlyMarketRates(
-                SaveNumber.Read(row.stock),
-                SaveNumber.Read(row.leverage),
-                SaveNumber.Read(row.stockInverse),
-                SaveNumber.Read(row.leverageInverse));
-
-            if (!MarketReturnRules.IsValid(rates))
-            {
-                throw new FormatException("시장 수익률이 올바르지 않습니다.");
-            }
-
-            // 같은 턴 번호가 두 번 존재하면 Add에서 오류가 발생함.
-            restored.Add(row.turn, rates);
-        }
-
-        // 모든 검증이 끝난 시점에 한 번에 교체.
         generatedMarket = new ReadOnlyDictionary<int, MonthlyMarketRates>(restored);
 
         MarketSeed = data.seed;

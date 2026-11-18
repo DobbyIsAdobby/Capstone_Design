@@ -91,6 +91,14 @@ public class TutorialFeatureButton : MonoBehaviour
             return;
         }
 
+        // 기능 해금 검사와 별도로 현재 Spotlight 단계에서 허용한 기능인지 확인.
+        SpotlightTutorialManager spotlight = SpotlightTutorialManager.Instance;
+
+        if (spotlight != null && !spotlight.AllowsFeature(feature))
+        {
+            return;
+        }
+
         onUnlockedClick.Invoke();
     }
 }

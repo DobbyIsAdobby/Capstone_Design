@@ -340,6 +340,15 @@ public class RealEstateManager : Singleton<RealEstateManager>
         // 순자산 손실로 집계하지 않도록 Financing으로 기록.
         game.ApplyCashChange(-(price - loanAmount), $"{Definition(index).name} 매입 자기자금", ReceiptLineType.Financing);
 
+        // 대출액을 포함한 전체 매입가격을 기록.
+        // 대출 여부에 따라 같은 부동산의 매수액 기준이 달라지지 않도록 함.
+        ReportHistoryManager.Instance.RecordBuy(
+            requestedTurn,
+            $"PROPERTY_{Definition(index).id}",
+            $"부동산 · {Definition(index).name}",
+            -1,
+            price);
+
         RefreshHUD();
         return null;
     }

@@ -52,6 +52,8 @@ public class SceneTransitionManager : Singleton<SceneTransitionManager>
     /// <returns></returns>
     public bool TryStartNewGame(out string error)
     {
+        EndingReportSession.Clear();
+
         pendingLoad = null;
         pendingEnding = null;
 
@@ -66,6 +68,8 @@ public class SceneTransitionManager : Singleton<SceneTransitionManager>
     /// <returns></returns>
     public bool TryMoveToLobby(out string error)
     {
+        EndingReportSession.Clear();
+        
         pendingLoad = null;
         pendingEnding = null;
 
