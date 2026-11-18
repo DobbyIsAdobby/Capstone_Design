@@ -53,6 +53,9 @@ public class SaveDataValidator
 
         // 로비에서도 실행할 수 있게 Instance 없이 검사해야함.
         RealEstateManager.ValidateSave(data.realEstate, turn, out long propertyValue, out long propertyDebt);
+        
+        // 엔딩에서도 실행할 수 있게 Instance 없이 검사해야함.
+        ReportHistoryManager.Validate(data.reportHistory, turn);
 
         Require(player.availableCash >= 0, "저장된 현금이 올바르지 않습니다.");
         Require(player.currentAP >= 0, "저장된 AP가 올바르지 않습니다.");

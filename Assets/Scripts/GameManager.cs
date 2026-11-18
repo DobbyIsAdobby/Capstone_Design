@@ -448,6 +448,13 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     private void BeginMonthRecord()
     {
+        // 첫 턴 및 다음 턴에 맞는 배경음을 선택.
+        // 같은 구간의 곡이 재생 중이면 처음부터 다시 틀지 않음.
+        if (BgmManager.Instance != null)
+        {
+            BgmManager.Instance.PlayGameTurn(currentMonth);
+        }
+
         monthlyLines.Clear();
         MonthStartTotalAsset = TotalAsset;
         hasMonthBaseLine = true;
@@ -529,6 +536,9 @@ public class GameManager : Singleton<GameManager>
         {
             return;
         }
+
+        // 발생한 수입 기록.
+        ReportHistoryManager.Instance.RecordChange(currentMonth, label, amount, type);
 
         // 동일 내역은 월 합계로 묶기
         for(int i = 0; i < monthlyLines.Count; i++)
@@ -617,6 +627,11 @@ public class GameManager : Singleton<GameManager>
 
         IsSetting = true;
         ProcessMonthlySettlement();
+
+        // 모든 자산, 지출, 파산 판정까지 마친 턴임을 기록.
+        // 월중 병원비 파산은 여기까지 오지 못함.
+        // 그렇기에 아직 끝나지 않은 턴의 시장 결과를 공개하지 않을거임.
+        ReportHistoryManager.Instance.MarkSettled(currentMonth);
 
         // 고정지출을 먼저 표시하고 나머지는 기록 순서에 따라 출력
         List<ReceiptLine> orderedLines = new List<ReceiptLine>();
@@ -797,6 +812,17 @@ public class GameManager : Singleton<GameManager>
             pendingNewsArticle = null;
             IsSetting = false;
             RequestEndingScene(EndingType.Bad);
+            return;
+        }
+
+        // 마지막 턴은 청구서를 확인한 직후 엔딩으로 이동.
+        // 경제, 부동산, 물가 신문을 추가로 열지 않음.
+        if (currentMonth >= maxMonth)
+        {
+            pendingNewsArticle = null;
+
+            // TriggerEnding이 최종 순자산과 펜트하우스 보유 여부로 엔딩을 판정.
+            TriggerEnding();
             return;
         }
 
@@ -1201,6 +1227,20 @@ public class GameManager : Singleton<GameManager>
             yield break;
         }
 
+        // Scene이 사라지기 전에 최종 결과를 복사.
+        try
+        {
+            EndingReportSession.Prepare(ending);
+        }
+        catch (System.Exception exception)
+        {
+            endingTransitionRequested = false;
+
+            Debug.LogError($"결산 리포트 준비 실패: {exception.Message}");
+
+            yield break;
+        }
+
         if (!transition.TryMoveToEnding(ending, out string error))
         {
             endingTransitionRequested = false;
@@ -1273,6 +1313,14 @@ public class GameManager : Singleton<GameManager>
     {
         // 다른 Manager까지 전부 복원한 다음 한 번만 호출
         hasMonthBaseLine = true;
+
+        // 복원된 턴을 기준으로 음악을 선택.
+        // ex) 35턴 저장 파일 >> 중반 배경음
+        if (BgmManager.Instance != null)
+        {
+            BgmManager.Instance.PlayGameTurn(currentMonth);
+        }
+
         UpdateUI();
     }
 }

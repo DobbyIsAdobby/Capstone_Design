@@ -115,7 +115,7 @@ public class MarketChartPanelUI : MonoBehaviour
             graphValues.Add((float)percent);
         }
 
-        titleText.text = $"{MarketSectorUtility.GetName(sector)} · " + $"{GetAssetName(assetType)} 수익률";
+        titleText.text = $"{MarketSectorUtility.GetName(sector)} " + "수익률";
 
         gameObject.SetActive(true);
 
@@ -193,7 +193,7 @@ public class MarketChartPanelUI : MonoBehaviour
 
         decimal percent = percentages[index];
 
-        selectedValueText.text = $"{index + 1}턴 · " + $"{percent.ToString("+0.00;-0.00;0.00")}%";
+        selectedValueText.text = $"{index + 1}턴 : " + $"{percent.ToString("+0.00;-0.00;0.00")}%";
 
         selectedValueText.color = percent > 0m ? new Color32(0, 200, 0, 255) : percent < 0m ? new Color32(200, 0, 0, 255) : new Color32(220, 220, 220, 255);
 

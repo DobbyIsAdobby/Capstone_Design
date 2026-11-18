@@ -10,7 +10,8 @@ public static class GameSaveCoordinator
     // v5 : 튜토리얼 시스템 데이터 추가에 따라 버전 상승
     // v6 : 투자 종목 데이터 추가에 따라 버전 상승
     // v7 : 투자 종목 정보, 신문, 랜덤 이벤트 데이터 추가에 따라 버전 상승
-    public const int FormatVersion = 7;
+    // v8 : 결산 리포트용 거래, 금액 변동 이력 저장 데이터 추가에 따라 버전 상승
+    public const int FormatVersion = 8;
 
     // 상품 효과나 직급 규칙 등 저장 호환성이 달라지면 올림.
     // v4 : 인플레이션 및 주거비 계산 규칙 추가.
@@ -57,6 +58,7 @@ public static class GameSaveCoordinator
             realEstate = RealEstateManager.Instance.CaptureSave(),
             happiness = HappinessManager.Instance.CaptureSave(),
             spotlightTutorial = SpotlightTutorialManager.Instance.CaptureSave(),
+            reportHistory = ReportHistoryManager.Instance.CaptureSave(),
         };
 
         // 잘못된 상태를 파일로 기록하지 않도록 검사
@@ -81,6 +83,8 @@ public static class GameSaveCoordinator
         RealEstateManager.Instance.ValidateSavedCatalog(data.realEstate, data.player.currentMonth);
         
         HappinessManager.Instance.ValidateSave(data.happiness, data.player.currentMonth);
+
+        ReportHistoryManager.Validate(data.reportHistory, data.player.currentMonth);
 
         // 게임 상태를 바꾸기 전에 모든 이벤트 검사를 완료해야함.
         EventManager.Instance.ValidateSavedEvents(data);
@@ -110,6 +114,8 @@ public static class GameSaveCoordinator
 
         SpotlightTutorialManager.Instance.RestoreSave(data.spotlightTutorial, data.player.currentMonth);
 
+        ReportHistoryManager.Instance.RestoreSave(data.reportHistory);
+
         // AP 지급, 청구서 초기화 없이 플레이만 다시 허용
         GameManager.Instance.CompleteSaveRestore();
     }
@@ -135,7 +141,8 @@ public static class GameSaveCoordinator
             HousingCostManager.Instance == null ||
             RealEstateManager.Instance == null ||
             HappinessManager.Instance == null ||
-            SpotlightTutorialManager.Instance == null)
+            SpotlightTutorialManager.Instance == null ||
+            ReportHistoryManager.Instance == null)
         {
             throw new InvalidOperationException("필수 게임 매니저가 누락되었습니다.");
         }

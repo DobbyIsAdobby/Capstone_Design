@@ -214,7 +214,7 @@
       "ap_cost": 10,
       "stress_increase": 15,
       "happiness_gain": 5,
-      "accept_label": "다시 시작하기",
+      "accept_label": "취미 다시 하기",
       "decline_label": "다음에 하기",
       "accept_result": [
         "처음에는 손이 굳었지만 곧 익숙한 즐거움이 돌아왔다. 잊고 있던 나를 만난 느낌이다."

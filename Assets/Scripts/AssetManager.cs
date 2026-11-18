@@ -260,6 +260,19 @@ public class AssetManager : Singleton<AssetManager>
 
         game.availableCash -= assetChange;
 
+        // 매수가 성공한 뒤 기록.
+        // 은행 입금과 매도는 매수 횟수에 포함하지 않음.
+        if (isBuying && type != AssetType.Bank)
+        {
+            ReportHistoryManager.Instance.RecordBuy(
+                game.currentMonth,
+                $"MARKET_{(int)sector}_{(int)type}",
+                $"{MarketSectorUtility.GetName(sector)} · " +
+                ReportHistoryManager.ProductName(type),
+                (int)sector,
+                amount);
+        }
+
         message = $"{amount:N0}원 거래가 완료되었습니다.";
 
         if(UIManager.Instance != null)

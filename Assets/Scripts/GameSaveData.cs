@@ -26,6 +26,7 @@ public sealed class GameSaveData
     public RealEstateSaveData realEstate;
     public HappinessSaveData happiness;
     public SpotlightSaveData spotlightTutorial;
+    public ReportHistory reportHistory;
 }
 
 /// <summary>
